@@ -1,0 +1,21 @@
+// MXD BLRR — Product model
+// Add this to your main schema.prisma file
+
+model Product {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  slug        String   @unique
+  category    String
+  description String   @db.Text
+  discountPct Int      @default(0)
+  images      String[] // Cloudinary public_ids after upload; local filenames during dev
+  sourceUrl   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([slug])
+  @@index([isActive])
+}

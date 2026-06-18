@@ -1,0 +1,70 @@
+version: '3.8'
+
+# =============================================================================
+# MXDBLR — Docker Compose (local dev / staging)
+#
+# Required environment variables in a .env file at this directory:
+#   POSTGRES_PASSWORD   — Postgres superuser password (no default in production)
+#   JWT_SECRET          — Must match api JWT_SECRET
+#   SETTINGS_ENCRYPTION_KEY — Must match api SETTINGS_ENCRYPTION_KEY
+#   NEXT_PUBLIC_API_URL — Public-facing API URL (browser requests)
+#
+# Usage:
+#   docker compose up --build          # first run
+#   docker compose up -d               # background
+#   docker compose down -v             # stop + remove volumes
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mxdblr
+      POSTGRES_USER: mxdblr
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mxdblr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://mxdblr:${POSTGRES_PASSWORD:-changeme}@postgres:5432/mxdblr
+      JWT_SECRET: ${JWT_SECRET}
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY}
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      # NEXT_PUBLIC_API_URL is the browser-visible URL — set via host .env
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.mxdblr.com/api}
+      # INTERNAL_API_URL points to the api service name inside the Docker network
+      INTERNAL_API_URL: http://api:4000
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -1,0 +1,817 @@
+{
+  "_meta": {
+    "source": "mxd_products.csv + mxd_images/",
+    "total": 58,
+    "categories": [
+      "Head Phone",
+      "Ear Phone",
+      "Speaker",
+      "Power Bank",
+      "Charger",
+      "Phone Case",
+      "Stand & Holder",
+      "AirPods",
+      "Smart Watch",
+      "Microphone",
+      "Mobile Battery",
+      "Data Cable"
+    ],
+    "notes": "No pricing on platform — B2B inquiry-only model via WhatsApp. Prices may be added later as an optional field if needed. Images reference local filenames in mxd_images/ — upload to Cloudinary before seeding production.",
+    "generated": "2026-05-28"
+  },
+  "products": [
+    {
+      "sku": "MXD-386",
+      "name": "MXD 386 HF",
+      "slug": "mxd-386",
+      "category": "Head Phone",
+      "description": "MXD-386 HF - 360° SURROUND STEREO SOUND, THE COMFORTABLE WEARING, EXPERIENCE OF ERGONOMIC, SUPER INTELLIGENT VOICE, 6 HOURS TALK TIME, CHARGES IN 120 MINUTES.",
+      "discount_pct": 50,
+      "images": [
+        "MXD_386_HF_0.png",
+        "MXD_386_HF_1.png",
+        "MXD_386_HF_2.png",
+        "MXD_386_HF_3.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-386"
+    },
+    {
+      "sku": "MXD-395",
+      "name": "MXD-395",
+      "slug": "mxd-395",
+      "category": "Head Phone",
+      "description": "MXD-395 HEADPHONE — CLEAR SOUND AND HEAVEN BEATS. WIRELESS HEADPHONE.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-395_0.jpg",
+        "MXD-395_1.jpg",
+        "MXD-395_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-395"
+    },
+    {
+      "sku": "MXD-M8",
+      "name": "MXD-M8",
+      "slug": "mxd-m8-earphone",
+      "category": "Ear Phone",
+      "description": "MXD-M8 EARPHONE COLLECTION: 10MM SPEAKER FOR DEEP BASS AND CLEAR SOUND. WITH A 100mW POWER OUTPUT, 3.5MM JACK, 1200MM CABLE.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-M8_0.png",
+        "MXD-M8_1.png",
+        "MXD-M8_2.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-m8-earphone"
+    },
+    {
+      "sku": "MXD-510",
+      "name": "MXD-510 ERAPHONE",
+      "slug": "mxd-510-eraphone",
+      "category": "Ear Phone",
+      "description": "GET EASY TO USE EARPHONES. SOUND CLARITY AND PROPER WORKING EARPHONE.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-510_ERAPHONE_0.png",
+        "MXD-510_ERAPHONE_1.png",
+        "MXD-510_ERAPHONE_2.png",
+        "MXD-510_ERAPHONE_3.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-757-eraphone"
+    },
+    {
+      "sku": "MXD-757",
+      "name": "MXD-757",
+      "slug": "mxd-757",
+      "category": "Ear Phone",
+      "description": "MXD-757 EARPHONES, FEATURING A 10MM SPEAKER, TYPE C INTERFACE, AND 1200MM WIRE LENGTH FOR OPTIMAL SOUND. AVAILABLE IN SLEEK BLACK.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-757_0.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-757"
+    },
+    {
+      "sku": "MXD-760",
+      "name": "MXD-760",
+      "slug": "mxd-760",
+      "category": "Ear Phone",
+      "description": "EXPERIENCE CRISP AUDIO AND SUPERIOR EARPHONES. FEATURING A 10MM SPEAKER SIZE FOR SOUND, A DURABLE 1200MM WIRE, AND UNIVERSAL COMPATIBILITY.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-760_0.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-760"
+    },
+    {
+      "sku": "MXD-505",
+      "name": "MXD-505",
+      "slug": "mxd-505",
+      "category": "Ear Phone",
+      "description": "NATURALLY THE EAR CANAL, LIGHT AND STURDY. STEREO SOUND QUALITY. 1200MM WIRE LENGTH.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-505_0.jpg",
+        "MXD-505_1.jpg",
+        "MXD-505_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-505"
+    },
+    {
+      "sku": "MXD-768",
+      "name": "MXD-768",
+      "slug": "mxd-768",
+      "category": "Ear Phone",
+      "description": "METAL STEREO, POWERFUL BASS WITH MAGNETIC BUDS. 3.5MM PLUG FEATURING A 10MM SPEAKER.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-768_0.jpg",
+        "MXD-768_1.jpg",
+        "MXD-768_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-768"
+    },
+    {
+      "sku": "MXD-517",
+      "name": "MXD-517",
+      "slug": "mxd-517",
+      "category": "Ear Phone",
+      "description": "EXPERIENCE BOOMING BASS WITH THE 517 HANDS-FREE EARPHONES. 10MM SPEAKER AND A COMFORTABLE FIT, 3.5 JACK, 1200MM WIRE LENGTH, AND THE BUILT-IN MIC FOR EASY CALLS.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-517_0.jpg",
+        "MXD-517_1.jpg",
+        "MXD-517_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-517"
+    },
+    {
+      "sku": "MXD-508",
+      "name": "MXD-508",
+      "slug": "mxd-508",
+      "category": "Ear Phone",
+      "description": "100mW WORKING POWER, AND A 3.5MM JACK FOR WIDE COMPATIBILITY. DURABILITY, STYLE, AND RELIABLE PERFORMANCE AUDIO. HI-FI STEREO BUILT-IN MIC.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-508_0.jpg",
+        "MXD-508_1.jpg",
+        "MXD-508_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-508"
+    },
+    {
+      "sku": "MXD-506",
+      "name": "MXD-506",
+      "slug": "mxd-506",
+      "category": "Ear Phone",
+      "description": "3.5MM JACK, ENJOY EASY CONNECTIVITY & COMFORT. NOISE ISOLATION PREMIUM QUALITY. DEEP BASS AND CLEAR SOUND.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-506_0.jpg",
+        "MXD-506_1.jpg",
+        "MXD-506_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-506"
+    },
+    {
+      "sku": "MXD-M113",
+      "name": "MXD-M113",
+      "slug": "mxd-m113",
+      "category": "Ear Phone",
+      "description": "MXD-M113 BOX EARPHONE — GOOD SOUND AND BEST PRICE TO AFFORD.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-M113_0.jpg",
+        "MXD-M113_1.jpg",
+        "MXD-M113_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-m113"
+    },
+    {
+      "sku": "MXD-879-TS",
+      "name": "MXD-879 TS",
+      "slug": "mxd-879-ts",
+      "category": "Speaker",
+      "description": "ELEVATE YOUR HOME ENTERTAINMENT WITH THE MXD DJ TOWER MULTIMEDIA SPEAKER. 150W P.M.P.D & REMOTE CONTROLLER, PLUG & PLAY WITH EXTRA BASS.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-879_TS_0.png",
+        "MXD-879_TS_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-902-speaker"
+    },
+    {
+      "sku": "MXD-878-TS",
+      "name": "MXD-878 TS",
+      "slug": "mxd-878-ts",
+      "category": "Speaker",
+      "description": "MXD-878 TOWER SPEAKER 150W P.M.P.D. MULTIMEDIA STANDING SPEAKER WITH LED LIGHT. Perfect for parties. Includes REMOTE, AUX IN, FM-RADIO, BLUETOOTH 5.0.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-878_TS_0.png",
+        "MXD-878_TS_1.png",
+        "MXD-878_TS_2.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-860-speaker"
+    },
+    {
+      "sku": "MXD-898",
+      "name": "MXD-898",
+      "slug": "mxd-898",
+      "category": "Speaker",
+      "description": "POWER OUTPUT (RMS): 5W. POWER SOURCE: USB CHARGEABLE BATTERY. BATTERY LIFE: 4HR. BLUETOOTH VERSION 5.0. WIRELESS RANGE: 10M. WIRELESS MUSIC STREAMING VIA BLUETOOTH.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-898_0.png",
+        "MXD-898_1.png",
+        "MXD-898_2.png",
+        "MXD-898_3.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-898"
+    },
+    {
+      "sku": "MXD-816",
+      "name": "MXD-816 ROCK MUSIC",
+      "slug": "mxd-816",
+      "category": "Speaker",
+      "description": "MXD-816 ROCK MUSIC. ENJOY 12 HOURS PLAYBACK MUSIC TIME. 25W V5.3 WIRELESS SPEAKER. RECHARGING IN 1.5 HOURS VIA TYPE-C. SUPPORTS TF CARD, USB, AND AUX. Perfect for any occasion.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-816_ROCK_MUSIC_0.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-816"
+    },
+    {
+      "sku": "MXD-817",
+      "name": "MXD-817",
+      "slug": "mxd-817",
+      "category": "Speaker",
+      "description": "MXD-817 TROLLY SPEAKER.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-817_0.jpg",
+        "MXD-817_1.jpg",
+        "MXD-817_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-817"
+    },
+    {
+      "sku": "MXD-815",
+      "name": "MXD-815",
+      "slug": "mxd-815",
+      "category": "Speaker",
+      "description": "MXD-815 SPACE BEAT SPEAKER — HIGHER QUALITY PRODUCT.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-815_0.jpg",
+        "MXD-815_1.jpg",
+        "MXD-815_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-815"
+    },
+    {
+      "sku": "MXD-PB570",
+      "name": "MXD-PB570",
+      "slug": "mxd-pb570",
+      "category": "Power Bank",
+      "description": "MAGNETIC WIRELESS 10000mAh POWER BANK. 35W & MULTI DEVICE CONNECTIVITY. QUICK CHARGE WIRELESS CHARGING. SMART CHIP.",
+      "discount_pct": 20,
+      "images": [
+        "MXD-PB570_0.png",
+        "MXD-PB570_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-570"
+    },
+    {
+      "sku": "MXD-567",
+      "name": "MXD-567",
+      "slug": "mxd-567",
+      "category": "Power Bank",
+      "description": "MXD-567 POWER BANK — 12000mAh.",
+      "discount_pct": 20,
+      "images": [
+        "MXD-567_0.jpg",
+        "MXD-567_1.jpg",
+        "MXD-567_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-567"
+    },
+    {
+      "sku": "MXD-569",
+      "name": "MXD-569",
+      "slug": "mxd-569",
+      "category": "Power Bank",
+      "description": "MXD-569 POWER BANK (22.5W) 25000mAh. 6 MONTH WARRANTY.",
+      "discount_pct": 20,
+      "images": [
+        "MXD-569_0.jpg",
+        "MXD-569_1.jpg",
+        "MXD-569_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-569"
+    },
+    {
+      "sku": "MXD-CH173",
+      "name": "MXD-CH173",
+      "slug": "mxd-ch173",
+      "category": "Charger",
+      "description": "MXD-173 MOBILE CHARGER 2.8A OUTPUT WITH SINGLE USB CHARGE. ADOPTION OF ADVANCED TECHNOLOGY, HIGH QUALITY PURE COPPER CHIP & OVER VOLTAGE PROTECTION.",
+      "discount_pct": 17,
+      "images": [
+        "MXD-CH173_0.png",
+        "MXD-CH173_1.png",
+        "MXD-CH173_2.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-173"
+    },
+    {
+      "sku": "MXD-CH281",
+      "name": "MXD-CH281",
+      "slug": "mxd-ch281",
+      "category": "Charger",
+      "description": "THE MXD-281 CHARGER OFFERS 20W POWER SUPPORT, A SINGLE USB PORT, AND 9S PROTECTION FOR SAFE CHARGING.",
+      "discount_pct": 17,
+      "images": [
+        "MXD-_CH281_0.png",
+        "MXD-_CH281_1.png",
+        "MXD-_CH281_2.png",
+        "MXD-_CH281_3.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-281"
+    },
+    {
+      "sku": "MXD-CH276",
+      "name": "MXD-CH 276",
+      "slug": "mxd-ch276",
+      "category": "Charger",
+      "description": "85W OUTPUT AND MULTI-PROTOCOL SUPPORT, 9S PROTECTION, AND AN AUTO ID CHIP. QUICK FAST CHARGING ON THE GO.",
+      "discount_pct": 17,
+      "images": [
+        "MXD-CH_276_0.png",
+        "MXD-CH_276_1.png",
+        "MXD-CH_276_2.png",
+        "MXD-CH_276_3.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-276"
+    },
+    {
+      "sku": "MXD-CH251",
+      "name": "MXD-CH 251 SPEED",
+      "slug": "mxd-ch251-speed",
+      "category": "Charger",
+      "description": "WITH A 20W OUTPUT COMPATIBILITY, THIS COMPACT CHARGER IS IDEAL FOR ON-THE-GO CHARGING. MULTI PROTOCOL SUPPORT.",
+      "discount_pct": 17,
+      "images": [
+        "MXD-CH_251_SPEED_0.jpg",
+        "MXD-CH_251_SPEED_1.jpg",
+        "MXD-CH_251_SPEED_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd--251"
+    },
+    {
+      "sku": "MXD-CH256",
+      "name": "MXD-CH256 SPEED",
+      "slug": "mxd-ch256-speed",
+      "category": "Charger",
+      "description": "MULTI-PROTECTION | 20W FAST CHARGING. ENSURES SAFE CHARGING. FEATURING AUTO ID CHIP TECHNOLOGY. PLUG IN AND POWER UP!",
+      "discount_pct": 17,
+      "images": [
+        "MXD-CH256_SPEED_0.jpg",
+        "MXD-CH256_SPEED_1.jpg",
+        "MXD-CH256_SPEED_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-256"
+    },
+    {
+      "sku": "MXD-277",
+      "name": "MXD-277",
+      "slug": "mxd-277",
+      "category": "Charger",
+      "description": "MXD-277 CHARGER — FAST CHARGING AND AFFORDABLE PRICE.",
+      "discount_pct": 17,
+      "images": [
+        "MXD-277_0.jpg",
+        "MXD-277_1.jpg",
+        "MXD-277_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-277"
+    },
+    {
+      "sku": "MXD-FLIP-COVER",
+      "name": "MXD FLIP COVER",
+      "slug": "mxd-flip-cover",
+      "category": "Phone Case",
+      "description": "AMAZING FITTING & LOOKING SO BRIGHTLY.",
+      "discount_pct": 50,
+      "images": [
+        "MXD_FLIP_COVER_0.png",
+        "MXD_FLIP_COVER_1.png",
+        "MXD_FLIP_COVER_2.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-flip-cover"
+    },
+    {
+      "sku": "MXD-ST889",
+      "name": "MXD-ST 889",
+      "slug": "mxd-st889",
+      "category": "Stand & Holder",
+      "description": "MEET THE MXD-889 CAR MOBILE HOLDER. DESIGNED FOR FULL ULTIMATE CONVENIENCE. 360° ROTATION. COMPATIBLE WITH DEVICES RANGING 4 TO 6 INCHES. STURDY AND SECURE.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-ST_889_0.png",
+        "MXD-ST_889_1.png",
+        "MXD-ST_889_2.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-889"
+    },
+    {
+      "sku": "MXD-ST983",
+      "name": "MXD-ST983",
+      "slug": "mxd-st983",
+      "category": "Stand & Holder",
+      "description": "MXD-983 ALUMINIUM ALLOY BASE BRACKET. CONVENIENT CHARGING FOR TABLET & SMARTPHONE. SILVER.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-ST983_0.png",
+        "MXD-ST983_1.png",
+        "MXD-ST983_2.png",
+        "MXD-ST983_3.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-983"
+    },
+    {
+      "sku": "MXD-956",
+      "name": "MXD-956",
+      "slug": "mxd-956",
+      "category": "Stand & Holder",
+      "description": "MXD-956 STAND.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-956_0.jpg",
+        "MXD-956_1.jpg",
+        "MXD-956_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-956"
+    },
+    {
+      "sku": "MXD-955",
+      "name": "MXD-955",
+      "slug": "mxd-955",
+      "category": "Stand & Holder",
+      "description": "MXD-955 STAND.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-955_0.jpg",
+        "MXD-955_1.jpg",
+        "MXD-955_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-955"
+    },
+    {
+      "sku": "MXD-954",
+      "name": "MXD-954",
+      "slug": "mxd-954",
+      "category": "Stand & Holder",
+      "description": "MXD-954 HOLDER — AFFORDABLE PRICE AND HIGH QUALITY PRODUCT.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-954_0.jpg",
+        "MXD-954_1.jpg",
+        "MXD-954_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-954"
+    },
+    {
+      "sku": "MXD-977",
+      "name": "MXD-977",
+      "slug": "mxd-977",
+      "category": "Stand & Holder",
+      "description": "MXD-977 CAR PHONE BRACKET.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-977_0.jpg",
+        "MXD-977_1.jpg",
+        "MXD-977_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-977"
+    },
+    {
+      "sku": "MXD-982",
+      "name": "MXD-982",
+      "slug": "mxd-982",
+      "category": "Stand & Holder",
+      "description": "MXD-982 MOBILE PHONE HOLDER — HIGH FITNESS / STABLE WITHOUT SHAKING.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-982_0.jpg",
+        "MXD-982_1.jpg",
+        "MXD-982_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-982"
+    },
+    {
+      "sku": "MXD-981",
+      "name": "MXD-981",
+      "slug": "mxd-981",
+      "category": "Stand & Holder",
+      "description": "MXD-981 CAR HOLDER — EASY USE AND STABILITY.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-981_0.jpg",
+        "MXD-981_1.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-981"
+    },
+    {
+      "sku": "MXD-390",
+      "name": "MXD-390",
+      "slug": "mxd-390",
+      "category": "AirPods",
+      "description": "MEET THE MXD-390 AIRPODS — YOUR WIRELESS V5.4 SOLUTION. BLUETOOTH CONNECTIVITY UP TO 10M. UP TO 5 HOURS OF MUSIC AND 6 HOURS TALK TIME PER BUD. QUICK 90-MINUTE TYPE-C CHARGING. INCLUDES SILICONE CASE PROTECTION.",
+      "discount_pct": 53,
+      "images": [
+        "MXD-390_0.png",
+        "MXD-390_1.png",
+        "MXD-390_2.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-371-airpod"
+    },
+    {
+      "sku": "MXD-AP369",
+      "name": "MXD-AP369",
+      "slug": "mxd-ap369",
+      "category": "AirPods",
+      "description": "YOUR WIRELESS V5.3 SOLUTION. BLUETOOTH CONNECTIVITY UP TO 12M. QUICK 90-MINUTE TYPE-C CHARGING. BATTERY CAPACITY: 300mAh. HD VOICE ENABLED.",
+      "discount_pct": 53,
+      "images": [
+        "MXD-AP369_0.png",
+        "MXD-AP369_1.png",
+        "MXD-AP369_2.png",
+        "MXD-AP369_3.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-376-airpods"
+    },
+    {
+      "sku": "MXD-391",
+      "name": "MXD-391",
+      "slug": "mxd-391",
+      "category": "AirPods",
+      "description": "YOUR WIRELESS V5.4 SOLUTION. 35 HOURS MUSIC TIME. BLUETOOTH CONNECTIVITY UP TO 10M. ELEVATE YOUR AUDIO EXPERIENCE.",
+      "discount_pct": 20,
+      "images": [
+        "MXD-391_0.png",
+        "MXD-391_1.png",
+        "MXD-391_2.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-391"
+    },
+    {
+      "sku": "MXD-BT385",
+      "name": "MXD-BT385",
+      "slug": "mxd-bt385",
+      "category": "AirPods",
+      "description": "ENJOY WIRELESS ROCKBUDS V5.3. 6 HOURS OF MUSIC & 5 HOURS TALK TIME PER BUD. TOUCH CONTROL. CHARGE IN 90 MINUTES VIA TYPE-C.",
+      "discount_pct": 53,
+      "images": [
+        "MXD-_BT385_0.png",
+        "MXD-_BT385_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-385"
+    },
+    {
+      "sku": "MXD-396",
+      "name": "MXD-396",
+      "slug": "mxd-396",
+      "category": "AirPods",
+      "description": "EASY TOUCH FUNCTIONS! ENJOY UP TO 5 HOURS OF MUSIC TIME. HALL SWITCH FUNCTIONS.",
+      "discount_pct": 53,
+      "images": [
+        "MXD-396_0.jpg",
+        "MXD-396_1.jpg",
+        "MXD-396_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-396"
+    },
+    {
+      "sku": "MXD-864",
+      "name": "MXD-864",
+      "slug": "mxd-864",
+      "category": "AirPods",
+      "description": "MXD-864 AIRPODS — GOOD SOUND QUALITY AND AFFORDABLE PRICE.",
+      "discount_pct": 53,
+      "images": [
+        "MXD-864_0.jpg",
+        "MXD-864_1.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-864"
+    },
+    {
+      "sku": "MXD-452",
+      "name": "MXD 452",
+      "slug": "mxd-452",
+      "category": "Smart Watch",
+      "description": "AMAZING DISPLAY & PERFECT DESIGN.",
+      "discount_pct": 33,
+      "images": [
+        "MXD_452_0.png",
+        "MXD_452_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-452"
+    },
+    {
+      "sku": "MXD-811",
+      "name": "MXD-811 HI-FI",
+      "slug": "mxd-811-hifi",
+      "category": "Microphone",
+      "description": "MXD-811 15W WIRELESS SPEAKER. HI-FI & SING SONG. RECORDED SONG MIC REPLAY OPTIONS. PLAY/PAUSE, SCAN, PREV/NEXT, SELFIE, MIC ON/OFF AND INCREASE REMIX MANY INCLUDE SYSTEM.",
+      "discount_pct": 18,
+      "images": [
+        "MXD-811HI-FI_0.png",
+        "MXD-811HI-FI_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-811"
+    },
+    {
+      "sku": "MXD-902PRO",
+      "name": "MXD-902PRO",
+      "slug": "mxd-902pro",
+      "category": "Microphone",
+      "description": "WIRELESS SPEAKER, HI-FI SPEAKER. SING A SONG. HEAR CLEARLY AT A DISTANCE.",
+      "discount_pct": 18,
+      "images": [
+        "MXD-902PRO_0.png",
+        "MXD-902PRO_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-902"
+    },
+    {
+      "sku": "MXD-BN56",
+      "name": "MXD-BN 56",
+      "slug": "mxd-bn56",
+      "category": "Mobile Battery",
+      "description": "BATTERY CAPACITY IS VERY NICE. GOOD PERFORMANCE.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-BN_56_0.png",
+        "MXD-BN_56_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-bn-56"
+    },
+    {
+      "sku": "MXD-X-SERIES",
+      "name": "MXD-X SERIES",
+      "slug": "mxd-x-series",
+      "category": "Mobile Battery",
+      "description": "RECHARGEABLE LI-ION POLYMER BATTERY & CELL TEMPERATURE PROTECTION. DOUBLE SHORT CIRCUIT PROTECTION WITH OUTPUT OVERVOLTAGE PROTECTION.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-X_-_SERIES_0.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-battaery"
+    },
+    {
+      "sku": "MXD-LI-ION-GOLD",
+      "name": "MXD LI-ION GOLD",
+      "slug": "mxd-li-ion-gold",
+      "category": "Mobile Battery",
+      "description": "MXD LI-ION GOLD SMD & DOUBLE IC CONTROL PCB. OVER LOADED PROTECTION. CONTROL SWITCHES.",
+      "discount_pct": 50,
+      "images": [
+        "MXD-_LI-ION_GOLD_0.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-mobile-battery"
+    },
+    {
+      "sku": "MXD-DC407",
+      "name": "MXD-DC407",
+      "slug": "mxd-dc407",
+      "category": "Data Cable",
+      "description": "USB 3.1 A SYNC. OUTPUT & 1M CABLE. RATED VOLTAGE 5V-3.1A (MAX). SUPER COMPATIBLE. FAST TRANSMISSION, ANTI-WINDING, HIGH QUALITY MATERIAL.",
+      "discount_pct": 33,
+      "images": [
+        "MXD-DC407_0.png",
+        "MXD-DC407_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-407"
+    },
+    {
+      "sku": "MXD-DC614",
+      "name": "MXD-DC614",
+      "slug": "mxd-dc614",
+      "category": "Data Cable",
+      "description": "TYPE-C CONNECTIVITY! WITH 45W OUTPUT. AVAILABLE IN MICRO, TYPE-C & LIGHTNING. ANTI-KNOTTED FAST TRANSMISSION. SUPER CHROMIUM PLATING PROCESS & ANTI-WINDING.",
+      "discount_pct": 33,
+      "images": [
+        "MXD-_DC614_0.png",
+        "MXD-_DC614_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-614"
+    },
+    {
+      "sku": "MXD-DC410",
+      "name": "MXD DC410",
+      "slug": "mxd-dc410",
+      "category": "Data Cable",
+      "description": "3-IN-1 USB CABLE: 18W OUTPUT, 1200MM LENGTH. FEATURING TYPE-C, MICRO, AND LIGHTNING CONNECTORS IN WHITE DESIGN. ANTI-KNOTTED, SUPER COMPATIBLE & FAST CHARGING.",
+      "discount_pct": 33,
+      "images": [
+        "MXD_DC410_0.png",
+        "MXD_DC410_1.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-410"
+    },
+    {
+      "sku": "MXD-DC674",
+      "name": "MXD-DC674",
+      "slug": "mxd-dc674",
+      "category": "Data Cable",
+      "description": "MXD-674 CABLE — TYPE-C WITH 85W OUTPUT. FAST CHARGING SUPPORT. WITHSTANDS 10,000+ BENDS. 6MM THICK & 1000MM LONG.",
+      "discount_pct": 33,
+      "images": [
+        "MXD-DC674_0.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-674-85-w"
+    },
+    {
+      "sku": "MXD-DC661",
+      "name": "MXD-DC661",
+      "slug": "mxd-dc661",
+      "category": "Data Cable",
+      "description": "WITH 65W OUTPUT. BUILT FOR RELIABLE AND INNOVATION. TYPE-C CONNECTIVITY. FAST CHARGING SUPPORTED.",
+      "discount_pct": 33,
+      "images": [
+        "MXD-DC661_0.png"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-661"
+    },
+    {
+      "sku": "MXD-DC653",
+      "name": "MXD-DC653",
+      "slug": "mxd-dc653",
+      "category": "Data Cable",
+      "description": "PERFECT COMPATIBILITY WITH ANDROID MICRO USB PHONES! 4.1A MAX OUTPUT. HIGH QUALITY CONNECTOR & ANTI-RUST PLUG.",
+      "discount_pct": 33,
+      "images": [
+        "MXD_-DC653_0.jpg",
+        "MXD_-DC653_1.jpg",
+        "MXD_-DC653_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-653"
+    },
+    {
+      "sku": "MXD-720",
+      "name": "MXD-720",
+      "slug": "mxd-720",
+      "category": "Data Cable",
+      "description": "MXD-720 DATA CABLE.",
+      "discount_pct": 33,
+      "images": [
+        "MXD-720_0.jpg",
+        "MXD-720_1.jpg",
+        "MXD-720_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-720"
+    },
+    {
+      "sku": "MXD-605",
+      "name": "MXD-605 AUX CABLE",
+      "slug": "mxd-605-aux-cable",
+      "category": "Data Cable",
+      "description": "MXD-605 AUX CABLE.",
+      "discount_pct": 33,
+      "images": [
+        "MXD-605_AUX_CABLE_0.jpg",
+        "MXD-605_AUX_CABLE_1.jpg",
+        "MXD-605_AUX_CABLE_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-605-aux-cable"
+    },
+    {
+      "sku": "MXD-718",
+      "name": "MXD-718",
+      "slug": "mxd-718",
+      "category": "Data Cable",
+      "description": "MXD-718 DATA CABLE.",
+      "discount_pct": 33,
+      "images": [
+        "MXD-718_0.jpg",
+        "MXD-718_1.jpg",
+        "MXD-718_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-718"
+    },
+    {
+      "sku": "MXD-601",
+      "name": "MXD-601",
+      "slug": "mxd-601",
+      "category": "Data Cable",
+      "description": "MXD-601 AUX CABLE.",
+      "discount_pct": 33,
+      "images": [
+        "MXD-601_0.jpg",
+        "MXD-601_1.jpg",
+        "MXD-601_2.jpg"
+      ],
+      "source_url": "https://mxdindia.com/p/mxd-601"
+    }
+  ]
+}

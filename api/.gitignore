@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+
+# SQLite dev database — must not be committed (contains OTP codes and session data)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+dev.db

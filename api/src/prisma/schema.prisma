@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DealerStatus {
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+  REJECTED
+}
+
+enum BusinessType {
+  RETAIL_SHOP
+  WHOLESALER
+  DISTRIBUTOR
+  REPAIR_SHOP
+  ONLINE_SELLER
+  MOBILE_ACCESSORIES_STORE
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
+enum NotificationChannel {
+  WHATSAPP
+  SMS
+}
+
+enum InquiryStatus {
+  NEW
+  VIEWED
+  RESPONDED
+  CLOSED
+}
+
+model Dealer {
+  id              String       @id @default(cuid())
+  mobile          String       @unique
+  ownerName       String
+  shopName        String
+  whatsappNumber  String
+  altMobile       String?
+  city            String
+  tehsil          String
+  district        String
+  state           String
+  country         String       @default("India")
+  pincode         String
+  gstNumber       String?
+  businessType    BusinessType
+  status          DealerStatus @default(ACTIVE)
+  lastRevokedAt   DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  sessions              Session[]
+  cartItems             CartItem[]
+  inquiries             InquiryLog[]
+  notificationSubs      NotificationSubscription[]
+  moderationLogs        ModerationLog[]
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  dealerId    String
+  dealer      Dealer   @relation(fields: [dealerId], references: [id])
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  mobile    String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([mobile])
+  @@index([expiresAt])
+}
+
+model Category {
+  id           String     @id @default(cuid())
+  name         String
+  slug         String     @unique
+  description  String     @default("")
+  image        String     @default("")
+  active       Boolean    @default(true)
+  parentId     String?
+  parent       Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children     Category[] @relation("CategoryTree")
+  displayOrder Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  products     Product[]
+  attributeTypes AttributeType[]
+}
+
+model AttributeType {
+  id          String    @id @default(cuid())
+  name        String
+  unit        String?
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  attributes  ProductAttribute[]
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  name          String
+  brand         String
+  sku           String      @unique
+  description   String?
+  moq           Int         @default(1)
+  stockStatus   StockStatus @default(IN_STOCK)
+  stockQty      Int         @default(0)
+  images        String[]    @default([])
+  price          Float?
+  pricingActive  Boolean     @default(false)
+  isNewArrival   Boolean     @default(false)
+  categoryId     String?
+  category      Category?   @relation(fields: [categoryId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  attributes           ProductAttribute[]
+  compatibilityTags    CompatibilityTag[]
+  cartItems            CartItem[]
+  notificationSubs     NotificationSubscription[]
+  notificationLogs     NotificationLog[]
+
+  @@index([brand])
+  @@index([stockStatus])
+  @@index([categoryId])
+}
+
+model ProductAttribute {
+  id              String        @id @default(cuid())
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeTypeId String
+  attributeType   AttributeType @relation(fields: [attributeTypeId], references: [id])
+  value           String
+}
+
+model CompatibilityTag {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       String
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  dealerId  String
+  dealer    Dealer   @relation(fields: [dealerId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dealerId, productId])
+}
+
+model InquiryLog {
+  id             String        @id @default(cuid())
+  dealerId       String
+  dealer         Dealer        @relation(fields: [dealerId], references: [id])
+  cartSnapshot   Json          @default("[]")
+  whatsappSentAt DateTime      @default(now())
+  status         InquiryStatus @default(NEW)
+  createdAt      DateTime      @default(now())
+}
+
+model NotificationSubscription {
+  id          String   @id @default(cuid())
+  dealerId    String?
+  dealer      Dealer?  @relation(fields: [dealerId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  phoneNumber String
+  createdAt   DateTime @default(now())
+
+  @@unique([phoneNumber, productId])
+}
+
+model NotificationLog {
+  id             String              @id @default(cuid())
+  productId      String
+  product        Product             @relation(fields: [productId], references: [id])
+  recipientPhone String
+  channel        NotificationChannel
+  message        String
+  status         String              @default("sent")
+  sentAt         DateTime            @default(now())
+}
+
+model GeoRestriction {
+  id        String   @id @default(cuid())
+  state     String
+  district  String   @default("")
+  allowed   Boolean  @default(true)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([state, district])
+}
+
+model AdminUser {
+  id             String   @id @default(cuid())
+  username       String   @unique
+  passwordHash   String
+  role           String   @default("STAFF")
+  createdAt      DateTime @default(now())
+  moderationLogs ModerationLog[]
+}
+
+model ModerationLog {
+  id        String    @id @default(cuid())
+  dealerId  String
+  dealer    Dealer    @relation(fields: [dealerId], references: [id])
+  action    String
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id])
+  reason    String?
+  createdAt DateTime  @default(now())
+}
+
+enum BannerType {
+  SIMPLE
+  PRODUCT_PROMO
+  BRAND_PROMO
+}
+
+model Brand {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  slug         String   @unique
+  logo         String   @default("")
+  active       Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SystemSettings {
+  id                  Int      @id @default(1)
+  whatsappNumber      String   @default("")
+  msg91ApiKey         String   @default("")
+  cloudinaryCloud     String   @default("")
+  cloudinaryApiKey    String   @default("")
+  cloudinaryApiSecret String   @default("")
+  updatedAt           DateTime @updatedAt
+}
+
+model Banner {
+  id            String     @id @default(cuid())
+  bannerType    BannerType @default(SIMPLE)
+  title         String
+  subtitle      String     @default("")
+  ctaText       String     @default("Browse Catalog")
+  ctaLink       String     @default("/catalog")
+  image         String     @default("")
+  bgColor       String     @default("#1A1A2E")
+  accentColor   String     @default("#F47920")
+  logoImage     String     @default("")
+  productImage1 String     @default("")
+  productImage2 String     @default("")
+  productImage3 String     @default("")
+  overlayOpacity Float     @default(0.35)
+  textAlignment String     @default("left")
+  active        Boolean    @default(true)
+  displayOrder  Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
