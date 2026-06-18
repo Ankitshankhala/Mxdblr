@@ -183,8 +183,9 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
           )}
         </form>
 
-        {/* Right actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        {/* Right actions — marginLeft:auto pins this to the right edge on mobile,
+            where the flex:1 search bar is hidden and no longer pushes it over. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 'auto' }}>
           {/* Mobile search icon */}
           <button
             type="button"
