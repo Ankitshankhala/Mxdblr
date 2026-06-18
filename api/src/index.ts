@@ -38,6 +38,8 @@ import adminSettingsRouter from './routes/admin/settings';
 import adminUploadRouter from './routes/admin/upload';
 import bannersRouter from './routes/banners';
 import brandsRouter from './routes/brands';
+import announcementsRouter from './routes/announcements';
+import adminAnnouncementsRouter from './routes/admin/announcements';
 
 const app = express();
 // Trust the first proxy hop so req.ip reflects the real client IP
@@ -99,6 +101,7 @@ app.use('/api/products', geoCheckMiddleware, productsRouter);
 app.use('/api/categories', geoCheckMiddleware, categoriesRouter);
 app.use('/api/banners', bannersRouter);
 app.use('/api/brands', brandsRouter);
+app.use('/api/announcements', announcementsRouter);
 
 // Auth-required dealer routes
 app.use('/api/cart', cartRouter);
@@ -119,6 +122,7 @@ app.use('/api/admin/banners', adminBannersRouter);
 app.use('/api/admin/brands', adminBrandsRouter);
 app.use('/api/admin/settings', adminSettingsRouter);
 app.use('/api/admin/upload', adminUploadRouter);
+app.use('/api/admin/announcements', adminAnnouncementsRouter);
 
 // Local image uploads (dev fallback — used when Cloudinary credentials are not set).
 // Override CORP header: helmet() sets same-origin by default, which blocks <img> tags

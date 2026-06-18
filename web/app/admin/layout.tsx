@@ -30,6 +30,16 @@ const NAV_ITEMS = [
     ),
   },
   {
+    href: "/admin/announcements",
+    label: "Announcements",
+    icon: (
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="m3 11 18-5v12L3 14v-3z" />
+        <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/products",
     label: "Products",
     icon: (
@@ -128,6 +138,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/geo": "Geo Restrictions",
   "/admin/settings": "Settings",
   "/admin/banners": "Hero Banners",
+  "/admin/announcements": "Announcements",
 };
 
 // Detects viewport width below breakpoint, SSR-safe (starts false, resolves after mount)

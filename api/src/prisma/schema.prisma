@@ -127,6 +127,7 @@ model Product {
   price          Float?
   pricingActive  Boolean     @default(false)
   isNewArrival   Boolean     @default(false)
+  isBestSeller   Boolean     @default(false)
   categoryId     String?
   category      Category?   @relation(fields: [categoryId], references: [id])
   createdAt     DateTime    @default(now())
@@ -284,4 +285,15 @@ model Banner {
   displayOrder  Int        @default(0)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+}
+
+// Scrolling announcement bar messages shown on the home page marquee.
+// Admin-editable via /admin/announcements.
+model Announcement {
+  id           String   @id @default(cuid())
+  text         String
+  active       Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
