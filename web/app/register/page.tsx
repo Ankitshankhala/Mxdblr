@@ -209,7 +209,7 @@ export default function RegisterPage() {
 
         {/* Form card */}
         <div className="card" style={{ padding: 28 }}>
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {step === 0 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                 <h2 style={{ fontWeight: 800, fontSize: 18, marginBottom: 20 }}>Business Information</h2>

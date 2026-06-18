@@ -142,7 +142,7 @@ export default function AuthPage() {
           padding: 32,
         }}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {step === 'mobile' && (
             <motion.div
               key="mobile"
