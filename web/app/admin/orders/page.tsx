@@ -301,8 +301,8 @@ function OrdersContent() {
       {/* View Inquiry Modal */}
       {viewInquiry && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 520 }}>
-            <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 520, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>Inquiry Details</div>
                 <div style={{ fontSize: 11, color: "#6B6B7D", fontFamily: "monospace", marginTop: 2 }}>
@@ -314,7 +314,7 @@ function OrdersContent() {
               </button>
             </div>
 
-            <div style={{ padding: "20px 24px" }}>
+            <div style={{ padding: "20px 24px", overflowY: "auto", flex: 1 }}>
               {/* Dealer info */}
               <div style={{ background: "#F8F6F2", borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "#6B6B7D", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Dealer</div>
@@ -378,7 +378,7 @@ function OrdersContent() {
               </div>
             </div>
 
-            <div style={{ padding: "14px 24px", borderTop: "1px solid #E8E4DE", display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <div style={{ padding: "14px 24px", borderTop: "1px solid #E8E4DE", display: "flex", justifyContent: "flex-end", gap: 10, flexShrink: 0 }}>
               <button
                 onClick={() => setViewInquiry(null)}
                 style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
