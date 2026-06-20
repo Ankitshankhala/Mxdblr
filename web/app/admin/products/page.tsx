@@ -17,6 +17,7 @@ type Product = {
   moq: number;
   stockStatus: string;
   isNewArrival: boolean;
+  isBestSeller: boolean;
   images: string[];
   description: string;
   attributes: any[];
@@ -45,7 +46,8 @@ interface ApiCategory { id: string; name: string; slug: string; }
 
 const EMPTY_PRODUCT: Omit<Product, "id"> = {
   name: "", brand: "MXD", sku: "", category: "", moq: 10,
-  stockStatus: "IN_STOCK", images: [], description: "", attributes: [{ key: "", value: "" }],
+  stockStatus: "IN_STOCK", isNewArrival: false, isBestSeller: false,
+  images: [], description: "", attributes: [{ key: "", value: "" }],
 };
 
 const CSV_TEMPLATE =
@@ -211,8 +213,8 @@ function ProductsContent() {
     setForm({
       name: p.name, brand: p.brand, sku: p.sku,
       category: getCategoryName(p.category), moq: p.moq,
-      stockStatus: p.stockStatus, images: [...p.images],
-      description: p.description, attributes: normAttrs,
+      stockStatus: p.stockStatus, isNewArrival: p.isNewArrival, isBestSeller: p.isBestSeller,
+      images: [...p.images], description: p.description, attributes: normAttrs,
     });
     setShowModal(true);
   }
@@ -250,6 +252,20 @@ function ProductsContent() {
       setShowDeleteConfirm(null);
       loadProducts();
     } catch { showToast("Failed to delete", "error"); }
+  }
+
+  async function handleToggleBestSeller(p: Product) {
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await fetch(`${API_BASE}/admin/products/${p.id}/best-seller`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ isBestSeller: !p.isBestSeller }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      showToast(p.isBestSeller ? "Removed from Best Sellers" : "Marked as Best Seller");
+      setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, isBestSeller: !p.isBestSeller } : x));
+    } catch { showToast("Failed to update", "error"); }
   }
 
   async function handleToggleNewArrival(p: Product) {
@@ -530,14 +546,14 @@ function ProductsContent() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
-                {["Image", "Name", "Brand", "SKU", "Category", "MOQ", "Stock Status", "New Arrival", "Actions"].map((h) => (
+                {["Image", "Name", "Brand", "SKU", "Category", "MOQ", "Stock Status", "Best Seller", "New Arrival", "Actions"].map((h) => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={9} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading products…</td></tr>
+                <tr><td colSpan={10} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading products…</td></tr>
               )}
               {!loading && products.map((p) => (
                 <tr key={p.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
@@ -562,6 +578,25 @@ function ProductsContent() {
                   <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{getCategoryName(p.category)}</td>
                   <td style={{ padding: "10px 14px", fontWeight: 600 }}>{p.moq}</td>
                   <td style={{ padding: "10px 14px" }}><StatusBadge status={p.stockStatus} /></td>
+                  <td style={{ padding: "10px 14px" }}>
+                    <button
+                      onClick={() => handleToggleBestSeller(p)}
+                      title={p.isBestSeller ? "Remove from Best Sellers" : "Mark as Best Seller"}
+                      style={{
+                        padding: "3px 10px",
+                        borderRadius: 6,
+                        border: p.isBestSeller ? "1px solid #6366F1" : "1px solid #E8E4DE",
+                        background: p.isBestSeller ? "#EEF2FF" : "#fff",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        color: p.isBestSeller ? "#6366F1" : "#6B6B7D",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {p.isBestSeller ? "★ Top Pick" : "☆ Add"}
+                    </button>
+                  </td>
                   <td style={{ padding: "10px 14px" }}>
                     <button
                       onClick={() => handleToggleNewArrival(p)}
@@ -590,7 +625,7 @@ function ProductsContent() {
                 </tr>
               ))}
               {!loading && products.length === 0 && (
-                <tr><td colSpan={9} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No products found</td></tr>
+                <tr><td colSpan={10} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No products found</td></tr>
               )}
             </tbody>
           </table>

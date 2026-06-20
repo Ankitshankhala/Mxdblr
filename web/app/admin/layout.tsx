@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState, useCallback } from "react";
 import { ToastProvider } from "@/components/admin/Toast";
+import { AdminAuthProvider, useAdminAuth, Permission } from "@/lib/admin/auth";
 
 const NAV_ITEMS = [
   {
@@ -116,6 +117,38 @@ const NAV_ITEMS = [
     ),
   },
   {
+    href: "/admin/roles",
+    label: "Roles & Permissions",
+    icon: (
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/staff",
+    label: "Staff",
+    icon: (
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <circle cx="9" cy="10" r="2" />
+        <path d="M15 9h3M15 13h3M7 16h10" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/audit-logs",
+    label: "Audit Log",
+    icon: (
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+        <rect x="9" y="3" width="6" height="4" rx="1" />
+        <path d="M9 12h6M9 16h6" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/settings",
     label: "Settings",
     icon: (
@@ -136,10 +169,48 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/orders": "Orders",
   "/admin/notifications": "Notifications",
   "/admin/geo": "Geo Restrictions",
+  "/admin/roles": "Roles & Permissions",
+  "/admin/staff": "Staff",
+  "/admin/audit-logs": "Audit Log",
   "/admin/settings": "Settings",
   "/admin/banners": "Hero Banners",
   "/admin/announcements": "Announcements",
 };
+
+// Permission(s) required to see a nav item / access a route. A route requires the
+// user to hold AT LEAST ONE of the listed permissions. Used for BOTH menu filtering
+// and the route-level access gate. The API enforces the same rules server-side — this
+// is the UX layer (hide menu items, block direct-URL access with a 403 screen).
+const ROUTE_PERMISSIONS: Record<string, Permission[]> = {
+  "/admin": ["VIEW_DASHBOARD"],
+  "/admin/products": ["MANAGE_PRODUCTS", "MANAGE_INVENTORY"],
+  "/admin/categories": ["MANAGE_PRODUCTS"],
+  "/admin/brands": ["MANAGE_PRODUCTS"],
+  "/admin/banners": ["MANAGE_PRODUCTS"],
+  "/admin/announcements": ["MANAGE_PRODUCTS"],
+  "/admin/dealers": ["MANAGE_CUSTOMERS"],
+  "/admin/notifications": ["MANAGE_CUSTOMERS"],
+  "/admin/orders": ["CREATE_ORDERS", "EDIT_ORDERS", "VIEW_REPORTS"],
+  "/admin/geo": ["SYSTEM_SETTINGS"],
+  "/admin/settings": ["SYSTEM_SETTINGS"],
+  "/admin/roles": ["MANAGE_ROLES"],
+  "/admin/staff": ["MANAGE_STAFF", "MANAGE_ADMINS"],
+  "/admin/audit-logs": ["MANAGE_ROLES", "MANAGE_ADMINS"],
+};
+
+// Resolve the required permissions for a pathname via longest-prefix match, so nested
+// routes (e.g. /admin/products/123) inherit their section's requirement.
+function requiredPermissionsForPath(pathname: string): Permission[] | null {
+  if (ROUTE_PERMISSIONS[pathname]) return ROUTE_PERMISSIONS[pathname];
+  let best: { len: number; perms: Permission[] } | null = null;
+  for (const [route, perms] of Object.entries(ROUTE_PERMISSIONS)) {
+    if (route === "/admin") continue; // exact-only; never a prefix for everything
+    if (pathname === route || pathname.startsWith(route + "/")) {
+      if (!best || route.length > best.len) best = { len: route.length, perms };
+    }
+  }
+  return best?.perms ?? null;
+}
 
 // Detects viewport width below breakpoint, SSR-safe (starts false, resolves after mount)
 function useIsMobile(breakpoint = 768) {
@@ -164,6 +235,13 @@ interface SidebarProps {
 function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { hasAny, loading } = useAdminAuth();
+
+  // Only show nav items the user is permitted to access (UX layer; API still enforces).
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    const perms = ROUTE_PERMISSIONS[item.href];
+    return !perms || hasAny(...perms);
+  });
 
   function handleLogout() {
     localStorage.removeItem("adminToken");
@@ -272,7 +350,10 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
           overflowY: "auto",
         }}
       >
-        {NAV_ITEMS.map((item) => {
+        {loading && (
+          <div style={{ padding: "10px 12px", fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Loading menu…</div>
+        )}
+        {!loading && visibleItems.map((item) => {
           const active = isActive(item);
           return (
             <Link
@@ -450,6 +531,42 @@ function AdminTopBar({ isMobile, onHamburgerClick }: TopBarProps) {
   );
 }
 
+function AccessDenied({ roleName }: { roleName: string | null }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center", padding: 24 }}>
+      <div style={{ fontSize: 48, fontWeight: 900, color: "#E8E4DE", lineHeight: 1 }}>403</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "#1A1A2E", marginTop: 12 }}>Access Denied</div>
+      <p style={{ fontSize: 13, color: "#6B6B7D", marginTop: 8, maxWidth: 360 }}>
+        Your role{roleName ? ` (${roleName})` : ""} does not have permission to view this page.
+        Contact a Super Admin if you believe this is a mistake.
+      </p>
+      <Link href="/admin" style={{ marginTop: 18, padding: "9px 18px", borderRadius: 8, background: "#F47920", color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+        Back to Dashboard
+      </Link>
+    </div>
+  );
+}
+
+// Blocks direct-URL access to pages the user lacks permission for (UX layer; the API
+// enforces the same server-side). Renders a loader until permissions resolve.
+function RouteGate({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const { me, loading, hasAny } = useAdminAuth();
+  const required = requiredPermissionsForPath(pathname);
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", color: "#6B6B7D", fontSize: 14 }}>
+        Loading…
+      </div>
+    );
+  }
+  if (required && !hasAny(...required)) {
+    return <AccessDenied roleName={me?.role?.name ?? null} />;
+  }
+  return <>{children}</>;
+}
+
 function ProtectedShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -574,7 +691,7 @@ function ProtectedShell({ children }: { children: ReactNode }) {
             maxWidth: "100%",
           }}
         >
-          {children}
+          <RouteGate>{children}</RouteGate>
         </main>
       </div>
     </div>
@@ -589,10 +706,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return <ToastProvider>{children}</ToastProvider>;
   }
 
-  // All other /admin/* routes: protected shell with auth gate
+  // All other /admin/* routes: protected shell with auth gate + permission context
   return (
     <ToastProvider>
-      <ProtectedShell>{children}</ProtectedShell>
+      <AdminAuthProvider>
+        <ProtectedShell>{children}</ProtectedShell>
+      </AdminAuthProvider>
     </ToastProvider>
   );
 }

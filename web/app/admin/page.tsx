@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatCard from "@/components/admin/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
+import { useAdminAuth } from "@/lib/admin/auth";
 
 function useIsMobile(bp = 768) {
   const [v, setV] = useState(false);
@@ -49,11 +50,17 @@ interface StockAlertProduct {
 
 function DashboardContent() {
   const isMobile = useIsMobile();
+  const { hasAny } = useAdminAuth();
   const [stats, setStats] = useState({ dealers: 0, inquiriesToday: 0, lowStock: 0, outOfStock: 0 });
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(true);
   const [stockAlerts, setStockAlerts] = useState<StockAlertProduct[]>([]);
   const [stockAlertsLoading, setStockAlertsLoading] = useState(true);
+
+  // Only show (and only fetch) the sections this role can access.
+  const canCustomers = hasAny("MANAGE_CUSTOMERS");
+  const canOrders = hasAny("CREATE_ORDERS", "EDIT_ORDERS", "VIEW_REPORTS");
+  const canStock = hasAny("MANAGE_INVENTORY", "MANAGE_PRODUCTS");
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -66,53 +73,59 @@ function DashboardContent() {
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
     // Total dealer count
-    fetch(`${API_BASE}/admin/dealers?limit=1`, { headers })
-      .then((r) => r.json())
-      .then((d) => setStats((s) => ({ ...s, dealers: d.pagination?.total ?? 0 })))
-      .catch(() => {});
+    if (canCustomers) {
+      fetch(`${API_BASE}/admin/dealers?limit=1`, { headers })
+        .then((r) => r.json())
+        .then((d) => setStats((s) => ({ ...s, dealers: d.pagination?.total ?? 0 })))
+        .catch(() => {});
+    }
 
-    // Inquiries submitted today
-    fetch(
-      `${API_BASE}/admin/inquiries?limit=1&from=${todayStart.toISOString()}&to=${tomorrowStart.toISOString()}`,
-      { headers }
-    )
-      .then((r) => r.json())
-      .then((d) => setStats((s) => ({ ...s, inquiriesToday: d.pagination?.total ?? 0 })))
-      .catch(() => {});
+    // Inquiries submitted today + recent inquiries
+    if (canOrders) {
+      fetch(
+        `${API_BASE}/admin/inquiries?limit=1&from=${todayStart.toISOString()}&to=${tomorrowStart.toISOString()}`,
+        { headers }
+      )
+        .then((r) => r.json())
+        .then((d) => setStats((s) => ({ ...s, inquiriesToday: d.pagination?.total ?? 0 })))
+        .catch(() => {});
 
-    // Stock stats — use aggregate endpoint, not a page of 100 products
-    fetch(`${API_BASE}/admin/products/stock-summary`, { headers })
-      .then((r) => r.json())
-      .then((d) => {
-        const summary: Array<{ stockStatus: string; _count: { stockStatus: number } }> = d.data || [];
-        const low = summary.find((s) => s.stockStatus === "LOW_STOCK")?._count.stockStatus ?? 0;
-        const out = summary.find((s) => s.stockStatus === "OUT_OF_STOCK")?._count.stockStatus ?? 0;
-        setStats((s) => ({ ...s, lowStock: low, outOfStock: out }));
-      })
-      .catch(() => {});
+      fetch(`${API_BASE}/admin/inquiries?limit=5&page=1`, { headers })
+        .then((r) => r.json())
+        .then((d) => setInquiries(d.data ?? []))
+        .catch(() => {})
+        .finally(() => setInquiriesLoading(false));
+    } else {
+      setInquiriesLoading(false);
+    }
 
-    // Stock alert products (low stock + out of stock, up to 10)
-    Promise.all([
-      fetch(`${API_BASE}/admin/products?stockStatus=LOW_STOCK&limit=5`, { headers }).then((r) => r.json()),
-      fetch(`${API_BASE}/admin/products?stockStatus=OUT_OF_STOCK&limit=5`, { headers }).then((r) => r.json()),
-    ])
-      .then(([lowRes, outRes]) => {
-        const lowItems: StockAlertProduct[] = (lowRes.products || []).map((p: { name: string; sku: string }) => ({ ...p, status: "LOW_STOCK" }));
-        const outItems: StockAlertProduct[] = (outRes.products || []).map((p: { name: string; sku: string }) => ({ ...p, status: "OUT_OF_STOCK" }));
-        setStockAlerts([...lowItems, ...outItems].slice(0, 8));
-      })
-      .catch(() => {})
-      .finally(() => setStockAlertsLoading(false));
+    // Stock stats + alerts
+    if (canStock) {
+      fetch(`${API_BASE}/admin/products/stock-summary`, { headers })
+        .then((r) => r.json())
+        .then((d) => {
+          const summary: Array<{ stockStatus: string; _count: { stockStatus: number } }> = d.data || [];
+          const low = summary.find((s) => s.stockStatus === "LOW_STOCK")?._count.stockStatus ?? 0;
+          const out = summary.find((s) => s.stockStatus === "OUT_OF_STOCK")?._count.stockStatus ?? 0;
+          setStats((s) => ({ ...s, lowStock: low, outOfStock: out }));
+        })
+        .catch(() => {});
 
-    // Recent inquiries — last 5
-    fetch(`${API_BASE}/admin/inquiries?limit=5&page=1`, { headers })
-      .then((r) => r.json())
-      .then((d) => {
-        setInquiries(d.data ?? []);
-      })
-      .catch(() => {})
-      .finally(() => setInquiriesLoading(false));
-  }, []);
+      Promise.all([
+        fetch(`${API_BASE}/admin/products?stockStatus=LOW_STOCK&limit=5`, { headers }).then((r) => r.json()),
+        fetch(`${API_BASE}/admin/products?stockStatus=OUT_OF_STOCK&limit=5`, { headers }).then((r) => r.json()),
+      ])
+        .then(([lowRes, outRes]) => {
+          const lowItems: StockAlertProduct[] = (lowRes.products || []).map((p: { name: string; sku: string }) => ({ ...p, status: "LOW_STOCK" }));
+          const outItems: StockAlertProduct[] = (outRes.products || []).map((p: { name: string; sku: string }) => ({ ...p, status: "OUT_OF_STOCK" }));
+          setStockAlerts([...lowItems, ...outItems].slice(0, 8));
+        })
+        .catch(() => {})
+        .finally(() => setStockAlertsLoading(false));
+    } else {
+      setStockAlertsLoading(false);
+    }
+  }, [canCustomers, canOrders, canStock]);
 
   return (
     <div>
@@ -125,6 +138,7 @@ function DashboardContent() {
           marginBottom: isMobile ? 16 : 24,
         }}
       >
+        {canCustomers && (
         <StatCard
           value={stats.dealers}
           label="Total Dealers"
@@ -139,6 +153,8 @@ function DashboardContent() {
             </svg>
           }
         />
+        )}
+        {canOrders && (
         <StatCard
           value={stats.inquiriesToday}
           label="Inquiries Today"
@@ -153,6 +169,8 @@ function DashboardContent() {
             </svg>
           }
         />
+        )}
+        {canStock && (<>
         <StatCard
           value={stats.lowStock}
           label="Low Stock Products"
@@ -179,6 +197,7 @@ function DashboardContent() {
             </svg>
           }
         />
+        </>)}
       </div>
 
       {/* Main content — single column on mobile, two columns on desktop */}
@@ -191,6 +210,7 @@ function DashboardContent() {
         }}
       >
         {/* Recent Inquiries Table */}
+        {canOrders && (
         <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
           <div style={{ padding: "16px 20px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>Recent Inquiries</div>
@@ -256,8 +276,10 @@ function DashboardContent() {
             </table>
           </div>
         </div>
+        )}
 
         {/* Low Stock Alert Panel */}
+        {canStock && (
         <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
           <div style={{ padding: "16px 20px", borderBottom: "1px solid #E8E4DE", display: "flex", alignItems: "center", gap: 8 }}>
             <svg width="14" height="14" fill="none" stroke="#F59E0B" strokeWidth="2" viewBox="0 0 24 24">
@@ -304,6 +326,7 @@ function DashboardContent() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );
