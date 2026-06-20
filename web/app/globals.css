@@ -89,6 +89,30 @@ body {
 }
 .btn-whatsapp:hover { opacity: 0.92; }
 
+/* Floating WhatsApp chat button (customer-facing pages) */
+.float-wa {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  z-index: 900;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.float-wa:hover { transform: scale(1.06); box-shadow: 0 8px 26px rgba(37, 211, 102, 0.55); }
+.float-wa:focus-visible { outline: 3px solid #1A1A2E; outline-offset: 3px; }
+/* Lift above the mobile bottom navigation bar on small screens */
+@media (max-width: 768px) {
+  .float-wa { bottom: 84px; right: 16px; width: 52px; height: 52px; }
+}
+
 .btn-ghost {
   display: inline-flex;
   align-items: center;

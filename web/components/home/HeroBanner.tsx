@@ -79,12 +79,56 @@ const FALLBACK_BANNERS: Banner[] = [
 ];
 
 const AUTO_PLAY_INTERVAL = 4500;
+const MOBILE_BREAKPOINT = 768;
 
-function BannerContent({ b, current, banners }: { b: Banner; current: number; banners: Banner[] }) {
-  const productImages = [b.productImage1, b.productImage2, b.productImage3].filter(Boolean);
+// API origin derived from NEXT_PUBLIC_API_URL (strip the trailing /api).
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").replace(/\/api\/?$/, "");
+
+// Banner images are stored as absolute dev URLs (http://localhost:4000/uploads/...).
+// "localhost" is unreachable from a phone on the LAN, so rewrite the /uploads host
+// to the configured API origin. Cloudinary/remote URLs (no /uploads segment) pass
+// through untouched, so this is safe in production.
+function normalizeImg(url: string): string {
+  if (!url) return url;
+  if (/^https?:\/\/[^/]+\/uploads\//.test(url)) {
+    return url.replace(/^https?:\/\/[^/]+(\/uploads\/)/, `${API_ORIGIN}$1`);
+  }
+  if (url.startsWith("/uploads/")) return `${API_ORIGIN}${url}`;
+  return url;
+}
+
+// SSR-safe viewport detector: defaults to desktop on the server + first client
+// render (so hydration matches), then corrects on mount. 768px matches the
+// (max-width: 768px) breakpoint used elsewhere in the app.
+function useIsMobile(breakpoint = MOBILE_BREAKPOINT) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [breakpoint]);
+  return isMobile;
+}
+
+function BannerContent({
+  b,
+  current,
+  banners,
+  isMobile,
+}: {
+  b: Banner;
+  current: number;
+  banners: Banner[];
+  isMobile: boolean;
+}) {
+  const productImages = [b.productImage1, b.productImage2, b.productImage3].filter(Boolean).map(normalizeImg);
   const isProductPromo = b.bannerType === "PRODUCT_PROMO";
   const isBrandPromo = b.bannerType === "BRAND_PROMO";
   const hasRightPanel = (isProductPromo && productImages.length > 0) || (isBrandPromo && b.logoImage);
+  // On mobile we always stack into a single centered column regardless of config.
+  const centered = !isMobile && b.textAlignment === "center";
 
   return (
     <div
@@ -93,16 +137,24 @@ function BannerContent({ b, current, banners }: { b: Banner; current: number; ba
         zIndex: 1,
         maxWidth: 1280,
         margin: "0 auto",
-        padding: "56px 24px",
+        padding: isMobile ? "40px 20px 56px" : "56px 24px",
         width: "100%",
         display: "flex",
+        flexDirection: isMobile ? "column" : "row",
         alignItems: "center",
-        gap: 40,
-        justifyContent: b.textAlignment === "center" ? "center" : "space-between",
+        gap: isMobile ? 28 : 40,
+        justifyContent: centered ? "center" : "space-between",
       }}
     >
       {/* Text side */}
-      <div style={{ flex: 1, maxWidth: hasRightPanel ? 560 : 640, textAlign: b.textAlignment === "center" ? "center" : "left" }}>
+      <div
+        style={{
+          flex: isMobile ? "none" : 1,
+          width: isMobile ? "100%" : undefined,
+          maxWidth: isMobile ? "100%" : hasRightPanel ? 560 : 640,
+          textAlign: centered ? "center" : "left",
+        }}
+      >
         {/* Accent pill */}
         <div
           style={{
@@ -144,11 +196,21 @@ function BannerContent({ b, current, banners }: { b: Banner; current: number; ba
           )}
         </h1>
 
-        <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, lineHeight: 1.65, marginBottom: 32, maxWidth: 480 }}>
+        <p
+          style={{
+            color: "rgba(255,255,255,0.55)",
+            fontSize: 15,
+            lineHeight: 1.65,
+            marginBottom: 32,
+            maxWidth: isMobile ? "100%" : 480,
+            marginLeft: centered ? "auto" : undefined,
+            marginRight: centered ? "auto" : undefined,
+          }}
+        >
           {b.subtitle}
         </p>
 
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: b.textAlignment === "center" ? "center" : "flex-start" }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: centered ? "center" : "flex-start" }}>
           <Link
             href={b.ctaLink}
             style={{
@@ -191,43 +253,50 @@ function BannerContent({ b, current, banners }: { b: Banner; current: number; ba
         <div
           style={{
             flexShrink: 0,
+            width: isMobile ? "100%" : undefined,
             display: "flex",
-            flexDirection: "column",
+            flexDirection: isMobile ? "row" : "column",
+            flexWrap: isMobile ? "wrap" : "nowrap",
             gap: 12,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          {productImages.map((img, i) => (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              key={i}
-              src={img}
-              alt={`Product ${i + 1}`}
-              style={{
-                width: productImages.length === 1 ? 260 : productImages.length === 2 ? 200 : 160,
-                height: productImages.length === 1 ? 260 : productImages.length === 2 ? 200 : 160,
-                objectFit: "contain",
-                filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.4))",
-                transition: "transform 0.3s ease",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLImageElement).style.transform = "translateY(-4px) scale(1.03)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLImageElement).style.transform = "")}
-            />
-          ))}
+          {productImages.map((img, i) => {
+            const desktopSize = productImages.length === 1 ? 260 : productImages.length === 2 ? 200 : 160;
+            const mobileSize = productImages.length === 1 ? 180 : productImages.length === 2 ? 132 : 104;
+            const size = isMobile ? mobileSize : desktopSize;
+            return (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                key={i}
+                src={img}
+                alt={`Product ${i + 1}`}
+                style={{
+                  width: size,
+                  height: size,
+                  objectFit: "contain",
+                  filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.4))",
+                  transition: "transform 0.3s ease",
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLImageElement).style.transform = "translateY(-4px) scale(1.03)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLImageElement).style.transform = "")}
+              />
+            );
+          })}
         </div>
       )}
 
       {/* Right panel — Brand Promo */}
       {isBrandPromo && b.logoImage && (
-        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ flexShrink: 0, width: isMobile ? "100%" : undefined, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={b.logoImage}
+            src={normalizeImg(b.logoImage)}
             alt="Brand logo"
             style={{
-              maxWidth: 240,
-              maxHeight: 200,
+              maxWidth: isMobile ? 180 : 240,
+              maxHeight: isMobile ? 140 : 200,
               objectFit: "contain",
               filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.3))",
             }}
@@ -243,6 +312,8 @@ export default function HeroBanner() {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isMobile = useIsMobile();
+  const minHeight = isMobile ? 340 : 420;
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/banners`)
@@ -273,22 +344,26 @@ export default function HeroBanner() {
 
   return (
     <section
-      style={{ position: "relative", overflow: "hidden", minHeight: 420 }}
+      style={{ position: "relative", overflow: "hidden", minHeight }}
       onMouseEnter={pause}
       onMouseLeave={resume}
     >
-      <div style={{ position: "relative", width: "100%", minHeight: 420 }}>
+      <div style={{ position: "relative", width: "100%", minHeight }}>
         {banners.map((b, i) => (
           <div
             key={b.id}
             style={{
-              position: i === 0 ? "relative" : "absolute",
+              // The CURRENT slide is relative so it sizes the container to its
+              // own (possibly tall, stacked-on-mobile) content — others are
+              // absolute for the crossfade. This prevents mobile content from
+              // being clipped by the section's overflow: hidden.
+              position: i === current ? "relative" : "absolute",
               inset: 0,
               background: b.bgColor,
               opacity: i === current ? 1 : 0,
               transition: "opacity 0.5s ease",
               pointerEvents: i === current ? "auto" : "none",
-              minHeight: 420,
+              minHeight,
               display: "flex",
               alignItems: "center",
             }}
@@ -297,7 +372,7 @@ export default function HeroBanner() {
             {b.image && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={b.image}
+                src={normalizeImg(b.image)}
                 alt={b.title}
                 style={{
                   position: "absolute", inset: 0,
@@ -307,12 +382,16 @@ export default function HeroBanner() {
               />
             )}
 
-            {/* Gradient overlay — darkens left side for text readability */}
+            {/* Gradient overlay — darkens for text readability. On mobile the
+                content is stacked, so use a top-to-bottom gradient instead of
+                left-to-right. */}
             <div
               style={{
                 position: "absolute", inset: 0,
                 background: b.image
-                  ? `linear-gradient(90deg, ${b.bgColor}f0 0%, ${b.bgColor}bb 45%, ${b.bgColor}44 75%, transparent 100%)`
+                  ? isMobile
+                    ? `linear-gradient(180deg, ${b.bgColor}cc 0%, ${b.bgColor}dd 60%, ${b.bgColor}f5 100%)`
+                    : `linear-gradient(90deg, ${b.bgColor}f0 0%, ${b.bgColor}bb 45%, ${b.bgColor}44 75%, transparent 100%)`
                   : `linear-gradient(135deg, ${b.bgColor}ee 0%, ${b.bgColor}99 50%, transparent 100%)`,
               }}
             />
@@ -322,19 +401,20 @@ export default function HeroBanner() {
               style={{
                 position: "absolute", right: -80, top: "50%",
                 transform: "translateY(-50%)",
-                width: 400, height: 400, borderRadius: "50%",
+                width: isMobile ? 260 : 400, height: isMobile ? 260 : 400, borderRadius: "50%",
                 background: b.accentColor, opacity: 0.06,
                 filter: "blur(60px)", pointerEvents: "none",
               }}
             />
 
-            <BannerContent b={b} current={i} banners={banners} />
+            <BannerContent b={b} current={i} banners={banners} isMobile={isMobile} />
           </div>
         ))}
       </div>
 
-      {/* Prev / Next arrows */}
-      {banners.length > 1 && (
+      {/* Prev / Next arrows — hidden on mobile (dots + autoplay handle nav, and
+          edge-anchored arrows would overlap the stacked content) */}
+      {banners.length > 1 && !isMobile && (
         <>
           <button
             onClick={prev}
