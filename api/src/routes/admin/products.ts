@@ -2,6 +2,7 @@ import express, { Router, Request, Response } from 'express';
 import { StockStatus, Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { requireAdminAuth } from '../../middleware/auth';
+import { requireLoadedPermission } from '../../middleware/rbac';
 import prisma from '../../lib/prisma';
 
 // ── CSV helpers (for /csv-import) ─────────────────────────────────────────────
@@ -84,6 +85,7 @@ const createProductSchema = z.object({
   ]).default([]),
   categoryId: z.string().optional(),
   isNewArrival: z.boolean().optional(),
+  isBestSeller: z.boolean().optional(),
   // Accept either attributeTypeId (existing type) or name (auto-create/find type)
   attributes: z.array(
     z.union([
@@ -118,7 +120,7 @@ async function resolveAttributeTypeId(attr: RawAttr, categoryId?: string): Promi
 
 // POST /api/admin/products/csv-import
 // Larger body limit for CSV text payload (up to ~5k products). Global limit is 1mb.
-router.post('/csv-import', express.json({ limit: '10mb' }), async (req: Request, res: Response): Promise<void> => {
+router.post('/csv-import', requireLoadedPermission('MANAGE_PRODUCTS'), express.json({ limit: '10mb' }), async (req: Request, res: Response): Promise<void> => {
   const { csv } = req.body as { csv?: string };
   if (!csv || typeof csv !== 'string') {
     res.status(400).json({ success: false, error: 'csv field is required' });
@@ -267,7 +269,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // POST /api/admin/products
-router.post('/', async (req: Request, res: Response): Promise<void> => {
+router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request, res: Response): Promise<void> => {
   const parse = createProductSchema.safeParse(req.body);
   if (!parse.success) {
     res.status(400).json({ success: false, errors: parse.error.issues });
@@ -307,7 +309,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // PUT /api/admin/products/:id
-router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request, res: Response): Promise<void> => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const parse = updateProductSchema.safeParse(req.body);
   if (!parse.success) {
@@ -363,7 +365,7 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
 });
 
 // DELETE /api/admin/products/:id
-router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+router.delete('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request, res: Response): Promise<void> => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   try {
     await prisma.product.delete({ where: { id } });
@@ -378,7 +380,7 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
 });
 
 // PATCH /api/admin/products/:id/new-arrival — toggle isNewArrival flag
-router.patch('/:id/new-arrival', async (req: Request, res: Response): Promise<void> => {
+router.patch('/:id/new-arrival', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request, res: Response): Promise<void> => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const { isNewArrival } = req.body as { isNewArrival?: boolean };
   if (typeof isNewArrival !== 'boolean') {
@@ -389,6 +391,29 @@ router.patch('/:id/new-arrival', async (req: Request, res: Response): Promise<vo
     const product = await prisma.product.update({
       where: { id },
       data: { isNewArrival },
+    });
+    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
+  } catch (e: any) {
+    if (e?.code === 'P2025') {
+      res.status(404).json({ success: false, message: 'Product not found' });
+      return;
+    }
+    throw e;
+  }
+});
+
+// PATCH /api/admin/products/:id/best-seller — toggle isBestSeller flag
+router.patch('/:id/best-seller', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request, res: Response): Promise<void> => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const { isBestSeller } = req.body as { isBestSeller?: boolean };
+  if (typeof isBestSeller !== 'boolean') {
+    res.status(400).json({ success: false, message: 'isBestSeller must be a boolean' });
+    return;
+  }
+  try {
+    const product = await prisma.product.update({
+      where: { id },
+      data: { isBestSeller },
     });
     res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
   } catch (e: any) {

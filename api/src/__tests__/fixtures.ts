@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import prisma from '../lib/prisma';
+import { ALL_PERMISSIONS, SUPER_ADMIN_ROLE } from '../lib/rbac';
 
 // Every fixture row carries this marker so cleanup can never touch real data.
 export const RUN_ID = `${Date.now()}`;
@@ -19,11 +20,23 @@ export interface SmokeFixtures {
 }
 
 export async function createFixtures(): Promise<SmokeFixtures> {
+  // Ensure the SUPER_ADMIN role exists (normally seeded) with all permissions, so the
+  // smoke admin can exercise every admin route under the new RBAC enforcement.
+  const superRole = await prisma.role.upsert({
+    where: { name: SUPER_ADMIN_ROLE },
+    update: {},
+    create: { name: SUPER_ADMIN_ROLE, description: 'Full access', isSystem: true, rank: 0 },
+  });
+  await prisma.rolePermission.createMany({
+    data: ALL_PERMISSIONS.map((permission) => ({ roleId: superRole.id, permission })),
+    skipDuplicates: true,
+  });
+
   const admin = await prisma.adminUser.create({
     data: {
       username: ADMIN_USERNAME,
       passwordHash: await bcrypt.hash(ADMIN_PASSWORD, 10),
-      role: 'STAFF',
+      roleId: superRole.id,
     },
   });
 

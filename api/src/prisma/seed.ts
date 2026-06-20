@@ -5,6 +5,7 @@ import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
+import { DEFAULT_ROLES, SUPER_ADMIN_ROLE } from '../lib/rbac';
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -91,17 +92,35 @@ const DEMO_SKUS = [
 async function main() {
   console.log('Starting seed...');
 
-  // Admin user
+  // RBAC roles + default permission matrix (idempotent — safe to re-run)
+  let superAdminRoleId = '';
+  for (const def of DEFAULT_ROLES) {
+    const role = await prisma.role.upsert({
+      where: { name: def.name },
+      update: { description: def.description, rank: def.rank, isSystem: true },
+      create: { name: def.name, description: def.description, rank: def.rank, isSystem: true },
+    });
+    if (def.name === SUPER_ADMIN_ROLE) superAdminRoleId = role.id;
+    // Reset the role's permission set to match the default matrix
+    await prisma.rolePermission.deleteMany({ where: { roleId: role.id } });
+    await prisma.rolePermission.createMany({
+      data: def.permissions.map((permission) => ({ roleId: role.id, permission })),
+      skipDuplicates: true,
+    });
+  }
+  console.log(`✓ ${DEFAULT_ROLES.length} roles + permissions`);
+
+  // Admin user — assigned to SUPER_ADMIN
   await prisma.adminUser.upsert({
     where: { username: 'admin' },
-    update: {},
+    update: { roleId: superAdminRoleId, active: true },
     create: {
       username: 'admin',
       passwordHash: await bcrypt.hash('mxd@admin2026', 10),
-      role: 'SUPER_ADMIN',
+      roleId: superAdminRoleId,
     },
   });
-  console.log('✓ Admin user');
+  console.log('✓ Admin user (SUPER_ADMIN)');
 
   // Geo restrictions
   for (const state of ['Karnataka', 'Tamil Nadu', 'Andhra Pradesh']) {

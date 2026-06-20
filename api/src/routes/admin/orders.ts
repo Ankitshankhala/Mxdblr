@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { InquiryStatus, Prisma } from '@prisma/client';
 import { requireAdminAuth } from '../../middleware/auth';
+import { requireLoadedPermission } from '../../middleware/rbac';
 import prisma from '../../lib/prisma';
 
 const router = Router();
@@ -62,7 +63,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // PUT /api/admin/inquiries/:id/status
-router.put('/:id/status', async (req: Request, res: Response): Promise<void> => {
+router.put('/:id/status', requireLoadedPermission('EDIT_ORDERS'), async (req: Request, res: Response): Promise<void> => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const { status } = req.body as { status: string };
 

@@ -40,6 +40,11 @@ import bannersRouter from './routes/banners';
 import brandsRouter from './routes/brands';
 import announcementsRouter from './routes/announcements';
 import adminAnnouncementsRouter from './routes/admin/announcements';
+import adminRbacRouter from './routes/admin/rbac';
+import adminUsersRouter from './routes/admin/users';
+
+// RBAC permission guards
+import { requirePermission, requireAnyPermission } from './middleware/rbac';
 
 const app = express();
 // Trust the first proxy hop so req.ip reflects the real client IP
@@ -110,19 +115,26 @@ app.use('/api/dealers', dealersRouter);
 // Mixed-auth notification routes
 app.use('/api', notificationsRouter);
 
-// Admin routes (all require admin JWT)
-app.use('/api/admin/categories', adminCategoriesRouter);
-app.use('/api/admin/products', adminProductsRouter);
-app.use('/api/admin/dealers', adminDealersRouter);
-app.use('/api/admin/inquiries', adminOrdersRouter);
-app.use('/api/admin/orders', adminOrdersRouter);   // alias used by frontend
-app.use('/api/admin/notify', adminNotificationsRouter);
-app.use('/api/admin/geo', adminGeoRouter);
-app.use('/api/admin/banners', adminBannersRouter);
-app.use('/api/admin/brands', adminBrandsRouter);
-app.use('/api/admin/settings', adminSettingsRouter);
-app.use('/api/admin/upload', adminUploadRouter);
-app.use('/api/admin/announcements', adminAnnouncementsRouter);
+// RBAC management + current-user context (each route self-guards by permission)
+app.use('/api/admin', adminRbacRouter);                 // /me, /permissions, /roles, /audit-logs
+app.use('/api/admin/users', adminUsersRouter);          // staff/admin account management
+
+// Admin routes — each mounted behind the permission(s) it requires. Routers still run
+// requireAdminAuth internally; these guards add the authorization layer (RBAC).
+// Routers with mixed needs (products: catalog vs inventory; orders: read vs edit) take a
+// broad guard here and a stricter per-endpoint guard inside the router.
+app.use('/api/admin/categories', requirePermission('MANAGE_PRODUCTS'), adminCategoriesRouter);
+app.use('/api/admin/products', requireAnyPermission('MANAGE_PRODUCTS', 'MANAGE_INVENTORY'), adminProductsRouter);
+app.use('/api/admin/dealers', requirePermission('MANAGE_CUSTOMERS'), adminDealersRouter);
+app.use('/api/admin/inquiries', requireAnyPermission('CREATE_ORDERS', 'EDIT_ORDERS', 'VIEW_REPORTS'), adminOrdersRouter);
+app.use('/api/admin/orders', requireAnyPermission('CREATE_ORDERS', 'EDIT_ORDERS', 'VIEW_REPORTS'), adminOrdersRouter);   // alias used by frontend
+app.use('/api/admin/notify', requirePermission('MANAGE_CUSTOMERS'), adminNotificationsRouter);
+app.use('/api/admin/geo', requirePermission('SYSTEM_SETTINGS'), adminGeoRouter);
+app.use('/api/admin/banners', requirePermission('MANAGE_PRODUCTS'), adminBannersRouter);
+app.use('/api/admin/brands', requirePermission('MANAGE_PRODUCTS'), adminBrandsRouter);
+app.use('/api/admin/settings', requirePermission('SYSTEM_SETTINGS'), adminSettingsRouter);
+app.use('/api/admin/upload', requirePermission('MANAGE_PRODUCTS'), adminUploadRouter);
+app.use('/api/admin/announcements', requirePermission('MANAGE_PRODUCTS'), adminAnnouncementsRouter);
 
 // Local image uploads (dev fallback — used when Cloudinary credentials are not set).
 // Override CORP header: helmet() sets same-origin by default, which blocks <img> tags

@@ -219,12 +219,20 @@ model GeoRestriction {
 }
 
 model AdminUser {
-  id             String   @id @default(cuid())
-  username       String   @unique
+  id             String    @id @default(cuid())
+  username       String    @unique
   passwordHash   String
-  role           String   @default("STAFF")
-  createdAt      DateTime @default(now())
+  active         Boolean   @default(true)
+  // Authorization is derived server-side from this role's permissions — never from
+  // client input. A null role grants no admin permissions (locked out by default).
+  roleId         String?
+  role           Role?     @relation(fields: [roleId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
   moderationLogs ModerationLog[]
+  auditLogs      AuditLog[] @relation("AuditActor")
+
+  @@index([roleId])
 }
 
 model ModerationLog {
@@ -236,6 +244,79 @@ model ModerationLog {
   admin     AdminUser @relation(fields: [adminId], references: [id])
   reason    String?
   createdAt DateTime  @default(now())
+}
+
+// ── RBAC (Role-Based Access Control) ──────────────────────────────────────────
+// Fixed catalog of permissions. New permission types are added here in code (a
+// schema change), not by users at runtime. Super Admin assigns these to roles.
+enum Permission {
+  VIEW_DASHBOARD
+  MANAGE_PRODUCTS
+  MANAGE_INVENTORY
+  CREATE_ORDERS
+  EDIT_ORDERS
+  VIEW_REPORTS
+  MANAGE_STAFF
+  MANAGE_CUSTOMERS
+  ACCESS_FINANCIAL_DATA
+  SYSTEM_SETTINGS
+  MANAGE_ROLES   // create/edit/delete roles and their permissions (Super Admin)
+  MANAGE_ADMINS  // create/manage admin-level accounts (Super Admin)
+}
+
+// Roles are dynamic: Super Admin can create/delete custom roles beyond the four
+// system roles. `rank` drives the anti-privilege-escalation guard (lower = more
+// privileged; SUPER_ADMIN = 0). `isSystem` roles cannot be deleted or renamed.
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String           @default("")
+  isSystem    Boolean          @default(false)
+  rank        Int              @default(100)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  permissions RolePermission[]
+  users       AdminUser[]
+}
+
+model RolePermission {
+  id         String     @id @default(cuid())
+  roleId     String
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission
+
+  @@unique([roleId, permission])
+  @@index([roleId])
+}
+
+enum AuditAction {
+  ROLE_CREATED
+  ROLE_UPDATED
+  ROLE_PERMISSIONS_UPDATED
+  ROLE_DELETED
+  USER_CREATED
+  USER_ROLE_CHANGED
+  USER_ACTIVATED
+  USER_DEACTIVATED
+  USER_DELETED
+}
+
+// Immutable audit trail for every role/permission/user change (Security req #6).
+// actorName/targetName are denormalized so the log survives actor/target deletion.
+model AuditLog {
+  id         String      @id @default(cuid())
+  actorId    String?
+  actor      AdminUser?  @relation("AuditActor", fields: [actorId], references: [id])
+  actorName  String
+  action     AuditAction
+  targetType String
+  targetId   String?
+  targetName String      @default("")
+  details    Json        @default("{}")
+  createdAt  DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([action])
 }
 
 enum BannerType {

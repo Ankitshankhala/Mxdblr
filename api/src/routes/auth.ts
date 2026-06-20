@@ -36,7 +36,7 @@ const registerSchema = z.object({
   country: z.string().default('India'),
   pincode: z.string().regex(/^\d{6}$/, 'Enter a valid 6-digit pincode'),
   gstNumber: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/).optional().or(z.literal('')),
-  businessType: z.nativeEnum(BusinessType),
+  businessType: z.enum([BusinessType.RETAIL_SHOP, BusinessType.WHOLESALER]),
 });
 
 // POST /api/auth/send-otp
@@ -203,7 +203,10 @@ router.post('/admin/login', adminLoginRateLimit, async (req: Request, res: Respo
 
   const { generateAdminToken } = await import('../middleware/auth');
 
-  const admin = await prisma.adminUser.findUnique({ where: { username } });
+  const admin = await prisma.adminUser.findUnique({
+    where: { username },
+    include: { role: true },
+  });
   if (!admin) {
     res.status(401).json({ success: false, message: 'Invalid credentials' });
     return;
@@ -215,8 +218,18 @@ router.post('/admin/login', adminLoginRateLimit, async (req: Request, res: Respo
     return;
   }
 
-  const token = generateAdminToken(admin.id, admin.username, admin.role);
-  res.json({ success: true, token, admin: { id: admin.id, username: admin.username, role: admin.role } });
+  // Deactivated accounts can authenticate-by-password but are denied a session.
+  if (!admin.active) {
+    res.status(403).json({ success: false, message: 'This account has been deactivated.' });
+    return;
+  }
+
+  const token = generateAdminToken(admin.id, admin.username);
+  res.json({
+    success: true,
+    token,
+    admin: { id: admin.id, username: admin.username, role: admin.role?.name ?? null },
+  });
 });
 
 export default router;

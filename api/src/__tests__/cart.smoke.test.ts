@@ -52,7 +52,7 @@ describe('Cart access control', () => {
 
   it('rejects cart access with an admin-type token', async () => {
     const { generateAdminToken } = await import('../middleware/auth');
-    const adminToken = generateAdminToken(fx.adminId, 'smoke', 'STAFF');
+    const adminToken = generateAdminToken(fx.adminId, 'smoke');
     const res = await request(app).get('/api/cart').set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(401);
   });

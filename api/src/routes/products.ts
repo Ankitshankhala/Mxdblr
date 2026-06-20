@@ -25,6 +25,7 @@ const productQuerySchema = z.object({
   search: z.string().optional(),
   stockStatus: z.nativeEnum(StockStatus).optional(),
   isNewArrival: z.coerce.boolean().optional(),
+  isBestSeller: z.coerce.boolean().optional(),
   sort: z.enum(['name_asc', 'name_desc', 'newest', 'oldest']).optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(24),
@@ -38,7 +39,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const { category, brand, search, stockStatus, isNewArrival, sort, page, limit } = parse.data;
+  const { category, brand, search, stockStatus, isNewArrival, isBestSeller, sort, page, limit } = parse.data;
   const skip = (page - 1) * limit;
 
   const where: Prisma.ProductWhereInput = {};
@@ -46,6 +47,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   if (category) where.category = { slug: category };
   if (brand) where.brand = { equals: brand, mode: 'insensitive' };
   if (isNewArrival !== undefined) where.isNewArrival = isNewArrival;
+  if (isBestSeller !== undefined) where.isBestSeller = isBestSeller;
   if (search) {
     where.OR = [
       { name:        { contains: search, mode: 'insensitive' } },
@@ -135,6 +137,7 @@ function sanitizeProduct(product: {
   price?: number | null;
   pricingActive?: boolean;
   isNewArrival?: boolean;
+  isBestSeller?: boolean;
   categoryId: string | null;
   category?: { id: string; name: string; slug: string; parent?: { id: string; name: string; slug: string } | null } | null;
   attributes?: Array<{ attributeType: { name: string; unit: string | null }; value: string }>;
@@ -153,6 +156,7 @@ function sanitizeProduct(product: {
     stockQty: product.stockQty,
     images: product.images,
     isNewArrival: product.isNewArrival ?? false,
+    isBestSeller: product.isBestSeller ?? false,
     categoryId: product.categoryId,
     category: product.category
       ? { id: product.category.id, name: product.category.name, slug: product.category.slug }
