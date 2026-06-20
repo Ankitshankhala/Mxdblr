@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Bell } from 'lucide-react';
+import { ShoppingBag, Bell, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import BrandChip from '@/components/ui/BrandChip';
@@ -12,6 +12,10 @@ import type { Product } from '@/types';
 import { cartApi } from '@/lib/api';
 
 const SLIDE_INTERVAL = 3000;
+// How long autoplay stays paused after a manual interaction (swipe / arrow / dot).
+const RESUME_DELAY = 6000;
+// Minimum horizontal travel (px) to count a touch as a swipe rather than a tap.
+const SWIPE_THRESHOLD = 40;
 
 interface ProductCardProps {
   product: Product;
@@ -22,38 +26,89 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [added, setAdded] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const resumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const images = product.images?.length ? product.images : [];
   const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK';
+  const hasMultiple = images.length > 1;
 
-  const startSlide = useCallback(() => {
-    if (images.length <= 1) return;
-    timerRef.current = setInterval(() => {
+  // Autoplay: a single interval driven by `paused`. Runs unless paused or single image.
+  useEffect(() => {
+    if (paused || !hasMultiple) return;
+    const id = setInterval(() => {
       setCurrentIdx((i) => (i + 1) % images.length);
     }, SLIDE_INTERVAL);
-  }, [images.length]);
+    return () => clearInterval(id);
+  }, [paused, hasMultiple, images.length]);
 
-  const stopSlide = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+  // Clear any pending resume timer on unmount.
+  useEffect(() => () => { if (resumeRef.current) clearTimeout(resumeRef.current); }, []);
+
+  // Pause autoplay, then resume after a delay (used by every manual interaction).
+  const pauseTemporarily = useCallback(() => {
+    setPaused(true);
+    if (resumeRef.current) clearTimeout(resumeRef.current);
+    resumeRef.current = setTimeout(() => setPaused(false), RESUME_DELAY);
   }, []);
 
-  useEffect(() => {
-    startSlide();
-    return stopSlide;
-  }, [startSlide, stopSlide]);
+  const nudge = useCallback((dir: number) => {
+    if (!hasMultiple) return;
+    setCurrentIdx((i) => {
+      const len = images.length;
+      return ((i + dir) % len + len) % len;
+    });
+    pauseTemporarily();
+  }, [hasMultiple, images.length, pauseTemporarily]);
 
-  function goTo(i: number, e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    stopSlide();
-    setCurrentIdx(i);
-    // resume after a pause
-    setTimeout(startSlide, SLIDE_INTERVAL);
-  }
+  const goToIdx = useCallback((idx: number) => {
+    setCurrentIdx(idx);
+    pauseTemporarily();
+  }, [pauseTemporarily]);
+
+  // Hover (desktop): hover is authoritative over the timed resume.
+  const onEnter = useCallback(() => {
+    if (resumeRef.current) clearTimeout(resumeRef.current);
+    setHovered(true);
+    setPaused(true);
+  }, []);
+  const onLeave = useCallback(() => {
+    if (resumeRef.current) clearTimeout(resumeRef.current);
+    setHovered(false);
+    setPaused(false);
+  }, []);
+
+  // Touch swipe (mobile). Distinguish a horizontal swipe from a vertical scroll or a tap.
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const didSwipe = useRef(false);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStartX.current = t.clientX;
+    touchStartY.current = t.clientY;
+    didSwipe.current = false;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX.current;
+    const dy = t.clientY - touchStartY.current;
+    if (hasMultiple && Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      didSwipe.current = true;
+      nudge(dx < 0 ? 1 : -1);
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+  // A swipe also fires a click on the <Link>; suppress that so swiping doesn't navigate.
+  const onLinkClick = (e: React.MouseEvent) => {
+    if (didSwipe.current) {
+      e.preventDefault();
+      didSwipe.current = false;
+    }
+  };
 
   async function handleAddToCart(e: React.MouseEvent) {
     e.stopPropagation();
@@ -74,19 +129,30 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }
 
+  const arrowBtnStyle: React.CSSProperties = {
+    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+    zIndex: 3, width: 28, height: 28, borderRadius: '50%',
+    background: 'rgba(26,26,46,0.45)', border: 'none', color: '#fff',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', padding: 0,
+  };
+
   return (
     <motion.div
       className="card overflow-hidden flex flex-col"
       style={{ transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s' }}
       whileHover={{ y: -3, boxShadow: '0 8px 28px rgba(26,26,46,0.12)', borderColor: '#1A1A2E' }}
-      onMouseEnter={stopSlide}
-      onMouseLeave={startSlide}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
     >
       {/* ── Image gallery ──────────────────────────────────────────────────────── */}
       <Link
         href={`/product/${product.sku}`}
         className="block"
-        style={{ position: 'relative', background: '#F5F3EF', aspectRatio: '1 / 1', overflow: 'hidden', flexShrink: 0 }}
+        style={{ position: 'relative', background: '#F5F3EF', aspectRatio: '1 / 1', overflow: 'hidden', flexShrink: 0, touchAction: 'pan-y' }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        onClick={onLinkClick}
       >
         {images.length > 0 ? (
           images.map((src, i) => (
@@ -123,17 +189,43 @@ export default function ProductCard({ product }: ProductCardProps) {
           <StockBadge status={product.stockStatus} size="sm" />
         </div>
 
+        {/* Prev / Next arrows — desktop hover (mobile uses swipe) */}
+        {hasMultiple && hovered && (
+          <>
+            <button
+              type="button"
+              aria-label="Previous image"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); nudge(-1); }}
+              style={{ ...arrowBtnStyle, left: 6 }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next image"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); nudge(1); }}
+              style={{ ...arrowBtnStyle, right: 6 }}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </>
+        )}
+
         {/* Dot navigation — bottom center */}
-        {images.length > 1 && (
+        {hasMultiple && (
           <div style={{ position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 5, zIndex: 2 }}>
             {images.map((_, i) => (
-              <div
+              <button
                 key={i}
-                onClick={(e) => goTo(i, e)}
+                type="button"
+                aria-label={`View image ${i + 1}`}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); goToIdx(i); }}
                 style={{
                   width: 6,
                   height: 6,
                   borderRadius: '50%',
+                  border: 'none',
+                  padding: 0,
                   background: i === currentIdx ? '#F47920' : 'rgba(0,0,0,0.22)',
                   cursor: 'pointer',
                   transition: 'background 0.2s',

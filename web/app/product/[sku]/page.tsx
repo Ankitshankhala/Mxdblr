@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
@@ -10,7 +9,7 @@ import BrandChip from '@/components/ui/BrandChip';
 import SkuLabel from '@/components/ui/SkuLabel';
 import ProductActions from '@/components/features/product/ProductActions';
 import BackButtonClient from '@/components/features/product/BackButton';
-import ProductThumbnailsClient from '@/components/features/product/ProductThumbnails';
+import ProductGallery from '@/components/features/product/ProductGallery';
 import type { Product } from '@/types';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -92,51 +91,14 @@ export default async function ProductPage({
 
         {/* Main layout — product-layout CSS class handles responsive grid vs stack */}
         <div className="product-layout" style={{ gap: 40, alignItems: 'flex-start' }}>
-          {/* Left: Images */}
+          {/* Left: Images — main image + thumbnails share state so clicking a
+              thumbnail swaps the main image */}
           <div>
-            {/* Main image */}
-            <div
-              style={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: '1/1',
-                background: '#EEF0FE',
-                borderRadius: 16,
-                overflow: 'hidden',
-                marginBottom: 12,
-              }}
-            >
-              {product.images?.[0] ? (
-                <Image
-                  src={product.images[0]}
-                  alt={product.name}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  priority
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              ) : (
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 64,
-                    fontWeight: 900,
-                    color: '#6366F1',
-                  }}
-                >
-                  {product.brand.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-            </div>
-
-            {/* Thumbnails */}
-            {product.images && product.images.length > 1 && (
-              <ProductThumbnails images={product.images} productName={product.name} />
-            )}
+            <ProductGallery
+              images={product.images ?? []}
+              productName={product.name}
+              brand={product.brand}
+            />
           </div>
 
           {/* Right: Info + Actions */}
@@ -203,8 +165,4 @@ export default async function ProductPage({
 
 function BackButton() {
   return <BackButtonClient />;
-}
-
-function ProductThumbnails({ images, productName }: { images: string[]; productName: string }) {
-  return <ProductThumbnailsClient images={images} productName={productName} />;
 }

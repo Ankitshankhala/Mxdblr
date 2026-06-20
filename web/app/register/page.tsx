@@ -10,10 +10,6 @@ import type { BusinessType } from '@/types';
 const BUSINESS_TYPES: { value: BusinessType; label: string }[] = [
   { value: 'RETAIL_SHOP', label: 'Retail Shop' },
   { value: 'WHOLESALER', label: 'Wholesaler' },
-  { value: 'DISTRIBUTOR', label: 'Distributor' },
-  { value: 'REPAIR_SHOP', label: 'Repair Shop' },
-  { value: 'ONLINE_SELLER', label: 'Online Seller' },
-  { value: 'MOBILE_ACCESSORIES_STORE', label: 'Mobile Accessories Store' },
 ];
 
 const STEPS = ['Business Info', 'Location', 'Review'];

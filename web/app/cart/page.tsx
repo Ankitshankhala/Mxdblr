@@ -14,8 +14,7 @@ import QtyStepper from '@/components/ui/QtyStepper';
 import { useCart } from '@/hooks/useCart';
 import { notificationsApi } from '@/lib/api';
 import type { CartItem } from '@/types';
-
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919000000000';
+import { whatsappLink } from '@/lib/config';
 
 function buildWhatsAppMessage(items: CartItem[], dealerName = 'Dealer', shopName = 'Shop'): string {
   const lines = items.map(
@@ -206,7 +205,7 @@ export default function CartPage() {
     dealer?.shopName || 'Shop'
   );
 
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappUrl = whatsappLink(whatsappMessage);
 
   async function handleWhatsAppInquiry() {
     if (!isAuthenticated) { window.location.href = '/auth'; return; }

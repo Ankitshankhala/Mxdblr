@@ -513,7 +513,7 @@ export default function AccountDashboard() {
                 description="Products saved for later"
               />
               <QuickLink
-                href={`https://wa.me/919116466369?text=Hi%2C%20I%20need%20support.%20My%20shop%3A%20${encodeURIComponent(dealer.shopName)}`}
+                href={`https://wa.me/919769444053?text=Hi%2C%20I%20need%20support.%20My%20shop%3A%20${encodeURIComponent(dealer.shopName)}`}
                 icon={<MessageCircle size={16} />}
                 label="WhatsApp Support"
                 description="Chat with our team directly"
