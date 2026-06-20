@@ -1,3 +1,10 @@
+/**
+ * Home page (route: /). Server Component that composes the storefront landing:
+ * hero banner, category cards, featured product grid, and the marketing sections
+ * (trust stats, how-it-works, coverage, testimonials, FAQ, dealer CTA) plus the
+ * shared Navbar/Footer/MobileBottomNav chrome. Interactive pieces are delegated
+ * to client child components.
+ */
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';

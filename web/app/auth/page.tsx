@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * Dealer login page (route: /auth). Two-step OTP flow — enter mobile
+ * (POST /api/auth/send-otp), then the 6-digit code (POST /api/auth/verify-otp);
+ * on success stores the dealer JWT. Uses AnimatePresence with initial={false} so
+ * the form paints on first render even if the enter animation doesn't fire.
+ */
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, RefreshCw } from 'lucide-react';

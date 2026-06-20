@@ -1,3 +1,10 @@
+/**
+ * Admin category management. Mounted at /api/admin/categories behind
+ * MANAGE_PRODUCTS.
+ *
+ * Full CRUD plus PATCH /:id/toggle (active), POST /bulk (bulk create), and
+ * GET /:id/products. Slugs are derived from the name via the local toSlug helper.
+ */
 import { Router, Request, Response } from 'express';
 import { requireAdminAuth } from '../../middleware/auth';
 import prisma from '../../lib/prisma';

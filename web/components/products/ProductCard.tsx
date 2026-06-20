@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * ProductCard — catalog/home product tile: image gallery (autoplay + swipe/arrows/
+ * dots), brand/SKU/MOQ, stock badge, and add-to-cart or notify-me CTA. No price
+ * (B2B inquiry model). NOTE: images are passed straight to next/image — uploads
+ * stored as absolute localhost URLs break on other devices until the upload
+ * pipeline stores relative paths (see production audit NEW-3).
+ */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Bell, ChevronLeft, ChevronRight } from 'lucide-react';

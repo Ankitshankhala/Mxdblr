@@ -1,3 +1,13 @@
+/**
+ * MSG91 messaging client — OTP SMS + WhatsApp Business outbound.
+ *
+ * Three helpers: sendOtp (login/registration OTP), sendWhatsAppMessage
+ * (restock/notification template), and buildInquiryWhatsAppMessage (formats a
+ * dealer cart into the wa.me inquiry text). When MSG91_AUTH_KEY is unset the
+ * send helpers no-op and return success (dev mock — OTP is logged to the console
+ * in development only), so the full auth flow is testable without a live key.
+ * Credentials come from env vars exclusively.
+ */
 import axios from 'axios';
 
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY || '';

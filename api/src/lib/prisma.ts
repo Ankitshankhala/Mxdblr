@@ -1,3 +1,11 @@
+/**
+ * Prisma client singleton (PostgreSQL via the node-postgres adapter).
+ *
+ * Wraps a single pg.Pool in a PrismaPg adapter so the whole API shares one
+ * connection pool. The instance is cached on globalThis in non-production to
+ * survive dev hot-reloads (nodemon/ts-node) without leaking new pools on every
+ * restart. Import the default export everywhere DB access is needed.
+ */
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';

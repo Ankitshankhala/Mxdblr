@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin geo-restriction page (route: /admin/geo). Manage the allow/deny list of
+ * states/districts that the IP-based geo gate enforces. Configuration only — the
+ * actual enforcement is server-side (api middleware/geo.ts). Wrapped in AdminGuard.
+ */
 import { useState } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

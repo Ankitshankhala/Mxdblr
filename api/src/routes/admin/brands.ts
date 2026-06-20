@@ -1,3 +1,9 @@
+/**
+ * Admin brand management. Mounted at /api/admin/brands behind MANAGE_PRODUCTS.
+ *
+ * Full CRUD (GET/POST/PUT/DELETE) over brands; inputs validated with zod, slugs
+ * derived via the local toSlug helper.
+ */
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireAdminAuth } from '../../middleware/auth';

@@ -1,3 +1,13 @@
+/**
+ * express-rate-limit configurations used across the API.
+ *
+ * - apiRateLimit: global throttle (120 req/min) mounted on /api in index.ts.
+ * - otpRateLimit: caps OTP sends (5 per 10 min) to limit SMS cost/abuse.
+ * - otpVerifyRateLimit / adminLoginRateLimit: brute-force guards (5 failed
+ *   attempts per 15 min; successful attempts are not counted). The OTP expires
+ *   in 5 min, well inside the verify window, so guessing is infeasible.
+ * Relies on `app.set('trust proxy', 1)` (index.ts) for correct client IPs.
+ */
 import rateLimit from 'express-rate-limit';
 
 export const otpRateLimit = rateLimit({

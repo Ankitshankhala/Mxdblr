@@ -1,3 +1,9 @@
+/**
+ * Public banner routes. Mounted at /api/banners.
+ *
+ * GET / — active homepage hero banners ordered by displayOrder. Read-only;
+ * admin CRUD lives in routes/admin/banners.ts.
+ */
 import { Router } from 'express';
 import prisma from '../lib/prisma';
 

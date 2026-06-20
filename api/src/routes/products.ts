@@ -1,3 +1,12 @@
+/**
+ * Public product catalog routes. Mounted at /api/products (geo-gated).
+ *
+ * GET /          — paginated, filterable, sortable product list (brand, category,
+ *                  stock, search) with a { success, data, pagination } envelope.
+ * GET /brands    — distinct brand list for the filter UI.
+ * GET /:id       — single product detail.
+ * Read-only and price-free (this is a B2B inquiry catalog, not a storefront).
+ */
 import { Router, Request, Response } from 'express';
 import { StockStatus, Prisma } from '@prisma/client';
 import { z } from 'zod';

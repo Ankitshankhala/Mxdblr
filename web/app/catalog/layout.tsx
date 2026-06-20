@@ -1,3 +1,8 @@
+/**
+ * Catalog route layout. A Server Component whose only job is to export SEO
+ * <Metadata> (title/description/OpenGraph) for /catalog — the catalog page
+ * itself is a Client Component and can't export metadata, so it lives here.
+ */
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

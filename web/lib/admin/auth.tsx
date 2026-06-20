@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Admin auth/permission context for the frontend. Provides the signed-in admin's
+ * identity and permission set (from GET /api/admin/me) plus helpers to gate menu
+ * items and routes by permission. Mirrors the server permission catalog; the
+ * real enforcement is server-side — this only drives what the UI shows.
+ */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";

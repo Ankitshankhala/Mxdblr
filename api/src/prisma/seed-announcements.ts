@@ -1,3 +1,10 @@
+/**
+ * Announcement seed. Run: npx ts-node src/prisma/seed-announcements.ts
+ *
+ * Seeds the marquee messages that used to be hardcoded in web/app/page.tsx, so
+ * the strip keeps showing them now that it is DB-driven (served by
+ * routes/announcements.ts, managed via routes/admin/announcements.ts).
+ */
 import 'dotenv/config';
 import prisma from '../lib/prisma';
 

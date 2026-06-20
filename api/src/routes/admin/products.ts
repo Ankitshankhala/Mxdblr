@@ -1,3 +1,14 @@
+/**
+ * Admin product management. Mounted at /api/admin/products behind
+ * MANAGE_PRODUCTS|MANAGE_INVENTORY (index.ts); mutations additionally require
+ * MANAGE_PRODUCTS via requireLoadedPermission, while stock updates allow
+ * MANAGE_INVENTORY.
+ *
+ * List/create/update/delete products, toggle new-arrival/best-seller, update
+ * stock (PATCH|PUT /:id/stock), GET /stock-summary (dashboard low-stock counts),
+ * and POST /csv-import (bulk import). All mutating routes map Prisma P2025 →
+ * 404 rather than 500. Includes inline CSV parsing helpers.
+ */
 import express, { Router, Request, Response } from 'express';
 import { StockStatus, Prisma } from '@prisma/client';
 import { z } from 'zod';

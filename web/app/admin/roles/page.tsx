@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Admin roles & permissions editor (route: /admin/roles). Create/edit/delete
+ * roles and toggle their permissions against the catalog from
+ * GET /api/admin/permissions. The UI mirrors the server-side anti-escalation
+ * rules (you cannot grant what you lack or touch a role at/above your rank).
+ * Wrapped in AdminGuard; needs MANAGE_ROLES.
+ */
 import { useEffect, useMemo, useState } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

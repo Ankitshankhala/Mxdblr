@@ -1,3 +1,12 @@
+/**
+ * Shared, self-cleaning test fixtures for the smoke suites.
+ *
+ * createFixtures seeds an admin (with the SUPER_ADMIN role + all permissions),
+ * a dealer, and test products; cleanupFixtures removes them in afterAll. Every
+ * row is stamped with a per-run marker (RUN_ID / SKU_PREFIX) so cleanup can only
+ * ever delete this run's data — never real records. Keeps the suite runnable
+ * against a real Postgres with zero leftover rows.
+ */
 import bcrypt from 'bcryptjs';
 import prisma from '../lib/prisma';
 import { ALL_PERMISSIONS, SUPER_ADMIN_ROLE } from '../lib/rbac';

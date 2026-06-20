@@ -1,4 +1,10 @@
 'use client';
+
+/**
+ * useWishlist — localStorage-backed wishlist of product IDs (key: mxd_wishlist).
+ * Exposes the saved IDs plus add/remove/toggle/has helpers. Client-only; not
+ * synced to the server.
+ */
 import { useState, useEffect, useCallback } from 'react';
 
 const WISHLIST_KEY = 'mxd_wishlist';

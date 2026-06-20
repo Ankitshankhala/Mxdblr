@@ -1,3 +1,9 @@
+/**
+ * Product detail page (route: /product/[sku]). Server Component that fetches the
+ * product by SKU, generates per-product SEO metadata, and calls notFound() for
+ * unknown SKUs. Renders the gallery + spec, delegating cart/notify interactions
+ * to client child components (ProductActions, ProductGallery).
+ */
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';

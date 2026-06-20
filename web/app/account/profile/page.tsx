@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * Dealer profile edit page (route: /account/profile). Form to view and update the
+ * dealer's profile via PUT /api/dealers/me. Dealer-auth only.
+ */
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {

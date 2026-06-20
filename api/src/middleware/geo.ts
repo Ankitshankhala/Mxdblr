@@ -1,3 +1,14 @@
+/**
+ * Geo-restriction gate — server-side, IP-based (the enforcement mechanism).
+ *
+ * geoCheckMiddleware resolves the client's state from their IP (ipapi.co over
+ * HTTPS, 3s timeout) and 403s anyone outside the allowed states. This is the
+ * REAL control: it never trusts a user-supplied state field (the registration
+ * dropdown is convenience only). Allowed states come from the geoRestriction
+ * table, falling back to DEFAULT_ALLOWED_STATES. Fails OPEN — local/private IPs,
+ * lookup timeouts, or API outages let the request through so legitimate users
+ * are never hard-blocked by infra failure. In development the gate is bypassed.
+ */
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 

@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * Dealer account dashboard (route: /account). Landing page for a signed-in
+ * dealer — profile summary and inquiry history (GET /api/dealers/me/inquiries),
+ * with links to profile edit and wishlist. Redirects to /auth when unauthenticated.
+ */
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {

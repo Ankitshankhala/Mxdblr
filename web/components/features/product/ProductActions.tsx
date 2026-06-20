@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * ProductActions — client island on the (server-rendered) product detail page.
+ * Quantity stepper + add-to-cart (enforcing MOQ) and the back-in-stock "notify
+ * me" action for out-of-stock items.
+ */
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Heart, Bell, ChevronDown } from 'lucide-react';

@@ -1,3 +1,8 @@
+/**
+ * Root layout — wraps every route. Loads the Inter font, imports global styles,
+ * sets the site-wide <Metadata> defaults, and mounts the persistent
+ * FloatingWhatsApp CTA. The single <html>/<body> shell for the whole app.
+ */
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";

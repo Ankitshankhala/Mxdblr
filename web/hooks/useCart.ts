@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * useCart — dealer cart state hook. Loads the cart from the API and wraps
+ * add/update/remove/clear, each returning { success, message } and preserving
+ * local state on failure so the UI can surface a toast. Backs the cart page and
+ * the add-to-cart buttons.
+ */
 import { useState, useEffect, useCallback } from 'react';
 import { cartApi } from '@/lib/api';
 import type { CartItem } from '@/types';

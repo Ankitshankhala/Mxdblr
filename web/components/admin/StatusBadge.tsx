@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * StatusBadge — colour-coded label for admin status values (dealer status,
+ * inquiry/order status, etc.). Maps a status string to a consistent style.
+ */
 type StatusBadgeProps = {
   status: string;
 };

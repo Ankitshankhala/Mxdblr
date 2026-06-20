@@ -1,3 +1,12 @@
+/**
+ * Primary database seed. Run: npx ts-node src/prisma/seed.ts
+ *
+ * Idempotently provisions the baseline the app needs to boot: the default RBAC
+ * roles + permissions (from lib/rbac.ts, including SUPER_ADMIN) and the initial
+ * admin account, plus any base reference data parsed from the bundled CSV.
+ * Connects via its own pg pool/adapter so it can run standalone (outside the API
+ * process). Catalog products are seeded separately by seed-catalog.ts.
+ */
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';

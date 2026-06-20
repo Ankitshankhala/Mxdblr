@@ -1,3 +1,9 @@
+/**
+ * Public category routes. Mounted at /api/categories (geo-gated).
+ *
+ * GET /        — active categories (full fields) for nav and the filter sidebar.
+ * GET /:slug   — single category by slug. Read-only.
+ */
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 

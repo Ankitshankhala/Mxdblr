@@ -1,3 +1,8 @@
+/**
+ * robots.txt generator (Next.js Metadata Route). Allows crawling of public
+ * pages (home, catalog, product, register) and disallows private areas
+ * (/admin, /account, /cart, /auth, /api). Points crawlers at the sitemap.
+ */
 import type { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {

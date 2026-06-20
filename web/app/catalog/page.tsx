@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * Catalog browse page (route: /catalog). Reads brand/category/search/sort/page
+ * from the URL search params and fetches matching products from the API, with a
+ * filter sidebar and grid. SEO metadata is supplied by the sibling server
+ * catalog/layout.tsx. NOTE: currently fully client-rendered — flagged in the
+ * production audit for conversion to a Server Component (perf/SEO).
+ */
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ChevronRight, SlidersHorizontal, ArrowUpDown } from 'lucide-react';

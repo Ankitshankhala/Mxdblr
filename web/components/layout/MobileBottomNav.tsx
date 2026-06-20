@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * MobileBottomNav — fixed bottom tab bar on small screens (home, catalog, cart,
+ * account) with the active route highlighted. Hidden on desktop.
+ */
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';

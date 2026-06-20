@@ -1,3 +1,11 @@
+/**
+ * Admin inquiry/order management. Mounted at both /api/admin/inquiries and
+ * /api/admin/orders (alias) behind CREATE_ORDERS|EDIT_ORDERS|VIEW_REPORTS.
+ *
+ * GET /            — filterable, paginated inquiry list.
+ * PUT /:id/status  — update inquiry status (requires EDIT_ORDERS specifically,
+ *                    via requireLoadedPermission).
+ */
 import { Router, Request, Response } from 'express';
 import { InquiryStatus, Prisma } from '@prisma/client';
 import { requireAdminAuth } from '../../middleware/auth';

@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * DealerCTABanner — homepage call-to-action banner prompting visitors to
+ * register as a dealer (links to /register).
+ */
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 

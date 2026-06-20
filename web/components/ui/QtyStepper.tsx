@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * QtyStepper — +/- numeric quantity input used in the cart and product actions.
+ * Enforces a minimum (typically the product MOQ) and emits change events.
+ */
 import { Minus, Plus } from 'lucide-react';
 
 interface QtyStepperProps {

@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin dashboard home (route: /admin). Shows real stat cards and low-stock
+ * alerts fetched from the products stock-summary API (no hardcoded data).
+ * Wrapped in AdminGuard.
+ */
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatCard from "@/components/admin/StatCard";

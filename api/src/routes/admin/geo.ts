@@ -1,3 +1,10 @@
+/**
+ * Admin geo-restriction config. Mounted at /api/admin/geo behind SYSTEM_SETTINGS.
+ *
+ * CRUD over the geoRestriction allow/deny list (state + optional district) that
+ * the IP-based gate in middleware/geo.ts reads. This configures which regions
+ * the catalog serves; the enforcement itself is server-side and IP-based.
+ */
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireAdminAuth } from '../../middleware/auth';

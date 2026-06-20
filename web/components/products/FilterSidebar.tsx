@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * FilterSidebar — catalog filter controls (brand, category, stock status). Emits
+ * a FilterValues object to the catalog page, which reflects it into the URL.
+ * Doubles as a slide-over panel on mobile.
+ */
 import { useState, useEffect } from 'react';
 import { X, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import type { Category, StockStatus } from '@/types';

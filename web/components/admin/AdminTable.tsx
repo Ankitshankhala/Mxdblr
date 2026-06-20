@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * AdminTable — reusable data table for the admin panel: column config, optional
+ * sorting, and empty/loading states. Shared across the admin list pages.
+ */
 import { ReactNode, useState } from "react";
 
 type Column<T> = {

@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin notifications page (route: /admin/notifications). View back-in-stock
+ * subscriptions, trigger restock alerts, and send WhatsApp broadcasts via the
+ * /api/admin/notify endpoints. Wrapped in AdminGuard.
+ */
 import { useState, useEffect, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

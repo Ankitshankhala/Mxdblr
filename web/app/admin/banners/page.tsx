@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin hero-banner page (route: /admin/banners). CRUD over homepage banners
+ * (image upload + link + active flag) and drag/reorder of displayOrder.
+ * Wrapped in AdminGuard.
+ */
 import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

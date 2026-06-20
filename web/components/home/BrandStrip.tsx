@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * BrandStrip — horizontal strip of brand logos/links on the homepage; each links
+ * into the brand-filtered catalog.
+ */
 import Link from 'next/link';
 
 export default function BrandStrip({ brands }: { brands: string[] }) {

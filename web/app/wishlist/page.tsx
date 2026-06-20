@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * Wishlist page (route: /wishlist). Renders the dealer's saved products (managed
+ * by the useWishlist hook / localStorage) with quick add-to-cart. Dealer-facing.
+ */
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';

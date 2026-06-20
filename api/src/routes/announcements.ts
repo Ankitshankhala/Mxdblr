@@ -1,3 +1,9 @@
+/**
+ * Public announcement routes. Mounted at /api/announcements.
+ *
+ * GET / — active marquee messages ordered by displayOrder (the scrolling banner
+ * on the storefront). Read-only; admin CRUD lives in routes/admin/announcements.ts.
+ */
 import { Router } from 'express';
 import prisma from '../lib/prisma';
 

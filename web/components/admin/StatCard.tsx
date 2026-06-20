@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * StatCard — dashboard metric tile (label, value, icon, optional link). Used by
+ * the admin dashboard to surface counts and alerts.
+ */
 import { ReactNode } from "react";
 import Link from "next/link";
 

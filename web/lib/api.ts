@@ -1,3 +1,10 @@
+/**
+ * Frontend API client — the single axios layer the storefront uses to talk to
+ * the backend. Centralizes the base URL (NEXT_PUBLIC_API_URL), dealer-token
+ * storage/attachment (localStorage), and grouped endpoint helpers
+ * (productsApi, categoriesApi, cartApi, …). Components should call these helpers
+ * rather than hit fetch/axios directly.
+ */
 import axios, { AxiosError } from 'axios';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';

@@ -1,3 +1,10 @@
+/**
+ * Admin announcement management. Mounted at /api/admin/announcements behind
+ * MANAGE_PRODUCTS.
+ *
+ * Full CRUD over the storefront marquee messages (admin list includes inactive
+ * ones). Public read is routes/announcements.ts.
+ */
 import { Router } from 'express';
 import prisma from '../../lib/prisma';
 import { requireAdminAuth } from '../../middleware/auth';

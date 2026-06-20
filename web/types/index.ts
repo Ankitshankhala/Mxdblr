@@ -1,3 +1,8 @@
+/**
+ * Shared frontend TypeScript types — the canonical shapes the web app uses for
+ * API data (Product, Category, CartItem, Dealer, enums like StockStatus and
+ * BusinessType, …). Keep these in sync with the Prisma models / API responses.
+ */
 export type StockStatus = 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 
 export type BusinessType =

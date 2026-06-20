@@ -1,3 +1,15 @@
+/**
+ * RBAC authorization guards — the layer that runs after authentication.
+ *
+ * requireAnyPermission / requirePermission are self-authenticating Express
+ * middleware factories: they verify the admin token, load the live role +
+ * permission set from the DB (rejecting deactivated accounts), attach
+ * req.adminCtx, and 403 unless the caller holds the required permission(s).
+ * Permissions are never trusted from the JWT — always re-read — so revocation is
+ * immediate. requireLoadedPermission layers a stricter check on a single
+ * endpoint without a second DB hit (reuses an already-loaded adminCtx). `rank`
+ * (lower = more privileged) drives the privilege-tier checks; see lib/rbac.ts.
+ */
 import { Request, Response, NextFunction } from 'express';
 import { Permission } from '@prisma/client';
 import prisma from '../lib/prisma';

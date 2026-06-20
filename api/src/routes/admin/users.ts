@@ -1,3 +1,12 @@
+/**
+ * Staff/admin account management. Mounted at /api/admin/users.
+ *
+ * CRUD over admin users and their role assignment. Every endpoint needs at least
+ * MANAGE_STAFF; acting on an admin-tier target (rank ≤ ADMIN_TIER_RANK)
+ * additionally requires MANAGE_ADMINS, enforced per-handler. Anti-escalation: a
+ * caller cannot create/modify users at or above their own privilege rank.
+ * Passwords are bcrypt-hashed; every change is recorded via writeAuditLog.
+ */
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';

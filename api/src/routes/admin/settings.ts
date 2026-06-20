@@ -1,3 +1,11 @@
+/**
+ * Admin system settings. Mounted at /api/admin/settings behind SYSTEM_SETTINGS.
+ *
+ * GET/PUT non-sensitive config plus PUT /change-password (admin password).
+ * Secret-bearing fields are masked on read via maskSecret and default empty.
+ * NOTE: API keys must NOT live here long-term — real credentials belong in env
+ * vars (TODO in source); these DB fields are slated for removal.
+ */
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireAdminAuth } from '../../middleware/auth';

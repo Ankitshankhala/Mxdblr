@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * BackButton — client island for the product detail page; navigates back in
+ * history (router.back). Kept separate so the page can stay a Server Component.
+ */
 import { ArrowLeft } from 'lucide-react';
 
 export default function BackButton() {

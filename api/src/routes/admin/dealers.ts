@@ -1,3 +1,12 @@
+/**
+ * Admin dealer (customer) management. Mounted at /api/admin/dealers behind
+ * MANAGE_CUSTOMERS.
+ *
+ * GET /              — filterable, paginated dealer list.
+ * GET /:id           — single dealer detail.
+ * PUT /:id/moderate  — approve / block / suspend a dealer (moderation action;
+ *                      a block bumps lastRevokedAt to kill active sessions).
+ */
 import { Router, Request, Response } from 'express';
 import { DealerStatus, Prisma } from '@prisma/client';
 import { z } from 'zod';

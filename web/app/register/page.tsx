@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * Dealer registration page (route: /register). Collects business details and
+ * submits POST /api/auth/register. State is chosen from a fixed dropdown (the
+ * server still independently enforces geo rules — the dropdown is convenience,
+ * not the control). Uses AnimatePresence initial={false} for reliable first paint.
+ */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, ArrowLeft } from 'lucide-react';

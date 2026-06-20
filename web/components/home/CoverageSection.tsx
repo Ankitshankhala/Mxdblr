@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * CoverageSection — homepage section showing the served regions (Karnataka,
+ * Tamil Nadu, Andhra Pradesh, …), matching the geo-restriction policy.
+ */
 import { MapPin } from 'lucide-react';
 
 const STATES = [

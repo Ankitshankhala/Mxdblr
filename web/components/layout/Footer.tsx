@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * Footer — site footer with company info, service-area, quick links, and contact
+ * details. Shown on the public storefront pages.
+ */
 import Link from 'next/link';
 import { MapPin, Clock, Package } from 'lucide-react';
 

@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin login page (route: /admin/login). Username + password form that posts to
+ * POST /api/auth/admin/login and, on success, stores the admin JWT and redirects
+ * into the admin shell. The only admin route not wrapped by AdminGuard.
+ */
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 

@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin shell layout — wraps every /admin page. Renders the sidebar navigation
+ * and header; nav items are shown/hidden based on the signed-in admin's
+ * permissions (fetched from GET /api/admin/me). Provides logout.
+ */
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState, useCallback } from "react";

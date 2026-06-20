@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin product management page (route: /admin/products). List with search/
+ * filter, create/edit forms (image upload via POST /api/admin/upload), stock
+ * updates, new-arrival/best-seller toggles, and CSV import. Wrapped in AdminGuard.
+ */
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import AdminGuard from "@/components/admin/AdminGuard";

@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * HeroBanner — homepage hero carousel driven by the banners API (autoplay +
+ * arrows, responsive: stacks on mobile). normalizeImg() rewrites legacy
+ * localhost upload hosts to the configured API origin so banner images resolve
+ * on phones (Cloudinary/remote URLs pass through). See production audit NEW-3.
+ */
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";

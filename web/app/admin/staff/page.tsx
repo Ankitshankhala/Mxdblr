@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin staff accounts page (route: /admin/staff). Invite/manage admin users and
+ * assign them roles via the /api/admin/users endpoints. Wrapped in AdminGuard;
+ * needs MANAGE_STAFF (admin-tier targets additionally need MANAGE_ADMINS).
+ */
 import { useEffect, useMemo, useState } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

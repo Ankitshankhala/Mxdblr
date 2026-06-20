@@ -1,3 +1,12 @@
+/**
+ * Dealer cart routes (all require a dealer JWT). Mounted at /api/cart.
+ *
+ * GET /                 — current dealer's cart with product detail.
+ * POST /                — add/update an item; enforces MOQ and out-of-stock
+ *                         rules server-side (the cart cannot be gamed client-side).
+ * DELETE /:productId    — remove one line. DELETE / — clear the cart.
+ * The cart is the basis for the WhatsApp inquiry (see routes/notifications.ts).
+ */
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireDealerAuth } from '../middleware/auth';

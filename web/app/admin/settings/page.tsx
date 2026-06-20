@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Admin settings page (route: /admin/settings). Edit non-sensitive system config
+ * (secret fields shown masked) and change the admin password. Wrapped in AdminGuard.
+ */
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

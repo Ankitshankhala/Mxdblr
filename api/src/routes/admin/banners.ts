@@ -1,3 +1,9 @@
+/**
+ * Admin banner management. Mounted at /api/admin/banners behind MANAGE_PRODUCTS.
+ *
+ * Full CRUD over homepage hero banners (admin list includes inactive ones) plus
+ * PUT /reorder/bulk to set displayOrder. Public read is routes/banners.ts.
+ */
 import { Router } from 'express';
 import prisma from '../../lib/prisma';
 import { requireAdminAuth } from '../../middleware/auth';

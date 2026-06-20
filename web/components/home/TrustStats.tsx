@@ -1,3 +1,7 @@
+/**
+ * TrustStats — homepage band of headline metrics (dealers, SKUs, coverage,
+ * turnaround). Static, presentational, server-safe (no client directive).
+ */
 import { Users, Package, MapPin, Zap } from 'lucide-react';
 
 const STATS = [

@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * useAuth — dealer session hook. Exposes the current dealer (decoded/stored from
+ * the JWT), authentication state, and logout (clears the token). Used by
+ * storefront pages to gate dealer-only UI and redirect to /auth.
+ */
 import { useState, useEffect } from 'react';
 import { clearToken } from '@/lib/api';
 

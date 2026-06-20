@@ -1,3 +1,16 @@
+/**
+ * RBAC management routes. Mounted at /api/admin (index.ts); each route
+ * self-guards by permission rather than sharing one mount-level guard.
+ *
+ * GET /me            — current admin's identity + role + permissions (drives the
+ *                      frontend menu/route gating); any active admin.
+ * GET /permissions   — the fixed permission catalog (MANAGE_ROLES).
+ * GET/POST/PATCH/DELETE /roles[/:id] — role CRUD (MANAGE_ROLES). Enforces:
+ *   you cannot grant a permission you don't hold, nor create/edit/delete a role
+ *   at or above your own rank (so SUPER_ADMIN is uneditable); system roles are
+ *   protected. Every change is written to the audit trail in a transaction.
+ * GET /audit-logs    — recent role/permission/user changes (MANAGE_ROLES|MANAGE_ADMINS).
+ */
 import { Router, Request, Response } from 'express';
 import { Permission, Prisma } from '@prisma/client';
 import prisma from '../../lib/prisma';

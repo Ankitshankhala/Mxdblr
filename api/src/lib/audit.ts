@@ -1,3 +1,12 @@
+/**
+ * Audit-trail writer for RBAC and account changes.
+ *
+ * writeAuditLog records who did what to which target. Best-effort by default
+ * (a logging failure never breaks the operation); pass a transaction client to
+ * make the audit write atomic with the change it records. actorName/targetName
+ * are denormalized so the trail stays readable after the actor or target is
+ * deleted. Read back via GET /api/admin/audit-logs.
+ */
 import { AuditAction, Prisma } from '@prisma/client';
 import prisma from './prisma';
 

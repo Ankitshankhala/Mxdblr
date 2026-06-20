@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Admin brands page (route: /admin/brands). CRUD over the brand list used by the
+ * catalog filter. Wrapped in AdminGuard.
+ */
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

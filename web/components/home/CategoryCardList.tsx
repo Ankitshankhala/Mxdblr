@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * CategoryCardList — homepage grid of category cards linking into the filtered
+ * catalog (/catalog?category=…). Fetches categories from the API.
+ */
 import Link from 'next/link';
 import Image from 'next/image';
 import { Zap, Headphones, Usb, Smartphone, Shield, PlugZap, MonitorSmartphone } from 'lucide-react';

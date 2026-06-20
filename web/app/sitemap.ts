@@ -1,3 +1,8 @@
+/**
+ * sitemap.xml generator (Next.js Metadata Route). Emits the static public pages
+ * plus a dynamic entry per product fetched from the API, so search engines can
+ * discover the catalog. Falls back to localhost when NEXT_PUBLIC_API_URL is unset.
+ */
 import type { MetadataRoute } from 'next';
 
 const BASE_URL = 'https://www.mxdblr.com';

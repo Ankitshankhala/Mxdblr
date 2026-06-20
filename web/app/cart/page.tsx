@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * Dealer cart page (route: /cart). Shows the current dealer's cart, allows
+ * quantity edits (respecting MOQ) and line removal, and converts the cart into a
+ * WhatsApp inquiry (POST /api/inquiry → wa.me deep link). Dealer-auth only.
+ */
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';

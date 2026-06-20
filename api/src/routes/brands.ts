@@ -1,3 +1,8 @@
+/**
+ * Public brand routes. Mounted at /api/brands.
+ *
+ * GET / — active brands for the catalog filter sidebar. Read-only.
+ */
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 

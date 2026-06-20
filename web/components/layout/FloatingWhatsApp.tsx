@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * FloatingWhatsApp — persistent floating WhatsApp CTA (mounted in the root
+ * layout). Builds the wa.me link via lib/config and hides itself on admin routes.
+ */
 import { usePathname } from "next/navigation";
 import { whatsappLink } from "@/lib/config";
 

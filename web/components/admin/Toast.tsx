@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Toast — admin notification system: a context provider + useToast hook that
+ * shows transient success/error messages. Wraps the admin shell so every admin
+ * action (incl. failed mutations) can surface feedback.
+ */
 import { createContext, useCallback, useContext, useState, ReactNode, useEffect } from "react";
 
 let _nextId = 0;

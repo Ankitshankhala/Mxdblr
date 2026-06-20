@@ -1,3 +1,15 @@
+/**
+ * JWT authentication for the two distinct identity types: dealers and admins.
+ *
+ * Tokens are type-tagged ('dealer' | 'admin') and the guards reject cross-type
+ * use, so a dealer token can never reach an admin route and vice versa.
+ * - requireDealerAuth also enforces token revocation (dealer.lastRevokedAt) so a
+ *   blocked/suspended dealer's existing session stops working immediately.
+ * - Admin tokens deliberately carry NO role/permission data; authorization is
+ *   looked up fresh from the DB on every request (see middleware/rbac.ts), so
+ *   permission/active changes take effect at once rather than at token expiry.
+ * authenticateAdminToken is the response-free verifier shared with the RBAC guards.
+ */
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';

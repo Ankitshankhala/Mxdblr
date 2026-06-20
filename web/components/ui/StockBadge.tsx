@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * StockBadge — colour-coded pill for a product's stock status (in stock / low /
+ * out of stock). Size-configurable; used on product cards, grids, and detail.
+ */
 import type { StockStatus } from '@/types';
 
 interface StockBadgeProps {

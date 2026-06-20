@@ -1,3 +1,15 @@
+/**
+ * API entry point — Express app bootstrap and the single source of route wiring.
+ *
+ * Fails fast if required env vars (DATABASE_URL, JWT_SECRET) are missing, then
+ * configures security (helmet), CORS (allow-list + LAN origins in dev only),
+ * logging, body parsing, and the global rate limiter. Mounts every router and is
+ * where authorization policy lives: public routers are geo-gated, dealer routers
+ * require a dealer JWT, and each admin router is mounted behind the RBAC
+ * permission(s) it needs. Also serves /uploads (dev image fallback) with a
+ * cross-origin CORP header, a JSON 404, and a global error handler that never
+ * leaks internals in production. Exported for supertest; only listens outside tests.
+ */
 import 'dotenv/config';
 import path from 'path';
 

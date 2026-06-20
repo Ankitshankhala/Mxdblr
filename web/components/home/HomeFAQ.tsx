@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * HomeFAQ — homepage FAQ accordion (expand/collapse questions about ordering,
+ * MOQ, coverage, etc.).
+ */
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 

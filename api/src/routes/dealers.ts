@@ -1,3 +1,11 @@
+/**
+ * Dealer self-service routes (all require a dealer JWT). Mounted at /api/dealers.
+ *
+ * GET /me               — current dealer's profile.
+ * PUT /me               — update profile (validated with zod).
+ * GET /me/inquiries     — paginated history of this dealer's inquiries
+ *                         (page/limit + pagination envelope).
+ */
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireDealerAuth } from '../middleware/auth';

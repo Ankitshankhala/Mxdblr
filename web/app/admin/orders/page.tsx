@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin inquiries/orders page (route: /admin/orders). Lists dealer inquiries with
+ * filters and lets staff update inquiry status (PUT /api/admin/orders/:id/status).
+ * Wrapped in AdminGuard.
+ */
 import { useState, useEffect, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";

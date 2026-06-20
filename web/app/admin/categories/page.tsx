@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Admin categories page (route: /admin/categories). CRUD over product categories
+ * with active toggle and ordering. Wrapped in AdminGuard.
+ */
 import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

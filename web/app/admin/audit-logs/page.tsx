@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin audit-log viewer (route: /admin/audit-logs). Read-only feed of recent
+ * role/permission/user changes from GET /api/admin/audit-logs. Wrapped in
+ * AdminGuard; needs MANAGE_ROLES or MANAGE_ADMINS.
+ */
 import { useEffect, useState } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

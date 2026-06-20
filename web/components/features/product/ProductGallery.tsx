@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * ProductGallery — client image gallery for the product detail page: a main
+ * image with selectable thumbnails. Replaced the older ProductThumbnails.
+ */
 import { useState } from 'react';
 import Image from 'next/image';
 

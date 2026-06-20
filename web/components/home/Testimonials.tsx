@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * Testimonials — homepage carousel/grid of dealer testimonials. Content is a
+ * local static array (placeholder copy until real testimonials are supplied).
+ */
 const TESTIMONIALS = [
   {
     name: 'Rajesh Kumar',

@@ -1,3 +1,14 @@
+/**
+ * Image storage — Cloudinary CDN with a local-disk fallback.
+ *
+ * uploadImageFromBuffer signs and uploads to Cloudinary when all three
+ * CLOUDINARY_* env vars are set; otherwise it writes to ./uploads and returns a
+ * `http://localhost:<port>/uploads/...` URL (dev fallback). Also provides
+ * deleteImage and getOptimizedUrl (injects Cloudinary transformation params).
+ * NOTE: the local-fallback URL is absolute to localhost — it breaks on other
+ * devices and is only whitelisted for localhost:4000 in next.config.ts, so
+ * production must run with real Cloudinary credentials.
+ */
 import axios from 'axios';
 import crypto from 'crypto';
 import path from 'path';

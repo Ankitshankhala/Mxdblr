@@ -1,3 +1,13 @@
+/**
+ * RBAC source of truth — permission catalog and default (system) roles.
+ *
+ * PERMISSION_CATALOG is the fixed set of permissions (with UI labels); new
+ * permission TYPES are added here in code, never created by users at runtime.
+ * DEFAULT_ROLES (SUPER_ADMIN → SHOP_WORKER) are seeded by prisma/seed.ts. The
+ * numeric `rank` powers the anti-escalation guard enforced in middleware/rbac.ts
+ * and routes/admin/rbac.ts: you may only manage roles/users of a strictly higher
+ * rank (= less privileged) than your own. SUPER_ADMIN = rank 0.
+ */
 import { Permission } from '@prisma/client';
 
 // ── Permission catalog ────────────────────────────────────────────────────────

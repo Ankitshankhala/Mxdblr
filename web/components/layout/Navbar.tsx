@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * Navbar — top navigation for the public/dealer site: logo, catalog/search,
+ * cart, and auth-aware account menu (reads the dealer token). Persistent across
+ * storefront pages.
+ */
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

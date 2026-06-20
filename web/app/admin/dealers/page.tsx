@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Admin dealers page (route: /admin/dealers). Lists dealer/customer accounts with
+ * search and moderation actions — approve / block / suspend
+ * (PUT /api/admin/dealers/:id/moderate). Wrapped in AdminGuard.
+ */
 import { useState, useEffect, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";

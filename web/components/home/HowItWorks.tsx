@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * HowItWorks — homepage section explaining the dealer flow (register → browse →
+ * inquire via WhatsApp) as numbered steps.
+ */
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 

@@ -1,3 +1,13 @@
+/**
+ * Authentication routes — dealer OTP login/registration + admin login.
+ * Mounted at /api/auth (geo-gated in index.ts).
+ *
+ * Endpoints: POST /send-otp, POST /verify-otp (rate-limited brute-force guards),
+ * POST /register (creates a dealer; state validated server-side), POST
+ * /admin/login (username + bcrypt password → admin JWT). OTPs are hashed at rest
+ * and sent via MSG91 (lib/msg91.ts); dealer/admin JWTs are issued by
+ * middleware/auth.ts. Inputs validated with zod.
+ */
 import { Router, Request, Response } from 'express';
 import { BusinessType } from '@prisma/client';
 import { z } from 'zod';

@@ -1,3 +1,11 @@
+/**
+ * Admin notifications & broadcasts. Mounted at /api/admin/notify behind
+ * MANAGE_CUSTOMERS.
+ *
+ * View back-in-stock subscriptions and products that have them, trigger restock
+ * alerts for a product (POST /trigger/:productId), send a WhatsApp broadcast
+ * (POST /broadcast), and read send history. Messages go out via lib/msg91.ts.
+ */
 import { Router, Request, Response } from 'express';
 import { requireAdminAuth } from '../../middleware/auth';
 import { sendWhatsAppMessage } from '../../lib/msg91';

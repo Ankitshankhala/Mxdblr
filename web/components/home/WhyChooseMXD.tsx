@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * WhyChooseMXD — homepage value-proposition grid (range, speed, delivery,
+ * coverage, trust, pricing). Static presentational section.
+ */
 import { Package, Zap, Truck, MapPin, ShieldCheck, Tag } from 'lucide-react';
 
 const BENEFITS = [

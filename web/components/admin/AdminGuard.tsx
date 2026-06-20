@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * AdminGuard — HOC that gates an admin page on the client: checks for a valid
+ * admin token and redirects to /admin/login if missing, rendering nothing until
+ * verified. A UX guard only — real authorization is enforced server-side on
+ * every admin API call (api middleware/rbac.ts).
+ */
 import { useEffect, useState, ComponentType } from "react";
 import { useRouter } from "next/navigation";
 

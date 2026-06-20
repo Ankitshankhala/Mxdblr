@@ -1,3 +1,11 @@
+/**
+ * Admin image upload. Mounted at /api/admin/upload behind MANAGE_PRODUCTS.
+ *
+ * POST / accepts a base64/data-URI image body, validates MIME type (jpeg/png/
+ * webp/gif) and a 5 MB size cap, then hands the buffer to uploadImageFromBuffer
+ * (Cloudinary, or local-disk fallback in dev) and returns the stored URL. This
+ * is the single server-side entry point for product/banner images.
+ */
 import { Router, Request, Response } from 'express';
 import express from 'express';
 import { requireAdminAuth } from '../../middleware/auth';

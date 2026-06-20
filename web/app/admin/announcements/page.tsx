@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Admin announcements page (route: /admin/announcements). CRUD over the
+ * storefront marquee messages (text + active flag + order). Wrapped in AdminGuard.
+ */
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";

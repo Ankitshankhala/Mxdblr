@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * ProductGrid — responsive grid that renders a list of products as ProductCards,
+ * with empty/loading states. Used on the home and catalog pages.
+ */
 import type { Product } from '@/types';
 import ProductCard from './ProductCard';
 

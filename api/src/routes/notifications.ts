@@ -1,3 +1,12 @@
+/**
+ * Mixed-auth notification + inquiry routes. Mounted at /api (index.ts).
+ *
+ * POST /notify-me   — public back-in-stock subscription for a product.
+ * POST /inquiry     — dealer-auth; turns the cart into a persisted inquiry with a
+ *                     cartSnapshot and returns the wa.me WhatsApp deep link.
+ * GET  /geo/check   — reports whether the caller's region is served (used by the
+ *                     frontend geo gate).
+ */
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireDealerAuth } from '../middleware/auth';
