@@ -21,6 +21,7 @@ interface Banner {
   ctaText: string;
   ctaLink: string;
   image: string;
+  mobileImage: string;
   bgColor: string;
   accentColor: string;
   logoImage: string;
@@ -40,6 +41,7 @@ const EMPTY: Omit<Banner, "id" | "displayOrder"> = {
   ctaText: "Browse Catalog",
   ctaLink: "/catalog",
   image: "",
+  mobileImage: "",
   bgColor: "#1A1A2E",
   accentColor: "#F47920",
   logoImage: "",
@@ -56,6 +58,11 @@ const BANNER_TYPE_LABELS: Record<BannerType, string> = {
   PRODUCT_PROMO: "Product Promotion",
   BRAND_PROMO: "Brand Promotion",
 };
+
+// Must match the server allow-list in api/src/routes/admin/upload.ts. Kept in sync
+// so the client rejects unsupported types up front instead of failing at upload.
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ACCEPT_ATTR = ".jpg,.jpeg,.png,.webp,.gif";
 
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 7,
@@ -84,7 +91,7 @@ function ImageUploadSlot({
   const { showToast } = useToast();
 
   const readFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) { showToast("Not an image file", "error"); return; }
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) { showToast("Unsupported format. Use JPG, PNG, WEBP or GIF.", "error"); return; }
     if (file.size > 5 * 1024 * 1024) { showToast("File exceeds 5 MB", "error"); return; }
     const reader = new FileReader();
     reader.onload = (e) => onChange(e.target?.result as string);
@@ -94,7 +101,7 @@ function ImageUploadSlot({
   return (
     <div>
       <label style={labelStyle}>{label}</label>
-      <input ref={ref} type="file" accept="image/*" style={{ display: "none" }}
+      <input ref={ref} type="file" accept={ACCEPT_ATTR} style={{ display: "none" }}
         onChange={(e) => { if (e.target.files?.[0]) readFile(e.target.files[0]); e.target.value = ""; }} />
       {value ? (
         <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
@@ -164,6 +171,7 @@ function BannersContent() {
       ctaText: b.ctaText,
       ctaLink: b.ctaLink,
       image: b.image,
+      mobileImage: b.mobileImage || "",
       bgColor: b.bgColor,
       accentColor: b.accentColor,
       logoImage: b.logoImage || "",
@@ -197,14 +205,15 @@ function BannersContent() {
     try {
       const token = localStorage.getItem("adminToken") ?? "";
       // Upload any base64 images to Cloudinary/local storage first
-      const [image, logoImage, productImage1, productImage2, productImage3] = await Promise.all([
+      const [image, mobileImage, logoImage, productImage1, productImage2, productImage3] = await Promise.all([
         uploadIfBase64(form.image, token),
+        uploadIfBase64(form.mobileImage, token),
         uploadIfBase64(form.logoImage, token),
         uploadIfBase64(form.productImage1, token),
         uploadIfBase64(form.productImage2, token),
         uploadIfBase64(form.productImage3, token),
       ]);
-      const payload = { ...form, image, logoImage, productImage1, productImage2, productImage3 };
+      const payload = { ...form, image, mobileImage, logoImage, productImage1, productImage2, productImage3 };
 
       const url = editing ? `${API}/admin/banners/${editing.id}` : `${API}/admin/banners`;
       const res = await fetch(url, {
@@ -261,7 +270,7 @@ function BannersContent() {
   }
 
   const readBgFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) { showToast("Not an image file", "error"); return; }
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) { showToast("Unsupported format. Use JPG, PNG, WEBP or GIF.", "error"); return; }
     if (file.size > 5 * 1024 * 1024) { showToast("File exceeds 5 MB", "error"); return; }
     const reader = new FileReader();
     reader.onload = (e) => setForm((f) => ({ ...f, image: e.target?.result as string }));
@@ -548,8 +557,8 @@ function BannersContent() {
 
                 {/* Background image */}
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={labelStyle}>Background Image (optional)</label>
-                  <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { if (e.target.files?.[0]) readBgFile(e.target.files[0]); e.target.value = ""; }} />
+                  <label style={labelStyle}>Desktop Background Image (optional)</label>
+                  <input ref={fileInputRef} type="file" accept={ACCEPT_ATTR} style={{ display: "none" }} onChange={(e) => { if (e.target.files?.[0]) readBgFile(e.target.files[0]); e.target.value = ""; }} />
                   {form.image ? (
                     <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -572,9 +581,20 @@ function BannersContent() {
                     >
                       <div style={{ fontSize: 20, marginBottom: 4 }}>🖼️</div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: isDragging ? "#F47920" : "#1A1A2E" }}>Click to upload or drag & drop</div>
-                      <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 3 }}>PNG, JPG, WEBP — max 5 MB. Shows as overlay behind text.</div>
+                      <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 3 }}>PNG, JPG, WEBP — max 5 MB. Recommended 1920 × 700. Shows as overlay behind text.</div>
                     </div>
                   )}
+                </div>
+
+                {/* Mobile background image (optional) — shown on phones (<768px).
+                    Falls back to the desktop image when left empty. */}
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <ImageUploadSlot
+                    value={form.mobileImage}
+                    onChange={(v) => setForm((f) => ({ ...f, mobileImage: v }))}
+                    label="Mobile Background Image (optional)"
+                    hint="Shown on phones. Recommended 1080 × 1350. Falls back to desktop image if empty."
+                  />
                 </div>
 
 

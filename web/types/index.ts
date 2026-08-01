@@ -31,6 +31,32 @@ export interface ProductAttribute {
   unit: string | null;
 }
 
+export type ProductFeatureCategory =
+  | 'CHARGING'
+  | 'WIRELESS'
+  | 'CABLE'
+  | 'DATA'
+  | 'PROTECTION'
+  | 'CERTIFICATION';
+
+/**
+ * A supported technology a product advertises (fast-charge standard, cable type,
+ * certification…). `logo` is the ICON (a /public/product-features/<slug>.svg path,
+ * an uploaded URL, or a sanitized inline SVG data-URI); `image` is the optional
+ * larger photo. `displayMode` chooses which of them the storefront renders.
+ */
+export type FeatureDisplayMode = 'ICON' | 'IMAGE' | 'BOTH';
+
+export interface ProductFeature {
+  name: string;
+  slug: string;
+  logo: string;
+  image?: string;
+  displayMode?: FeatureDisplayMode;
+  category: ProductFeatureCategory;
+  description: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -45,6 +71,7 @@ export interface Product {
   category: { id: string; name: string; slug: string } | null;
   attributes: ProductAttribute[];
   compatibilityTags: string[];
+  features?: ProductFeature[];
   createdAt: string;
   updatedAt: string;
   breadcrumb?: { name: string; slug: string }[];

@@ -60,20 +60,10 @@ model Dealer {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  sessions              Session[]
   cartItems             CartItem[]
   inquiries             InquiryLog[]
   notificationSubs      NotificationSubscription[]
   moderationLogs        ModerationLog[]
-}
-
-model Session {
-  id          String   @id @default(cuid())
-  dealerId    String
-  dealer      Dealer   @relation(fields: [dealerId], references: [id])
-  token       String   @unique
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
 }
 
 model OtpCode {
@@ -126,6 +116,9 @@ model Product {
   images        String[]    @default([])
   price          Float?
   pricingActive  Boolean     @default(false)
+  // Storefront visibility. false = hidden from the public site but retained in
+  // admin (soft-hide instead of delete). Existing rows default to visible.
+  active         Boolean     @default(true)
   isNewArrival   Boolean     @default(false)
   isBestSeller   Boolean     @default(false)
   categoryId     String?
@@ -135,6 +128,7 @@ model Product {
 
   attributes           ProductAttribute[]
   compatibilityTags    CompatibilityTag[]
+  features             ProductFeatureLink[]
   cartItems            CartItem[]
   notificationSubs     NotificationSubscription[]
   notificationLogs     NotificationLog[]
@@ -142,6 +136,7 @@ model Product {
   @@index([brand])
   @@index([stockStatus])
   @@index([categoryId])
+  @@index([active])
 }
 
 model ProductAttribute {
@@ -151,6 +146,66 @@ model ProductAttribute {
   attributeTypeId String
   attributeType   AttributeType @relation(fields: [attributeTypeId], references: [id])
   value           String
+}
+
+// Category buckets for the Product Feature master list. Drives grouping on the
+// product detail "Supported Technologies" section.
+enum ProductFeatureCategory {
+  CHARGING       // fast-charge protocols: Quick Charge, PD, VOOC, SuperVOOC…
+  WIRELESS       // Qi, MagSafe
+  CABLE          // USB-C, Lightning, Thunderbolt, USB 3.x/4
+  DATA           // transfer speeds: 480Mbps, 5/10/20/40 Gbps
+  PROTECTION     // over-voltage/current, short-circuit, temperature
+  CERTIFICATION  // CE, FCC, RoHS, BIS
+}
+
+// Which media a feature renders with. ICON = the small logo/glyph (default,
+// what products show on cards); IMAGE = the larger photo/banner; BOTH = show both.
+enum FeatureDisplayMode {
+  ICON
+  IMAGE
+  BOTH
+}
+
+// Master list of supported technologies a product can advertise (fast-charge
+// standards, cable types, certifications). Central so 400+ products reference a
+// feature by slug instead of each uploading a duplicate logo image. `logo` is the
+// ICON (public path under web/public/product-features/<slug>.svg, an uploaded
+// Cloudinary/local URL, or a data-URI SVG); `image` is the optional larger photo.
+// `displayMode` chooses icon-only / image-only / both.
+model ProductFeature {
+  id           String                 @id @default(cuid())
+  name         String
+  slug         String                 @unique
+  logo         String                 @default("")
+  image        String                 @default("")
+  displayMode  FeatureDisplayMode     @default(ICON)
+  category     ProductFeatureCategory @default(CHARGING)
+  description  String                 @default("")
+  active       Boolean                @default(true)
+  displayOrder Int                    @default(0)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  products     ProductFeatureLink[]
+
+  @@index([category])
+  @@index([active])
+}
+
+// Join table: which features a product supports. Ordered per-product so admins
+// control which icons surface first on the (max-4) card.
+model ProductFeatureLink {
+  id           String         @id @default(cuid())
+  productId    String
+  product      Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  featureId    String
+  feature      ProductFeature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  displayOrder Int            @default(0)
+
+  @@unique([productId, featureId])
+  @@index([productId])
+  @@index([featureId])
 }
 
 model CompatibilityTag {
@@ -165,7 +220,7 @@ model CartItem {
   dealerId  String
   dealer    Dealer   @relation(fields: [dealerId], references: [id])
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -188,7 +243,7 @@ model NotificationSubscription {
   dealerId    String?
   dealer      Dealer?  @relation(fields: [dealerId], references: [id])
   productId   String
-  product     Product  @relation(fields: [productId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   phoneNumber String
   createdAt   DateTime @default(now())
 
@@ -198,7 +253,7 @@ model NotificationSubscription {
 model NotificationLog {
   id             String              @id @default(cuid())
   productId      String
-  product        Product             @relation(fields: [productId], references: [id])
+  product        Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
   recipientPhone String
   channel        NotificationChannel
   message        String
@@ -354,6 +409,7 @@ model Banner {
   ctaText       String     @default("Browse Catalog")
   ctaLink       String     @default("/catalog")
   image         String     @default("")
+  mobileImage   String     @default("")
   bgColor       String     @default("#1A1A2E")
   accentColor   String     @default("#F47920")
   logoImage     String     @default("")
@@ -377,4 +433,43 @@ model Announcement {
   displayOrder Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// Categorises an Event for the homepage "Events & Activities" section badge.
+enum EventCategory {
+  PRODUCT_LAUNCH
+  DEALER_MEETUP
+  TRAINING
+  EXHIBITION
+  CELEBRATION
+  OTHER
+}
+
+// "Events & Activities" — marketing/trust content shown on the homepage above
+// "Why Dealers Choose MXD" and managed via /admin/events. Follows the existing
+// content-model convention (single model, String[] media, published/featured/
+// displayOrder) rather than separate image/video tables.
+//
+// `videos` is a JSON array of { url, thumbnailUrl, source } where source is one of
+// 'youtube' | 'vimeo' | 'upload' | 'url'. Uploaded videos store a Cloudinary-derived
+// poster in thumbnailUrl; YouTube videos derive it from the video id; others fall
+// back to the HTML5 <video> first frame on the client.
+model Event {
+  id           String        @id @default(cuid())
+  title        String
+  description  String        @default("")
+  category     EventCategory @default(OTHER)
+  eventDate    DateTime
+  location     String        @default("")
+  coverImage   String        @default("")
+  images       String[]      @default([])
+  videos       Json          @default("[]")
+  published    Boolean       @default(false)
+  featured     Boolean       @default(false)
+  displayOrder Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Public feed query is WHERE published ORDER BY displayOrder asc, eventDate desc, id.
+  @@index([published, displayOrder, eventDate])
 }

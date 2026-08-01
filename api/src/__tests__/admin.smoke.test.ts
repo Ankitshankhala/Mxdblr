@@ -79,7 +79,7 @@ describe('Admin product CRUD', () => {
       .get(`/api/admin/products?search=${NEW_SKU}`)
       .set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
-    const found = res.body.products.find((p: { sku: string }) => p.sku === NEW_SKU);
+    const found = res.body.data.find((p: { sku: string }) => p.sku === NEW_SKU);
     expect(found).toBeTruthy();
     expect(found.price).toBeUndefined();
     expect(found.pricingActive).toBeUndefined();

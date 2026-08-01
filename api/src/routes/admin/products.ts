@@ -95,6 +95,7 @@ const createProductSchema = z.object({
     z.string().transform((s) => s ? s.split(',').map((u) => u.trim()).filter(Boolean) : []),
   ]).default([]),
   categoryId: z.string().optional(),
+  active: z.boolean().optional(),
   isNewArrival: z.boolean().optional(),
   isBestSeller: z.boolean().optional(),
   // Accept either attributeTypeId (existing type) or name (auto-create/find type)
@@ -105,9 +106,30 @@ const createProductSchema = z.object({
     ])
   ).default([]),
   compatibilityTags: z.array(z.string()).default([]),
+  // Supported technologies, referenced by ProductFeature.slug. Unknown slugs are
+  // ignored (not created) — features are managed via /api/admin/features.
+  featureSlugs: z.array(z.string()).default([]),
 });
 
 const updateProductSchema = createProductSchema.partial();
+
+// Resolve feature slugs → ordered ProductFeatureLink create rows. Preserves the
+// admin-supplied order (drives which icons surface first on the max-4 card) and
+// silently drops slugs that don't match an existing feature.
+async function resolveFeatureLinks(slugs: string[]): Promise<{ featureId: string; displayOrder: number }[]> {
+  if (slugs.length === 0) return [];
+  const found = await prisma.productFeature.findMany({
+    where: { slug: { in: slugs } },
+    select: { id: true, slug: true },
+  });
+  const idBySlug = new Map(found.map((f) => [f.slug, f.id]));
+  return slugs
+    .map((slug, i) => {
+      const featureId = idBySlug.get(slug);
+      return featureId ? { featureId, displayOrder: i } : null;
+    })
+    .filter((x): x is { featureId: string; displayOrder: number } => x !== null);
+}
 
 function sanitizeAdminProduct(p: Record<string, unknown>) {
   return {
@@ -130,7 +152,7 @@ async function resolveAttributeTypeId(attr: RawAttr, categoryId?: string): Promi
 }
 
 // POST /api/admin/products/csv-import
-// Larger body limit for CSV text payload (up to ~5k products). Global limit is 1mb.
+// Larger body limit for CSV text payload (up to ~5k products). Global limit is 8mb.
 router.post('/csv-import', requireLoadedPermission('MANAGE_PRODUCTS'), express.json({ limit: '10mb' }), async (req: Request, res: Response): Promise<void> => {
   const { csv } = req.body as { csv?: string };
   if (!csv || typeof csv !== 'string') {
@@ -239,12 +261,12 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     const where: Prisma.ProductWhereInput = {};
     if (search) {
       where.OR = [
-        { name: { contains: String(search) } },
-        { sku: { contains: String(search) } },
-        { brand: { contains: String(search) } },
+        { name: { contains: String(search), mode: 'insensitive' } },
+        { sku: { contains: String(search), mode: 'insensitive' } },
+        { brand: { contains: String(search), mode: 'insensitive' } },
       ];
     }
-    if (brand) where.brand = { contains: String(brand) };
+    if (brand) where.brand = { contains: String(brand), mode: 'insensitive' };
     if (category) where.category = { slug: String(category) };
     if (stockStatus) where.stockStatus = String(stockStatus) as StockStatus;
 
@@ -260,19 +282,26 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
           category: { select: { name: true, slug: true } },
           _count: { select: { cartItems: true, notificationSubs: true } },
           attributes: { include: { attributeType: { select: { name: true, unit: true } } } },
+          features: {
+            orderBy: { displayOrder: 'asc' },
+            include: { feature: { select: { name: true, slug: true, logo: true, category: true } } },
+          },
         },
       }),
       prisma.product.count({ where }),
     ]);
 
+    // Standard envelope: { success, data, pagination }. (Was previously a flat
+    // { products, count, total, page, limit, pages } shape — envelope drift.)
     res.json({
       success: true,
-      products: products.map(sanitizeAdminProduct),
-      count: products.length,
-      total,
-      page: pageNum,
-      limit: limitNum,
-      pages: Math.ceil(total / limitNum),
+      data: products.map(sanitizeAdminProduct),
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
     });
   } catch (e) {
     res.status(500).json({ success: false, error: 'Failed to fetch products' });
@@ -287,7 +316,7 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
     return;
   }
 
-  const { attributes, compatibilityTags, images, ...productData } = parse.data;
+  const { attributes, compatibilityTags, featureSlugs, images, ...productData } = parse.data;
 
   const existing = await prisma.product.findUnique({ where: { sku: productData.sku } });
   if (existing) {
@@ -302,16 +331,20 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
     }))
   );
 
+  const featureLinks = await resolveFeatureLinks(featureSlugs);
+
   const product = await prisma.product.create({
     data: {
       ...productData,
       images,
       attributes: { create: resolvedAttrs },
       compatibilityTags: { create: compatibilityTags.map((tag) => ({ tag })) },
+      features: { create: featureLinks },
     },
     include: {
       attributes: { include: { attributeType: true } },
       compatibilityTags: true,
+      features: { include: { feature: true } },
       category: true,
     },
   });
@@ -328,7 +361,7 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
     return;
   }
 
-  const { attributes, compatibilityTags, images, ...productData } = parse.data;
+  const { attributes, compatibilityTags, featureSlugs, images, ...productData } = parse.data;
 
   const resolvedAttrs = attributes !== undefined
     ? await Promise.all(
@@ -338,6 +371,8 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
         }))
       )
     : undefined;
+
+  const featureLinks = featureSlugs !== undefined ? await resolveFeatureLinks(featureSlugs) : undefined;
 
   try {
     const product = await prisma.product.update({
@@ -357,10 +392,17 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
             create: compatibilityTags.map((tag) => ({ tag })),
           },
         }),
+        ...(featureLinks !== undefined && {
+          features: {
+            deleteMany: {},
+            create: featureLinks,
+          },
+        }),
       },
       include: {
         attributes: { include: { attributeType: true } },
         compatibilityTags: true,
+        features: { include: { feature: true } },
         category: true,
       },
     });
@@ -384,6 +426,13 @@ router.delete('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Re
   } catch (e: any) {
     if (e?.code === 'P2025') {
       res.status(404).json({ success: false, message: 'Product not found' });
+      return;
+    }
+    // Foreign-key constraint: product is still referenced by a relation that is
+    // not set to cascade. Return a clear 409 instead of an opaque 500 so the
+    // admin knows the product is in use rather than the request having errored.
+    if (e?.code === 'P2003') {
+      res.status(409).json({ success: false, message: 'Product is still referenced by other records and cannot be deleted' });
       return;
     }
     res.status(500).json({ success: false, message: 'Failed to delete product' });
@@ -425,6 +474,29 @@ router.patch('/:id/best-seller', requireLoadedPermission('MANAGE_PRODUCTS'), asy
     const product = await prisma.product.update({
       where: { id },
       data: { isBestSeller },
+    });
+    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
+  } catch (e: any) {
+    if (e?.code === 'P2025') {
+      res.status(404).json({ success: false, message: 'Product not found' });
+      return;
+    }
+    throw e;
+  }
+});
+
+// PATCH /api/admin/products/:id/active — toggle storefront visibility
+router.patch('/:id/active', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request, res: Response): Promise<void> => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const { active } = req.body as { active?: boolean };
+  if (typeof active !== 'boolean') {
+    res.status(400).json({ success: false, message: 'active must be a boolean' });
+    return;
+  }
+  try {
+    const product = await prisma.product.update({
+      where: { id },
+      data: { active },
     });
     res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
   } catch (e: any) {

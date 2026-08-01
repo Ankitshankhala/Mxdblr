@@ -5,6 +5,7 @@
  * Tamil Nadu, Andhra Pradesh, …), matching the geo-restriction policy.
  */
 import { MapPin } from 'lucide-react';
+import { whatsappLink } from '@/lib/config';
 
 const STATES = [
   {
@@ -131,10 +132,12 @@ export default function CoverageSection() {
           ))}
         </div>
 
+        {/* TODO(client): confirm real expansion timeline — "2025" has already
+            passed and this claim is now stale/inaccurate if left as-is. */}
         <div style={{ textAlign: 'center', marginTop: 36, fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
-          Expanding to Kerala &amp; Telangana in 2025 —{' '}
+          Expanding to Kerala &amp; Telangana soon —{' '}
           <a
-            href="https://wa.me/919769444053"
+            href={whatsappLink()}
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: '#F47920', textDecoration: 'none', fontWeight: 600 }}

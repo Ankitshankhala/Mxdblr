@@ -10,7 +10,7 @@ Built by: Charu Solutions
 ```
 mxdblr/
 ├── api/   — Express + Prisma backend (port 4000)
-└── web/   — Next.js 15 frontend (port 3000)
+└── web/   — Next.js 16 frontend (port 3000)
 ```
 
 ---
@@ -99,59 +99,89 @@ npm start
 
 ## API Endpoints
 
+All responses use the envelope `{ success, data, pagination? }` (or
+`{ success, message }`). Admin routes require an admin JWT **and** the noted RBAC
+permission (enforced at mount + inside each router).
+
 ### Public
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | /health | Health check |
 | POST | /api/auth/send-otp | Send OTP to mobile |
-| POST | /api/auth/verify-otp | Verify OTP, returns JWT or newDealer flag |
-| POST | /api/auth/register | Register new dealer |
-| POST | /api/auth/admin/login | Admin login |
-| GET | /api/products | List products (filterable) |
+| POST | /api/auth/verify-otp | Verify OTP → JWT or `newDealer` flag |
+| POST | /api/auth/register | Register new dealer (OTP-verified) |
+| POST | /api/auth/admin/login | Admin login (bcrypt) |
+| GET | /api/products | List products (filter/sort/paginate) |
+| GET | /api/products/brands | Distinct brand names |
 | GET | /api/products/:id | Single product by ID or SKU |
 | GET | /api/categories | Full category tree |
 | GET | /api/categories/:slug | Single category |
+| GET | /api/banners | Active homepage banners |
+| GET | /api/brands | Brand model list |
+| GET | /api/features | Product feature definitions |
+| GET | /api/announcements | Marquee announcements |
+| GET | /api/events | Events & activities |
 | POST | /api/notify-me | Subscribe to restock notification |
 | GET | /api/geo/check | Geo restriction check |
 
-### Dealer (JWT required)
+### Dealer (dealer JWT required)
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | /api/cart | Get cart |
-| POST | /api/cart | Add/update cart item |
+| POST | /api/cart | Add/update cart item (server MOQ + stock enforce) |
 | DELETE | /api/cart/:productId | Remove cart item |
 | DELETE | /api/cart | Clear cart |
 | GET | /api/dealers/me | Get own profile |
 | PUT | /api/dealers/me | Update own profile |
-| GET | /api/dealers/me/inquiries | Get own inquiry history |
+| GET | /api/dealers/me/inquiries | Own inquiry history |
 | POST | /api/inquiry | Submit WhatsApp inquiry |
 
-### Admin (Admin JWT required)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET/POST/PUT/DELETE | /api/admin/products | Product management |
-| PATCH | /api/admin/products/:id/stock | Update stock status |
-| GET | /api/admin/dealers | List all dealers |
-| GET | /api/admin/dealers/:id | Dealer detail |
-| PUT | /api/admin/dealers/:id/moderate | Moderate dealer |
-| GET | /api/admin/inquiries | List all inquiries |
-| PUT | /api/admin/inquiries/:id/status | Update inquiry status |
-| GET | /api/admin/notify/subscriptions | List notification subs |
-| POST | /api/admin/notify/trigger/:productId | Trigger restock notifications |
-| GET/POST/DELETE | /api/admin/geo | Geo restriction management |
+### Admin (admin JWT + RBAC permission)
+| Method | Path | Permission | Description |
+|--------|------|-----------|-------------|
+| GET | /api/admin/me | (any admin) | Current admin + permissions |
+| GET | /api/admin/permissions | — | Permission catalog |
+| GET/POST | /api/admin/roles · PATCH/DELETE /roles/:id | MANAGE_ROLES | Role management |
+| GET | /api/admin/audit-logs | MANAGE_ROLES/ADMINS | Recent role/user changes |
+| GET/POST/PATCH/DELETE | /api/admin/users(/:id) | MANAGE_ADMINS | Staff/admin accounts |
+| GET/POST/PUT/DELETE | /api/admin/products(/:id) | MANAGE_PRODUCTS/INVENTORY | Product CRUD |
+| POST | /api/admin/products/csv-import | MANAGE_PRODUCTS | Bulk CSV import |
+| GET | /api/admin/products/stock-summary | " | Low/out-of-stock summary |
+| PATCH | /api/admin/products/:id/{stock,new-arrival,best-seller,active} | " | Flags/stock |
+| PUT | /api/admin/products/:id/stock | " | Set stock |
+| GET/POST/PUT/PATCH/DELETE | /api/admin/categories(/:id) | MANAGE_PRODUCTS | Categories (+ /bulk, /:id/products, /:id/toggle) |
+| GET | /api/admin/dealers · /:id · /export · /filters/options | MANAGE_CUSTOMERS | Dealer list/detail/export |
+| PUT | /api/admin/dealers/:id/moderate | " | Block/suspend (revokes sessions) |
+| GET | /api/admin/inquiries (alias /orders) | CREATE/EDIT_ORDERS, VIEW_REPORTS | Inquiry list |
+| PUT | /api/admin/inquiries/:id/status | EDIT_ORDERS | Update inquiry status |
+| GET/POST | /api/admin/notify/{subscriptions,trigger/:productId,products-with-subs,history,broadcast} | MANAGE_CUSTOMERS | Restock/broadcast |
+| GET/POST/DELETE | /api/admin/geo | SYSTEM_SETTINGS | Geo allow-list |
+| GET/POST/PUT/DELETE | /api/admin/banners | MANAGE_PRODUCTS | Banners (+ /reorder/bulk) |
+| GET/POST/PUT/DELETE | /api/admin/brands | MANAGE_PRODUCTS | Brands |
+| GET/POST/PUT/DELETE | /api/admin/features | MANAGE_PRODUCTS | Product features (+ /library) |
+| GET/POST/PUT/DELETE | /api/admin/announcements | MANAGE_PRODUCTS | Marquee |
+| GET/POST/PUT/DELETE | /api/admin/events | MANAGE_PRODUCTS | Events (+ /reorder/bulk) |
+| GET/PUT | /api/admin/settings · PUT /change-password | SYSTEM_SETTINGS | Non-secret config + admin password |
+| POST | /api/admin/upload · /video | MANAGE_PRODUCTS | Image/video upload |
+
+> Integration secrets (MSG91, Cloudinary) are read from **env vars only** — the
+> Settings screen manages non-secret config, not credentials.
 
 ---
 
 ## Frontend Pages
 
-| Route | Description |
-|-------|-------------|
-| / | Homepage with hero, categories, new arrivals, brands |
-| /catalog | Product listing with filters and search |
-| /product/[sku] | Product detail with attributes, stock badge, cart |
-| /auth | OTP login (mobile input + 6-box OTP step) |
-| /register | 3-step dealer registration form |
-| /cart | Inquiry cart with WhatsApp message builder |
+| Route | Rendering | Description |
+|-------|-----------|-------------|
+| / | SSR + ISR | Homepage: hero, categories, best-sellers, new arrivals, brands, events |
+| /catalog | SSR + ISR | Product listing — URL-driven filters/sort/pagination |
+| /product/[sku] | SSR | Product detail: attributes, stock badge, cart, features |
+| /auth | Client | OTP login (mobile + 6-box OTP) |
+| /register | Client | 3-step dealer registration |
+| /cart | Client | Inquiry cart + WhatsApp message builder |
+| /account, /account/profile | Client | Dealer account + profile edit |
+| /wishlist | Client | localStorage wishlist |
+| /admin/* | Client (JWT-gated) | Full admin suite: products, dealers, orders, banners, brands, categories, features, events, announcements, geo, roles, staff, audit-logs, settings, notifications |
 
 ---
 

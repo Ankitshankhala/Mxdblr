@@ -210,22 +210,32 @@ export default function CartPage() {
     dealer?.shopName || 'Shop'
   );
 
-  const whatsappUrl = whatsappLink(whatsappMessage);
+  // Fallback link used only if the API call fails (offline, network error) —
+  // the API response is the source of truth for both the number and message
+  // (CRIT-7 fix: previously this client-built link was always used, so
+  // inquiries could go to a stale/placeholder number even when the server
+  // had the correct one).
+  const fallbackWhatsappUrl = whatsappLink(whatsappMessage);
 
   async function handleWhatsAppInquiry() {
     if (!isAuthenticated) { window.location.href = '/auth'; return; }
 
     setSubmitting(true);
+    let finalUrl = fallbackWhatsappUrl;
     try {
-      await notificationsApi.submitInquiry(
+      const res = await notificationsApi.submitInquiry(
         items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
       );
+      const { whatsappNumber, whatsappMessage: serverMessage } = res.data?.data || {};
+      if (whatsappNumber) {
+        finalUrl = whatsappLink(serverMessage || whatsappMessage, whatsappNumber);
+      }
       setSubmitted(true);
     } catch {
-      // Even if log fails, still open WhatsApp
+      // Log failed — still open WhatsApp using the client-built fallback
     } finally {
       setSubmitting(false);
-      window.open(whatsappUrl, '_blank');
+      window.open(finalUrl, '_blank');
     }
   }
 
@@ -311,7 +321,7 @@ export default function CartPage() {
                     lineHeight: 1.5,
                   }}
                 >
-                  Pricing is not shown on this portal. Once you send this inquiry via WhatsApp, our team will share wholesale pricing within 2 hours.
+                  Pricing is not shown on this portal. Once you send this inquiry via WhatsApp, our team will share wholesale pricing ASAP - As Fast as Possible.
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, marginBottom: 20 }}>

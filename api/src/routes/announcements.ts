@@ -14,7 +14,9 @@ router.get('/', async (_req, res) => {
   try {
     const announcements = await prisma.announcement.findMany({
       where: { active: true },
-      orderBy: { displayOrder: 'asc' },
+      // Secondary sort on createdAt so that equal displayOrder values have a
+      // stable, deterministic order instead of reordering between requests.
+      orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
     });
     res.json({ success: true, data: announcements });
   } catch {

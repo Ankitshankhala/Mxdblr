@@ -26,7 +26,7 @@ router.post('/', async (req, res) => {
   try {
     const {
       bannerType, title, subtitle, ctaText, ctaLink,
-      image, bgColor, accentColor,
+      image, mobileImage, bgColor, accentColor,
       logoImage, productImage1, productImage2, productImage3,
       overlayOpacity, textAlignment,
       active, displayOrder,
@@ -41,6 +41,7 @@ router.post('/', async (req, res) => {
         ctaText: ctaText || 'Browse Catalog',
         ctaLink: ctaLink || '/catalog',
         image: image || '',
+        mobileImage: mobileImage || '',
         bgColor: bgColor || '#1A1A2E',
         accentColor: accentColor || '#F47920',
         logoImage: logoImage || '',
@@ -78,7 +79,7 @@ router.put('/:id', async (req, res) => {
   try {
     const {
       bannerType, title, subtitle, ctaText, ctaLink,
-      image, bgColor, accentColor,
+      image, mobileImage, bgColor, accentColor,
       logoImage, productImage1, productImage2, productImage3,
       overlayOpacity, textAlignment,
       active, displayOrder,
@@ -92,6 +93,7 @@ router.put('/:id', async (req, res) => {
         ...(ctaText !== undefined && { ctaText }),
         ...(ctaLink !== undefined && { ctaLink }),
         ...(image !== undefined && { image }),
+        ...(mobileImage !== undefined && { mobileImage }),
         ...(bgColor !== undefined && { bgColor }),
         ...(accentColor !== undefined && { accentColor }),
         ...(logoImage !== undefined && { logoImage }),
@@ -106,6 +108,9 @@ router.put('/:id', async (req, res) => {
     });
     res.json({ success: true, data: banner });
   } catch (e: any) {
+    if (e?.code === 'P2025') {
+      return res.status(404).json({ error: 'Banner not found' });
+    }
     res.status(500).json({ error: e?.message || 'Failed to update banner' });
   }
 });
@@ -115,7 +120,10 @@ router.delete('/:id', async (req, res) => {
   try {
     await prisma.banner.delete({ where: { id: req.params.id } });
     res.json({ success: true });
-  } catch {
+  } catch (e: any) {
+    if (e?.code === 'P2025') {
+      return res.status(404).json({ error: 'Banner not found' });
+    }
     res.status(500).json({ error: 'Failed to delete banner' });
   }
 });

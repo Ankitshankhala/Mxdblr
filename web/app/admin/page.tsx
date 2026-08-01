@@ -121,8 +121,8 @@ function DashboardContent() {
         fetch(`${API_BASE}/admin/products?stockStatus=OUT_OF_STOCK&limit=5`, { headers }).then((r) => r.json()),
       ])
         .then(([lowRes, outRes]) => {
-          const lowItems: StockAlertProduct[] = (lowRes.products || []).map((p: { name: string; sku: string }) => ({ ...p, status: "LOW_STOCK" }));
-          const outItems: StockAlertProduct[] = (outRes.products || []).map((p: { name: string; sku: string }) => ({ ...p, status: "OUT_OF_STOCK" }));
+          const lowItems: StockAlertProduct[] = (lowRes.data || []).map((p: { name: string; sku: string }) => ({ ...p, status: "LOW_STOCK" }));
+          const outItems: StockAlertProduct[] = (outRes.data || []).map((p: { name: string; sku: string }) => ({ ...p, status: "OUT_OF_STOCK" }));
           setStockAlerts([...lowItems, ...outItems].slice(0, 8));
         })
         .catch(() => {})

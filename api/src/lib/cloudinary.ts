@@ -25,6 +25,10 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/png': 'png',
   'image/webp': 'webp',
   'image/gif': 'gif',
+  'image/svg+xml': 'svg',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
 };
 
 function saveLocally(buffer: Buffer, mimeType: string): string | null {
@@ -35,8 +39,11 @@ function saveLocally(buffer: Buffer, mimeType: string): string | null {
     const ext = MIME_TO_EXT[mimeType] || 'jpg';
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     fs.writeFileSync(path.join(UPLOADS_DIR, filename), buffer);
-    const port = process.env.PORT || '4000';
-    return `http://localhost:${port}/uploads/${filename}`;
+    // Relative path — persisted to DB as-is. The frontend's normalizeImageUrl()
+    // (web/lib/config.ts) makes this absolute against NEXT_PUBLIC_API_URL at
+    // render time, so it resolves correctly on any device/host, not just
+    // localhost. Never hardcode a host here (CRIT-6).
+    return `/uploads/${filename}`;
   } catch {
     return null;
   }
@@ -88,6 +95,50 @@ export async function uploadImageFromBuffer(
       { timeout: 30000 }
     );
     return response.data.secure_url as string;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Upload a video buffer. Cloudinary transcodes + auto-generates a poster frame
+ * (the thumbnail is the same delivery URL with a .jpg extension). Falls back to
+ * local disk when Cloudinary creds are absent (no server-side thumbnail in that
+ * case — the client uses the <video> first frame). Returns the playable URL and a
+ * thumbnail URL ('' when none could be derived).
+ */
+export async function uploadVideoFromBuffer(
+  buffer: Buffer,
+  folder: string,
+  mimeType = 'video/mp4'
+): Promise<{ url: string; thumbnailUrl: string } | null> {
+  if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+    const url = saveLocally(buffer, mimeType);
+    return url ? { url, thumbnailUrl: '' } : null;
+  }
+
+  const timestamp = Math.round(Date.now() / 1000);
+  const params: Record<string, string | number> = { folder, timestamp };
+  const signature = generateSignature(params);
+
+  const formData = new FormData();
+  const blob = new Blob([new Uint8Array(buffer)]);
+  formData.append('file', blob);
+  formData.append('api_key', API_KEY);
+  formData.append('timestamp', String(timestamp));
+  formData.append('signature', signature);
+  formData.append('folder', folder);
+
+  try {
+    const response = await axios.post(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+      formData,
+      { timeout: 120000, maxBodyLength: Infinity, maxContentLength: Infinity }
+    );
+    const url = response.data.secure_url as string;
+    // Cloudinary serves an auto-generated poster at the same path with a .jpg ext.
+    const thumbnailUrl = url.replace(/\.\w+$/, '.jpg');
+    return { url, thumbnailUrl };
   } catch {
     return null;
   }

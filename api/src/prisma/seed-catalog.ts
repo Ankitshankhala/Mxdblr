@@ -2,12 +2,14 @@
  * MXD Catalog Seed — populates all 12 categories and 59 products
  * Run: npx ts-node src/prisma/seed-catalog.ts
  */
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
-const url = process.env.DATABASE_URL ?? 'file:./dev.db';
-const adapter = new PrismaLibSql({ url });
-const prisma = new PrismaClient({ adapter } as any);
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 const CATEGORIES = [
   { name: 'Headphones',       slug: 'headphones',       displayOrder: 1,  description: 'Over-ear and on-ear headphones for personal and professional use' },

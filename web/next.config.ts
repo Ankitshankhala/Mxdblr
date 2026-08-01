@@ -20,10 +20,29 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "mxdindia.com",
       },
+      // Production API host — serves locally-stored /uploads/* when Cloudinary
+      // creds are absent. Whitelisted so next/image won't 404 on the fallback
+      // path. Update the hostname if the production API domain changes; it must
+      // match the host in NEXT_PUBLIC_API_URL.
+      {
+        protocol: "https",
+        hostname: "api.mxdblr.com",
+        pathname: "/uploads/**",
+      },
       // Local API server — dev only (Cloudinary used in production)
       {
         protocol: "http",
         hostname: "localhost",
+        port: "4000",
+        pathname: "/uploads/**",
+      },
+      // LAN IP of the dev machine serving the API — required so next/image will
+      // optimize upload images when the site is opened from a phone over Wi-Fi
+      // (localhost is unreachable from the phone). Dev only. Update if the
+      // machine's LAN IP changes; must match NEXT_PUBLIC_API_URL in .env.local.
+      {
+        protocol: "http",
+        hostname: "192.168.1.6",
         port: "4000",
         pathname: "/uploads/**",
       },

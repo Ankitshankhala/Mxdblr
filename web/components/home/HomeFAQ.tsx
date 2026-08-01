@@ -18,11 +18,11 @@ const FAQS = [
   },
   {
     q: 'How do I place an order?',
-    a: 'Browse the catalog, add items to your cart, and click "Send Inquiry via WhatsApp." Our team will confirm the order, pricing, and dispatch timeline within 2 hours on business days.',
+    a: 'Browse the catalog, add items to your cart, and click "Send Inquiry via WhatsApp." Our team confirms the order, pricing, and dispatch timeline the same business day.',
   },
   {
     q: 'How long does delivery take?',
-    a: 'Orders dispatched from Bengaluru typically reach Karnataka destinations in 1 day, Tamil Nadu and Andhra Pradesh in 2–3 days via our courier partners.',
+    a: 'Orders dispatched Sameday from Bengaluru typically reach Karnataka destinations in 1 day, Tamil Nadu and Andhra Pradesh in 1-2 days via our courier partners.',
   },
   {
     q: 'Are the products genuine / authentic?',
@@ -30,7 +30,7 @@ const FAQS = [
   },
   {
     q: 'Can I return or exchange products?',
-    a: 'Defective products are eligible for replacement within 7 days of delivery. Raise a replacement request on WhatsApp with an unboxing video or photo evidence.',
+    a: 'Defective products are eligible for replacement as per warranty . Raise a replacement request on WhatsApp with an unboxing video or photo evidence.',
   },
 ];
 

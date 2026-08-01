@@ -43,6 +43,18 @@ function maskSecret(value: string | null | undefined): string {
   return '••••••' + value.slice(-4);
 }
 
+const MASK_PATTERN = /^••••••.{0,4}$/;
+
+// CRIT-4 fix: GET returns masked secrets for display. If the client round-trips
+// that masked value back on PUT without editing it, this previously overwrote
+// the real secret with the literal "••••••xxxx" string — silent data
+// corruption behind a success toast. Any field matching the mask shape is
+// treated as "unchanged" and the existing DB value is kept instead.
+function resolveSecretField(incoming: string, existing: string | null | undefined): string {
+  if (MASK_PATTERN.test(incoming)) return existing || '';
+  return incoming;
+}
+
 // GET /api/admin/settings
 // Sensitive API keys/secrets are masked — last 4 chars only, never returned in full.
 router.get('/', async (_req: Request, res: Response): Promise<void> => {
@@ -77,10 +89,19 @@ router.put('/', async (req: Request, res: Response): Promise<void> => {
   }
 
   try {
+    const existing = await prisma.systemSettings.findUnique({ where: { id: SETTINGS_ID } });
+
+    const resolved = {
+      ...parse.data,
+      msg91ApiKey: resolveSecretField(parse.data.msg91ApiKey, existing?.msg91ApiKey),
+      cloudinaryApiKey: resolveSecretField(parse.data.cloudinaryApiKey, existing?.cloudinaryApiKey),
+      cloudinaryApiSecret: resolveSecretField(parse.data.cloudinaryApiSecret, existing?.cloudinaryApiSecret),
+    };
+
     const settings = await prisma.systemSettings.upsert({
       where: { id: SETTINGS_ID },
-      update: parse.data,
-      create: { id: SETTINGS_ID, ...parse.data },
+      update: resolved,
+      create: { id: SETTINGS_ID, ...resolved },
     });
     res.json({
       success: true,

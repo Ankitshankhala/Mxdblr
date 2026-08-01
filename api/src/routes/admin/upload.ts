@@ -1,21 +1,33 @@
 /**
- * Admin image upload. Mounted at /api/admin/upload behind MANAGE_PRODUCTS.
+ * Admin media upload. Mounted at /api/admin/upload behind MANAGE_PRODUCTS.
  *
- * POST / accepts a base64/data-URI image body, validates MIME type (jpeg/png/
- * webp/gif) and a 5 MB size cap, then hands the buffer to uploadImageFromBuffer
- * (Cloudinary, or local-disk fallback in dev) and returns the stored URL. This
- * is the single server-side entry point for product/banner images.
+ * POST /       — base64/data-URI image (jpeg/png/webp/gif), 5 MB cap.
+ * POST /video  — multipart video file (mp4/webm/mov), 50 MB cap, multer-streamed
+ *                to Cloudinary (auto poster/transcode) or local-disk in dev.
+ * Both hand the buffer to the cloudinary lib and return the stored URL(s). This is
+ * the single server-side entry point for product/banner/event media.
  */
 import { Router, Request, Response } from 'express';
 import express from 'express';
+import multer from 'multer';
 import { requireAdminAuth } from '../../middleware/auth';
-import { uploadImageFromBuffer } from '../../lib/cloudinary';
+import { uploadImageFromBuffer, uploadVideoFromBuffer } from '../../lib/cloudinary';
+import { sanitizeSvg } from '../../lib/svg';
 
 const router = Router();
 router.use(requireAdminAuth);
 
-const ALLOWED_MIME_PREFIXES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+// Raster formats carry no active content and pass straight through. `image/svg+xml`
+// is allowed too but is ALWAYS sanitized first (SVG can carry scripts).
+const ALLOWED_MIME_PREFIXES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+const ALLOWED_VIDEO_MIME = ['video/mp4', 'video/webm', 'video/quicktime'];
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50 MB
+const videoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_VIDEO_BYTES },
+});
 
 // POST /api/admin/upload
 // Accepts { data: "data:image/jpeg;base64,..." } JSON body.
@@ -43,11 +55,22 @@ router.post('/', express.json({ limit: '8mb' }), async (req: Request, res: Respo
     return;
   }
 
-  const buffer = Buffer.from(base64Payload, 'base64');
+  let buffer = Buffer.from(base64Payload, 'base64');
 
   if (buffer.length > MAX_SIZE_BYTES) {
     res.status(400).json({ success: false, message: 'Image exceeds 5 MB limit' });
     return;
+  }
+
+  // SVG is XML and can carry scripts/handlers — sanitize before it is ever stored
+  // or rendered. A payload that doesn't look like an SVG is rejected outright.
+  if (mimeType === 'image/svg+xml') {
+    const cleaned = sanitizeSvg(buffer.toString('utf8'));
+    if (!cleaned) {
+      res.status(400).json({ success: false, message: 'Invalid or unsafe SVG file' });
+      return;
+    }
+    buffer = Buffer.from(cleaned, 'utf8');
   }
 
   const folder = (req.query.folder as string) || 'mxdblr/uploads';
@@ -62,6 +85,46 @@ router.post('/', express.json({ limit: '8mb' }), async (req: Request, res: Respo
   }
 
   res.json({ success: true, url });
+});
+
+// POST /api/admin/upload/video
+// Multipart form-data with a single `file` field. Validates type + 50 MB size,
+// streams the buffer to Cloudinary (video/upload → transcode + poster) or local
+// disk in dev. Returns { url, thumbnailUrl }.
+router.post('/video', (req: Request, res: Response): void => {
+  videoUpload.single('file')(req, res, async (err: unknown) => {
+    if (err) {
+      const code = (err as { code?: string }).code;
+      const message =
+        code === 'LIMIT_FILE_SIZE' ? 'Video exceeds 50 MB limit' : 'Video upload failed';
+      res.status(400).json({ success: false, message });
+      return;
+    }
+
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ success: false, message: 'Missing `file` field (multipart video required)' });
+      return;
+    }
+
+    if (!ALLOWED_VIDEO_MIME.includes(file.mimetype)) {
+      res.status(400).json({ success: false, message: `Unsupported video type: ${file.mimetype}. Allowed: mp4, webm, mov.` });
+      return;
+    }
+
+    const folder = (req.query.folder as string) || 'mxdblr/events';
+    const result = await uploadVideoFromBuffer(file.buffer, folder, file.mimetype);
+
+    if (!result) {
+      res.status(503).json({
+        success: false,
+        message: 'Video upload failed. Check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.',
+      });
+      return;
+    }
+
+    res.json({ success: true, ...result });
+  });
 });
 
 export default router;

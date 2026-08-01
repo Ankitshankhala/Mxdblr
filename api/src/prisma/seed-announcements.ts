@@ -14,7 +14,7 @@ const MESSAGES = [
   'New Arrivals: iPhone 16 Accessories Now Available',
   'Free Delivery on Orders above ₹5,000',
   'Service Area: Karnataka | Tamil Nadu | Andhra Pradesh',
-  'WhatsApp Inquiries Processed within 2 Hours',
+  'WhatsApp Inquiries Processed ASAP - As Fast as Possible',
   'MOQ as Low as 5 Units on Select Products',
 ];
 

@@ -30,8 +30,10 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   const fromStr = typeof rawFrom === 'string' ? rawFrom : (Array.isArray(rawFrom) ? String(rawFrom[0]) : undefined);
   const toStr = typeof rawTo === 'string' ? rawTo : (Array.isArray(rawTo) ? String(rawTo[0]) : undefined);
 
-  const pageNum = Math.max(1, parseInt(pageStr));
-  const limitNum = Math.min(100, parseInt(limitStr));
+  const parsedPage = parseInt(pageStr);
+  const parsedLimit = parseInt(limitStr);
+  const pageNum = Number.isNaN(parsedPage) ? 1 : Math.max(1, parsedPage);
+  const limitNum = Number.isNaN(parsedLimit) ? 50 : Math.min(100, Math.max(1, parsedLimit));
   const skip = (pageNum - 1) * limitNum;
 
   const where: Prisma.InquiryLogWhereInput = {};
@@ -81,13 +83,21 @@ router.put('/:id/status', requireLoadedPermission('EDIT_ORDERS'), async (req: Re
     return;
   }
 
-  const inquiry = await prisma.inquiryLog.update({
-    where: { id },
-    data: { status: status as InquiryStatus },
-    include: { dealer: { select: { ownerName: true, shopName: true, mobile: true } } },
-  });
+  try {
+    const inquiry = await prisma.inquiryLog.update({
+      where: { id },
+      data: { status: status as InquiryStatus },
+      include: { dealer: { select: { ownerName: true, shopName: true, mobile: true } } },
+    });
 
-  res.json({ success: true, data: inquiry });
+    res.json({ success: true, data: inquiry });
+  } catch (e: any) {
+    if (e?.code === 'P2025') {
+      res.status(404).json({ success: false, message: 'Inquiry not found' });
+      return;
+    }
+    throw e;
+  }
 });
 
 export default router;

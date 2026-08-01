@@ -6,13 +6,14 @@
  */
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { whatsappLink } from '@/lib/config';
 
 const STEPS = [
   {
     step: '01',
     title: 'Register as a Dealer',
-    desc: 'Fill out the dealer registration form with your shop and GST details. Approval within 24 hours.',
-    cta: { label: 'Register Now', href: '/register' },
+    desc: 'Takes about 2 minutes. You will need a valid GST number and basic shop details. Most applications are reviewed within 24 hours.',
+    cta: { label: 'Register as a Dealer', href: '/register' },
   },
   {
     step: '02',
@@ -23,8 +24,8 @@ const STEPS = [
   {
     step: '03',
     title: 'Order via WhatsApp',
-    desc: 'Add items to your cart and send an inquiry. Our team confirms pricing and dispatch within 2 hours.',
-    cta: { label: 'WhatsApp Us', href: 'https://wa.me/919769444053' },
+    desc: 'Add items to your cart and send an inquiry. Our team confirms pricing and dispatch the same business day.',
+    cta: { label: 'WhatsApp Us', href: whatsappLink() },
   },
 ];
 

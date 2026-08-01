@@ -52,8 +52,16 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 // DELETE /api/admin/geo/:id
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  await prisma.geoRestriction.delete({ where: { id } });
-  res.json({ success: true, message: 'Geo restriction removed' });
+  try {
+    await prisma.geoRestriction.delete({ where: { id } });
+    res.json({ success: true, message: 'Geo restriction removed' });
+  } catch (e: any) {
+    if (e?.code === 'P2025') {
+      res.status(404).json({ success: false, message: 'Geo restriction not found' });
+      return;
+    }
+    throw e;
+  }
 });
 
 export default router;

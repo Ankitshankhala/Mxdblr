@@ -120,12 +120,22 @@ async function main() {
   console.log(`✓ ${DEFAULT_ROLES.length} roles + permissions`);
 
   // Admin user — assigned to SUPER_ADMIN
+  // HIGH-9 fix: no hardcoded default password. SEED_ADMIN_PASSWORD must be set
+  // (e.g. via a one-time env var at seed time) so there's never a known
+  // credential in source that could end up in production if seed ever runs there.
+  const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!seedAdminPassword || seedAdminPassword.length < 8) {
+    throw new Error(
+      'SEED_ADMIN_PASSWORD env var must be set (8+ chars) before running the seed script. ' +
+      'Example: SEED_ADMIN_PASSWORD="your-strong-password" npm run db:seed'
+    );
+  }
   await prisma.adminUser.upsert({
     where: { username: 'admin' },
     update: { roleId: superAdminRoleId, active: true },
     create: {
       username: 'admin',
-      passwordHash: await bcrypt.hash('mxd@admin2026', 10),
+      passwordHash: await bcrypt.hash(seedAdminPassword, 10),
       roleId: superAdminRoleId,
     },
   });

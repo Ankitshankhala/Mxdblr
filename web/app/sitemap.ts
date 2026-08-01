@@ -6,7 +6,9 @@
 import type { MetadataRoute } from 'next';
 
 const BASE_URL = 'https://www.mxdblr.com';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_URL = process.env.INTERNAL_API_URL
+  ? `${process.env.INTERNAL_API_URL.replace(/\/$/, '')}/api`
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api');
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [

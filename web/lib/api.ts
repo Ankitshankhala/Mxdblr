@@ -105,4 +105,9 @@ export const brandsApi = {
   list: () => api.get('/brands'),
 };
 
+// Product features / supported technologies (public)
+export const featuresApi = {
+  list: () => api.get('/features'),
+};
+
 export default api;

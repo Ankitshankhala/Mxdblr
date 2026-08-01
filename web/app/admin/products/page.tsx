@@ -19,14 +19,27 @@ type Product = {
   brand: string;
   sku: string;
   category: any;
+  categoryId: string;
   moq: number;
   stockStatus: string;
+  stockQty: number;
+  active: boolean;
   isNewArrival: boolean;
   isBestSeller: boolean;
   images: string[];
   description: string;
   attributes: any[];
+  features?: any[];
+  featureSlugs?: string[];
 };
+
+interface AdminFeature {
+  id: string;
+  name: string;
+  slug: string;
+  logo: string;
+  category: string;
+}
 
 function getCategoryName(cat: any): string {
   if (!cat) return "";
@@ -50,9 +63,9 @@ const SORT_OPTIONS = [
 interface ApiCategory { id: string; name: string; slug: string; }
 
 const EMPTY_PRODUCT: Omit<Product, "id"> = {
-  name: "", brand: "MXD", sku: "", category: "", moq: 10,
-  stockStatus: "IN_STOCK", isNewArrival: false, isBestSeller: false,
-  images: [], description: "", attributes: [{ key: "", value: "" }],
+  name: "", brand: "MXD", sku: "", category: "", categoryId: "", moq: 10,
+  stockStatus: "IN_STOCK", stockQty: 0, active: true, isNewArrival: false, isBestSeller: false,
+  images: [], description: "", attributes: [{ key: "", value: "" }], featureSlugs: [],
 };
 
 const CSV_TEMPLATE =
@@ -122,8 +135,9 @@ function ProductsContent() {
   });
 
   const [apiBrands, setApiBrands] = useState<string[]>([]);
+  const [apiFeatures, setApiFeatures] = useState<AdminFeature[]>([]);
 
-  // ── Load categories + brands once ──────────────────────────────────────────
+  // ── Load categories + brands + features once ───────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     const headers = { Authorization: `Bearer ${token}` };
@@ -134,6 +148,10 @@ function ProductsContent() {
     fetch(`${API_BASE}/admin/brands`, { headers })
       .then((r) => r.json())
       .then((d) => { if (d.data?.length) setApiBrands(d.data.map((b: { name: string }) => b.name)); })
+      .catch(() => {});
+    fetch(`${API_BASE}/admin/features`, { headers })
+      .then((r) => r.json())
+      .then((d) => { if (d.data?.length) setApiFeatures(d.data.filter((f: AdminFeature & { active?: boolean }) => f.active !== false)); })
       .catch(() => {});
   }, []);
 
@@ -161,9 +179,9 @@ function ProductsContent() {
       });
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
-      setProducts(data.products || []);
-      setTotalCount(data.total || 0);
-      setTotalPages(data.pages || 1);
+      setProducts(data.data || []);
+      setTotalCount(data.pagination?.total || 0);
+      setTotalPages(data.pagination?.pages || 1);
       setCurrentPage(page);
     } catch { showToast("Failed to load products", "error"); }
     finally { setLoading(false); }
@@ -206,7 +224,7 @@ function ProductsContent() {
   // ── Add / Edit handlers ─────────────────────────────────────────────────────
   function openAdd() {
     setEditingProduct(null);
-    setForm({ ...EMPTY_PRODUCT, attributes: [{ key: "", value: "" }] });
+    setForm({ ...EMPTY_PRODUCT, attributes: [{ key: "", value: "" }], featureSlugs: [] });
     setShowModal(true);
   }
   function openEdit(p: Product) {
@@ -215,13 +233,28 @@ function ProductsContent() {
       key: a.attributeType?.name || a.key || "",
       value: a.value || "",
     }));
+    // features come back as [{ feature: { slug, ... }, displayOrder }] — extract ordered slugs.
+    const featureSlugs: string[] = ((p.features as any[]) || [])
+      .map((link: any) => link.feature?.slug || link.slug)
+      .filter(Boolean);
     setForm({
       name: p.name, brand: p.brand, sku: p.sku,
-      category: getCategoryName(p.category), moq: p.moq,
-      stockStatus: p.stockStatus, isNewArrival: p.isNewArrival, isBestSeller: p.isBestSeller,
-      images: [...p.images], description: p.description, attributes: normAttrs,
+      category: getCategoryName(p.category),
+      // Seed the id from the returned category object (or top-level categoryId)
+      // so the select is pre-populated and edits preserve the assignment.
+      categoryId: (p.category && typeof p.category === "object" ? p.category.id : "") || p.categoryId || "",
+      moq: p.moq,
+      stockStatus: p.stockStatus, stockQty: p.stockQty ?? 0, active: p.active ?? true, isNewArrival: p.isNewArrival, isBestSeller: p.isBestSeller,
+      images: [...p.images], description: p.description, attributes: normAttrs, featureSlugs,
     });
     setShowModal(true);
+  }
+
+  function toggleFeature(slug: string) {
+    setForm((f) => {
+      const cur = f.featureSlugs ?? [];
+      return { ...f, featureSlugs: cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug] };
+    });
   }
 
   async function handleSave() {
@@ -234,10 +267,20 @@ function ProductsContent() {
       const attributes = (form.attributes as Attribute[])
         .filter((a) => a.key.trim() !== "")
         .map((a) => ({ name: a.key.trim(), value: a.value }));
+      // Build the payload explicitly. The API expects `categoryId` (not the
+      // display `category` name), and only when a category is actually selected —
+      // sending an empty string would violate the Product→Category foreign key.
+      const { category: _categoryName, categoryId, ...rest } = form;
+      const payload: Record<string, unknown> = {
+        ...rest,
+        images: form.images,
+        attributes,
+      };
+      if (categoryId) payload.categoryId = categoryId;
       const res = await fetch(url, {
         method: editingProduct ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...form, images: form.images, attributes }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error || e.message || "Failed"); }
       showToast(editingProduct ? "Product updated" : "Product added");
@@ -285,6 +328,20 @@ function ProductsContent() {
       showToast(p.isNewArrival ? "Removed from New Arrivals" : "Marked as New Arrival");
       setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, isNewArrival: !p.isNewArrival } : x));
     } catch { showToast("Failed to update", "error"); }
+  }
+
+  async function handleToggleActive(p: Product) {
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await fetch(`${API_BASE}/admin/products/${p.id}/active`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ active: !p.active }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      showToast(p.active ? "Product hidden from storefront" : "Product is now visible");
+      setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, active: !p.active } : x));
+    } catch { showToast("Failed to update visibility", "error"); }
   }
 
   // ── CSV import ──────────────────────────────────────────────────────────────
@@ -551,14 +608,14 @@ function ProductsContent() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
-                {["Image", "Name", "Brand", "SKU", "Category", "MOQ", "Stock Status", "Best Seller", "New Arrival", "Actions"].map((h) => (
+                {["Image", "Name", "Brand", "SKU", "Category", "MOQ", "Stock Status", "Visibility", "Best Seller", "New Arrival", "Actions"].map((h) => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={10} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading products…</td></tr>
+                <tr><td colSpan={11} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading products…</td></tr>
               )}
               {!loading && products.map((p) => (
                 <tr key={p.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
@@ -585,8 +642,31 @@ function ProductsContent() {
                   <td style={{ padding: "10px 14px" }}><StatusBadge status={p.stockStatus} /></td>
                   <td style={{ padding: "10px 14px" }}>
                     <button
+                      onClick={() => handleToggleActive(p)}
+                      title={p.active ? "Hide from storefront" : "Show on storefront"}
+                      aria-pressed={p.active}
+                      aria-label={p.active ? `Hide ${p.name} from storefront` : `Show ${p.name} on storefront`}
+                      style={{
+                        padding: "3px 10px",
+                        borderRadius: 6,
+                        border: p.active ? "1px solid #059669" : "1px solid #E8E4DE",
+                        background: p.active ? "#D1FAE5" : "#F3F4F6",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        color: p.active ? "#059669" : "#6B7280",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {p.active ? "Visible" : "Hidden"}
+                    </button>
+                  </td>
+                  <td style={{ padding: "10px 14px" }}>
+                    <button
                       onClick={() => handleToggleBestSeller(p)}
                       title={p.isBestSeller ? "Remove from Best Sellers" : "Mark as Best Seller"}
+                      aria-pressed={p.isBestSeller}
+                      aria-label={p.isBestSeller ? `Remove ${p.name} from Best Sellers` : `Mark ${p.name} as Best Seller`}
                       style={{
                         padding: "3px 10px",
                         borderRadius: 6,
@@ -606,6 +686,8 @@ function ProductsContent() {
                     <button
                       onClick={() => handleToggleNewArrival(p)}
                       title={p.isNewArrival ? "Remove from New Arrivals" : "Mark as New Arrival"}
+                      aria-pressed={p.isNewArrival}
+                      aria-label={p.isNewArrival ? `Remove ${p.name} from New Arrivals` : `Mark ${p.name} as New Arrival`}
                       style={{
                         padding: "3px 10px",
                         borderRadius: 6,
@@ -630,7 +712,7 @@ function ProductsContent() {
                 </tr>
               ))}
               {!loading && products.length === 0 && (
-                <tr><td colSpan={10} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No products found</td></tr>
+                <tr><td colSpan={11} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No products found</td></tr>
               )}
             </tbody>
           </table>
@@ -867,7 +949,7 @@ function ProductsContent() {
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 560, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{editingProduct ? "Edit Product" : "Add Product"}</div>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 18 }}>×</button>
+              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 18 }}>×</button>
             </div>
 
             <div style={{ overflowY: "auto", padding: "20px 24px", flex: 1 }}>
@@ -900,9 +982,9 @@ function ProductsContent() {
                 </div>
                 <div>
                   <label style={labelStyle}>Category</label>
-                  <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} style={inputStyle}>
+                  <select value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))} style={inputStyle}>
                     <option value="">— Select category —</option>
-                    {apiCategories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    {apiCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -913,6 +995,27 @@ function ProductsContent() {
                   <label style={labelStyle}>Stock Status</label>
                   <select value={form.stockStatus} onChange={(e) => setForm((f) => ({ ...f, stockStatus: e.target.value }))} style={inputStyle}>
                     {STOCK_OPTIONS.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Stock Quantity</label>
+                  <input
+                    type="number"
+                    value={form.stockQty}
+                    onChange={(e) => setForm((f) => ({ ...f, stockQty: Math.max(0, Number(e.target.value)) }))}
+                    style={inputStyle}
+                    min={0}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Storefront Visibility</label>
+                  <select
+                    value={form.active ? "visible" : "hidden"}
+                    onChange={(e) => setForm((f) => ({ ...f, active: e.target.value === "visible" }))}
+                    style={inputStyle}
+                  >
+                    <option value="visible">Visible (shown on site)</option>
+                    <option value="hidden">Hidden (admin only)</option>
                   </select>
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
@@ -947,6 +1050,7 @@ function ProductsContent() {
                           <img src={src} alt={`Product image ${idx + 1}`} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE" }}
                             onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0.3"; }} />
                           <button onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
+                            aria-label={`Remove image ${idx + 1}`}
                             style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", background: "#DC2626", border: "2px solid #fff", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, lineHeight: 1, padding: 0 }}>×</button>
                           {idx === 0 && <div style={{ position: "absolute", bottom: 4, left: 4, background: "#F47920", color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4 }}>MAIN</div>}
                         </div>
@@ -971,12 +1075,68 @@ function ProductsContent() {
                     <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <input value={attr.key} onChange={(e) => updateAttr(idx, "key", e.target.value)} placeholder="Key (e.g. Color)" style={{ ...inputStyle, flex: 1 }} />
                       <input value={attr.value} onChange={(e) => updateAttr(idx, "value", e.target.value)} placeholder="Value (e.g. Black)" style={{ ...inputStyle, flex: 1 }} />
-                      <button onClick={() => removeAttr(idx)} style={{ padding: "6px", borderRadius: 6, border: "1px solid #FCE7E7", background: "#FCE7E7", color: "#DC2626", cursor: "pointer", flexShrink: 0 }}>
+                      <button onClick={() => removeAttr(idx)} aria-label={`Remove attribute ${idx + 1}`} style={{ padding: "6px", borderRadius: 6, border: "1px solid #FCE7E7", background: "#FCE7E7", color: "#DC2626", cursor: "pointer", flexShrink: 0 }}>
                         <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                       </button>
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Supported Technologies — toggle chips from the feature master list */}
+              <div style={{ marginTop: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <label style={{ ...labelStyle, margin: 0 }}>Supported Technologies</label>
+                  <span style={{ fontSize: 11, color: "#A8A39A" }}>
+                    {(form.featureSlugs?.length ?? 0)} selected
+                  </span>
+                </div>
+                {apiFeatures.length === 0 ? (
+                  <p style={{ fontSize: 12, color: "#A8A39A" }}>
+                    No features defined yet. Add them under Product Features.
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 220, overflowY: "auto", paddingRight: 4 }}>
+                    {["CHARGING", "WIRELESS", "CABLE", "DATA", "PROTECTION", "CERTIFICATION"]
+                      .map((cat) => ({ cat, items: apiFeatures.filter((f) => f.category === cat) }))
+                      .filter((g) => g.items.length > 0)
+                      .map(({ cat, items }) => (
+                        <div key={cat}>
+                          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#A8A39A", marginBottom: 6 }}>{cat}</div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                            {items.map((f) => {
+                              const on = (form.featureSlugs ?? []).includes(f.slug);
+                              return (
+                                <button
+                                  key={f.slug}
+                                  type="button"
+                                  onClick={() => toggleFeature(f.slug)}
+                                  aria-pressed={on}
+                                  style={{
+                                    display: "flex", alignItems: "center", gap: 6,
+                                    padding: "5px 10px", borderRadius: 16, cursor: "pointer",
+                                    fontSize: 12, fontWeight: 600,
+                                    border: on ? "1px solid #F47920" : "1px solid #E8E4DE",
+                                    background: on ? "#FFF3E8" : "#fff",
+                                    color: on ? "#B8560F" : "#6B6B7D",
+                                  }}
+                                >
+                                  {f.logo && (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={f.logo} alt="" width={16} height={16} style={{ objectFit: "contain" }} />
+                                  )}
+                                  {f.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+                <p style={{ fontSize: 11, color: "#A8A39A", marginTop: 6 }}>
+                  Selection order sets which icons show first on the product card (max 4 + “+N more”).
+                </p>
               </div>
             </div>
 

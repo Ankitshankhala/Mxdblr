@@ -3,6 +3,13 @@
 /**
  * CategoryCardList — homepage grid of category cards linking into the filtered
  * catalog (/catalog?category=…). Fetches categories from the API.
+ *
+ * CRO note: switched from a single-row horizontal scroller to a dense
+ * responsive grid with the product count always shown in bold/brand color —
+ * matching the pattern used by same-niche competitors (Gaffarwala,
+ * greatchoice.co.in), where a dense category grid with visible counts per
+ * tile signals catalog depth immediately and lets a dealer self-navigate
+ * without scrolling through a thin row first.
  */
 import Link from 'next/link';
 import Image from 'next/image';
@@ -34,15 +41,13 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
     return (
       <div
         style={{
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
           gap: 12,
-          overflowX: 'auto',
-          paddingBottom: 8,
-          scrollbarWidth: 'none',
         }}
       >
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="card" style={{ width: 160, padding: '16px 14px', flexShrink: 0 }}>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="card" style={{ padding: '16px 14px' }}>
             <div style={{ width: 44, height: 44, background: '#F0EDEA', borderRadius: 10, marginBottom: 10 }} />
             <div style={{ height: 12, background: '#F0EDEA', borderRadius: 4, marginBottom: 6, width: '80%' }} />
             <div style={{ height: 10, background: '#F5F3F0', borderRadius: 4, width: '60%' }} />
@@ -55,21 +60,19 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
   return (
     <div
       style={{
-        display: 'flex',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
         gap: 12,
-        overflowX: 'auto',
-        paddingBottom: 8,
-        scrollbarWidth: 'none',
       }}
     >
       {categories.map((cat, idx) => {
         const palette = ICON_PALETTE[idx % ICON_PALETTE.length];
         const { Icon, color, iconColor } = palette;
         return (
-          <Link key={cat.id} href={`/catalog?category=${cat.slug}`} style={{ textDecoration: 'none', flexShrink: 0 }}>
+          <Link key={cat.id} href={`/catalog?category=${cat.slug}`} style={{ textDecoration: 'none' }}>
             <div
               className="card"
-              style={{ width: 160, padding: '16px 14px', cursor: 'pointer', transition: 'border-color 0.15s' }}
+              style={{ padding: '16px 14px', cursor: 'pointer', transition: 'border-color 0.15s', height: '100%' }}
               onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = '#F47920')}
               onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = '#E8E4DE')}
             >
@@ -89,9 +92,16 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
                 </div>
               )}
               <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{cat.name}</div>
-              <div style={{ fontSize: 11, color: '#6B6B7D' }}>
-                {cat.description || `${cat.productCount ?? 0} products`}
+              {/* Product count always shown, bold + brand color — the count
+                  itself is the trust/depth signal, not just supplementary text. */}
+              <div style={{ fontSize: 11, color: '#F47920', fontWeight: 700 }}>
+                {cat.productCount ?? 0} products
               </div>
+              {cat.description && (
+                <div style={{ fontSize: 10, color: '#A8A39A', marginTop: 2, lineHeight: 1.4 }}>
+                  {cat.description}
+                </div>
+              )}
             </div>
           </Link>
         );

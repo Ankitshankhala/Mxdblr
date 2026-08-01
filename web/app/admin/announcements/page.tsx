@@ -17,6 +17,9 @@ interface Announcement {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
+// Keep in sync with MAX_TEXT_LENGTH in api/src/routes/admin/announcements.ts.
+const MAX_TEXT_LENGTH = 200;
+
 const EMPTY: Omit<Announcement, "id"> = {
   text: "",
   active: true,
@@ -226,15 +229,21 @@ function AnnouncementsContent() {
                 <label style={labelStyle}>Message *</label>
                 <textarea
                   value={form.text}
-                  onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, text: e.target.value.slice(0, MAX_TEXT_LENGTH) }))}
                   placeholder="e.g. Free Delivery on Orders above ₹5,000"
                   rows={2}
+                  maxLength={MAX_TEXT_LENGTH}
                   style={{ ...inputStyle, resize: "vertical", lineHeight: 1.4 }}
                   autoFocus
                 />
-                <p style={{ fontSize: 11, color: "#A8A39A", marginTop: 4 }}>
-                  Shown in the scrolling bar at the top of the home page. Keep it short.
-                </p>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 4 }}>
+                  <p style={{ fontSize: 11, color: "#A8A39A" }}>
+                    Shown in the scrolling bar at the top of the home page. Keep it short.
+                  </p>
+                  <span style={{ fontSize: 11, color: form.text.length >= MAX_TEXT_LENGTH ? "#DC2626" : "#A8A39A", whiteSpace: "nowrap" }}>
+                    {form.text.length}/{MAX_TEXT_LENGTH}
+                  </span>
+                </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>

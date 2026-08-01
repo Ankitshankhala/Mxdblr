@@ -1,31 +1,45 @@
 'use client';
 
 /**
- * Testimonials — homepage carousel/grid of dealer testimonials. Content is a
- * local static array (placeholder copy until real testimonials are supplied).
+ * Testimonials — homepage carousel/grid of dealer testimonials.
+ *
+ * TODO(client): the array below is placeholder copy with invented names and
+ * quotes — it must NOT ship to production as-is. Presenting fabricated named
+ * "customers" as real is a trust/legal risk (flagged in the production audit,
+ * CRIT-5). Replace every entry with a real dealer's actual quote (with their
+ * permission) before launch, or hide this section entirely until real
+ * testimonials are collected. Shop names below are deliberately generic
+ * (no invented full names) to reduce the risk of this placeholder being
+ * mistaken for real customer data if it ships by accident.
  */
 const TESTIMONIALS = [
   {
-    name: 'Rajesh Kumar',
-    shop: 'RK Mobile Store, Bengaluru',
-    text: 'Been sourcing from MXD for over 2 years. The quality is consistent, MOQ is flexible, and their WhatsApp team responds faster than any other distributor I work with.',
+    name: 'Dealer since 2024',
+    shop: 'Mobile Accessories Retailer, Bengaluru',
+    text: '[PLACEHOLDER — replace with a real dealer quote before launch]',
     rating: 5,
   },
   {
-    name: 'Priya Sundaram',
-    shop: 'Priya Accessories, Chennai',
-    text: 'MXD helped me expand my catalog without overstocking. I started with just 5 units of each product and gradually scaled. Delivery to Chennai is always next day.',
+    name: 'Dealer since 2024',
+    shop: 'Mobile Accessories Retailer, Chennai',
+    text: '[PLACEHOLDER — replace with a real dealer quote before launch]',
     rating: 5,
   },
   {
-    name: 'Mohammed Farhan',
-    shop: 'FM Electronics, Vijayawada',
-    text: 'The catalog portal makes it so easy to check stock before ordering. No more calling around to check availability. The data cables and chargers move very fast in my area.',
+    name: 'Dealer since 2024',
+    shop: 'Mobile Accessories Retailer, Vijayawada',
+    text: '[PLACEHOLDER — replace with a real dealer quote before launch]',
     rating: 5,
   },
 ];
 
 export default function Testimonials() {
+  // Launch safety: never render placeholder entries. Any testimonial whose text
+  // still contains the placeholder marker is dropped; if none remain real, the
+  // whole section is hidden. Add real dealer quotes above and it reappears.
+  const testimonials = TESTIMONIALS.filter((t) => !t.text.includes('[PLACEHOLDER'));
+  if (testimonials.length === 0) return null;
+
   return (
     <section style={{ maxWidth: 1280, margin: '0 auto', padding: '60px 20px 0' }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
@@ -62,7 +76,7 @@ export default function Testimonials() {
           gap: 16,
         }}
       >
-        {TESTIMONIALS.map((t, i) => (
+        {testimonials.map((t, i) => (
           <div
             key={i}
             className="card"

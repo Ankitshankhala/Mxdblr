@@ -16,9 +16,14 @@ import SkuLabel from '@/components/ui/SkuLabel';
 import ProductActions from '@/components/features/product/ProductActions';
 import BackButtonClient from '@/components/features/product/BackButton';
 import ProductGallery from '@/components/features/product/ProductGallery';
+import SupportedTechnologies from '@/components/products/SupportedTechnologies';
 import type { Product } from '@/types';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+// Server-side fetch: prefer the internal Docker service URL when set (the
+// browser-facing NEXT_PUBLIC_API_URL may be unreachable from the container).
+const API = process.env.INTERNAL_API_URL
+  ? `${process.env.INTERNAL_API_URL.replace(/\/$/, '')}/api`
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api');
 
 async function getProduct(sku: string): Promise<Product | null> {
   try {
@@ -162,6 +167,11 @@ export default async function ProductPage({
             <ProductActions product={product} />
           </div>
         </div>
+
+        {/* Supported technologies — full-width, grouped by category */}
+        {product.features && product.features.length > 0 && (
+          <SupportedTechnologies features={product.features} />
+        )}
       </div>
     </div>
   );

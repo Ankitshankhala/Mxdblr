@@ -6,6 +6,7 @@
  */
 import Link from 'next/link';
 import { MapPin, Clock, Package } from 'lucide-react';
+import { whatsappLink } from '@/lib/config';
 
 const CATEGORIES = [
   { name: 'Headphones', slug: 'headphones' },
@@ -52,7 +53,7 @@ export default function Footer() {
               B2B wholesale portal for mobile accessories. Serving registered dealers across South India.
             </p>
             <a
-              href="https://wa.me/919769444053"
+              href={whatsappLink()}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-whatsapp"

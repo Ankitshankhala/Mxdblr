@@ -19,6 +19,22 @@ FROM base AS build
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+
+# NEXT_PUBLIC_* vars are baked into the browser bundle at build time —
+# must be passed as build args, not runtime env (runtime env has no effect
+# on already-compiled client JS).
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+# Optional build-time values. Left empty, the components that read them
+# self-suppress (TrustStats hides, WhatsApp falls back to lib/config.ts).
+ARG NEXT_PUBLIC_WHATSAPP_NUMBER
+ENV NEXT_PUBLIC_WHATSAPP_NUMBER=${NEXT_PUBLIC_WHATSAPP_NUMBER}
+ARG NEXT_PUBLIC_STAT_DEALERS
+ENV NEXT_PUBLIC_STAT_DEALERS=${NEXT_PUBLIC_STAT_DEALERS}
+ARG NEXT_PUBLIC_STAT_SKUS
+ENV NEXT_PUBLIC_STAT_SKUS=${NEXT_PUBLIC_STAT_SKUS}
+
 RUN npm run build
 
 # ── Stage 3: lean runner ──────────────────────────────────────────────────────

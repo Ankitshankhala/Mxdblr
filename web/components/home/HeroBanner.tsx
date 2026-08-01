@@ -20,6 +20,7 @@ interface Banner {
   ctaText: string;
   ctaLink: string;
   image: string;
+  mobileImage: string;
   bgColor: string;
   accentColor: string;
   logoImage: string;
@@ -34,11 +35,12 @@ const FALLBACK_BANNERS: Banner[] = [
   {
     id: "f1",
     bannerType: "SIMPLE",
-    title: "Quality for Everyone.",
-    subtitle: "The wholesale mobile accessories portal for verified dealers across Karnataka, Tamil Nadu & Andhra Pradesh.",
+    title: "Wholesale Mobile Accessories. No Minimum Bulk Orders.",
+    subtitle: "1,200+ genuine SKUs, MOQ as low as 5 units, same-day dispatch from Bengaluru — for registered dealers across Karnataka, Tamil Nadu & Andhra Pradesh.",
     ctaText: "Browse Catalog",
     ctaLink: "/catalog",
     image: "",
+    mobileImage: "",
     bgColor: "#1A1A2E",
     accentColor: "#F47920",
     logoImage: "",
@@ -56,6 +58,7 @@ const FALLBACK_BANNERS: Banner[] = [
     ctaText: "Shop Now",
     ctaLink: "/catalog?category=cases-covers",
     image: "",
+    mobileImage: "",
     bgColor: "#0F1F0F",
     accentColor: "#22c55e",
     logoImage: "",
@@ -73,6 +76,7 @@ const FALLBACK_BANNERS: Banner[] = [
     ctaText: "View Chargers",
     ctaLink: "/catalog?category=chargers",
     image: "",
+    mobileImage: "",
     bgColor: "#1A0F00",
     accentColor: "#F59E0B",
     logoImage: "",
@@ -101,6 +105,17 @@ function normalizeImg(url: string): string {
   }
   if (url.startsWith("/uploads/")) return `${API_ORIGIN}${url}`;
   return url;
+}
+
+// Resolve a CTA link into a safe href + whether it should open in a new tab.
+// Empty/whitespace links fall back to /catalog (never render href="" which points
+// at the current page). Absolute http(s) URLs are treated as external → new tab
+// with rel="noopener". Everything else is an internal path.
+function resolveCta(link: string): { href: string; external: boolean } {
+  const trimmed = (link || "").trim();
+  if (!trimmed) return { href: "/catalog", external: false };
+  if (/^https?:\/\//i.test(trimmed)) return { href: trimmed, external: true };
+  return { href: trimmed.startsWith("/") ? trimmed : `/${trimmed}`, external: false };
 }
 
 // SSR-safe viewport detector: defaults to desktop on the server + first client
@@ -217,20 +232,26 @@ function BannerContent({
         </p>
 
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: centered ? "center" : "flex-start" }}>
-          <Link
-            href={b.ctaLink}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              background: b.accentColor, color: "#fff",
-              fontWeight: 700, fontSize: 14, padding: "12px 24px",
-              borderRadius: 10, textDecoration: "none", transition: "opacity 0.15s",
-            }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.88")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")}
-          >
-            {b.ctaText}
-            <ArrowRight size={16} />
-          </Link>
+          {(() => {
+            const cta = resolveCta(b.ctaLink);
+            return (
+              <Link
+                href={cta.href}
+                {...(cta.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  background: b.accentColor, color: "#fff",
+                  fontWeight: 700, fontSize: 14, padding: "12px 24px",
+                  borderRadius: 10, textDecoration: "none", transition: "opacity 0.15s",
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.88")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")}
+              >
+                {b.ctaText}
+                <ArrowRight size={16} />
+              </Link>
+            );
+          })()}
           <Link
             href="/register"
             style={{
@@ -244,7 +265,7 @@ function BannerContent({
             onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.5)")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.2)")}
           >
-            Become a Dealer
+            Register as a Dealer
           </Link>
         </div>
 
@@ -317,7 +338,7 @@ export default function HeroBanner() {
   const [banners, setBanners] = useState<Banner[]>(FALLBACK_BANNERS);
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [paused, setPaused] = useState(false);
   const isMobile = useIsMobile();
   const minHeight = isMobile ? 340 : 420;
 
@@ -329,35 +350,71 @@ export default function HeroBanner() {
   }, []);
 
   const goTo = useCallback((idx: number) => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrent(idx);
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning]);
+    setIsTransitioning((t) => {
+      if (t) return t;
+      setCurrent(idx);
+      setTimeout(() => setIsTransitioning(false), 500);
+      return true;
+    });
+  }, []);
 
-  const next = useCallback(() => goTo((current + 1) % banners.length), [current, banners.length, goTo]);
-  const prev = useCallback(() => goTo((current - 1 + banners.length) % banners.length), [current, banners.length, goTo]);
+  // Advance using the functional updater so this callback never depends on
+  // `current` — the autoplay effect below can then own a single stable interval
+  // instead of churning one per slide (previous timer-leak / double-advance bug).
+  const count = banners.length;
+  const next = useCallback(() => {
+    setCurrent((c) => {
+      const target = (c + 1) % count;
+      setIsTransitioning(true);
+      setTimeout(() => setIsTransitioning(false), 500);
+      return target;
+    });
+  }, [count]);
+  const prev = useCallback(() => goTo((current - 1 + count) % count), [current, count, goTo]);
 
+  // Single autoplay interval. Runs unless paused (hover), there's only one
+  // slide, or the user has requested reduced motion at the OS level (WCAG
+  // 2.2.2/2.3.3) — auto-advancing slides is exactly the kind of motion that
+  // setting is meant to suppress. Re-created only when pause state or slide
+  // count changes — not on every transition — so there is exactly one active
+  // timer at a time.
   useEffect(() => {
-    timerRef.current = setInterval(next, AUTO_PLAY_INTERVAL);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [next]);
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (paused || count <= 1 || prefersReducedMotion) return;
+    const id = setInterval(next, AUTO_PLAY_INTERVAL);
+    return () => clearInterval(id);
+  }, [paused, count, next]);
 
-  const pause = () => { if (timerRef.current) clearInterval(timerRef.current); };
-  const resume = () => { timerRef.current = setInterval(next, AUTO_PLAY_INTERVAL); };
+  const pause = () => setPaused(true);
+  const resume = () => setPaused(false);
 
   const banner = banners[current];
 
   return (
     <section
+      className="hero-ctrl"
+      tabIndex={0}
       style={{ position: "relative", overflow: "hidden", minHeight }}
       onMouseEnter={pause}
       onMouseLeave={resume}
+      onFocusCapture={pause}
+      onBlurCapture={resume}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Promotional banners. Use the left and right arrow keys to change slides."
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight") { next(); }
+        else if (e.key === "ArrowLeft") { prev(); }
+      }}
     >
-      <div style={{ position: "relative", width: "100%", minHeight }}>
+      <div style={{ position: "relative", width: "100%", minHeight }} aria-live="polite">
         {banners.map((b, i) => (
           <div
             key={b.id}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${i + 1} of ${banners.length}`}
+            aria-hidden={i === current ? undefined : true}
             style={{
               // The CURRENT slide is relative so it sizes the container to its
               // own (possibly tall, stacked-on-mobile) content — others are
@@ -374,12 +431,16 @@ export default function HeroBanner() {
               alignItems: "center",
             }}
           >
-            {/* Background image */}
-            {b.image && (
+            {/* Background image — prefer the device-specific mobile image when
+                on a phone; fall back to the desktop image when mobileImage is
+                empty so existing banners render unchanged. */}
+            {(isMobile ? b.mobileImage || b.image : b.image) && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={normalizeImg(b.image)}
-                alt={b.title}
+                src={normalizeImg(isMobile ? b.mobileImage || b.image : b.image)}
+                alt=""
+                aria-hidden="true"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 style={{
                   position: "absolute", inset: 0,
                   width: "100%", height: "100%",
@@ -394,7 +455,7 @@ export default function HeroBanner() {
             <div
               style={{
                 position: "absolute", inset: 0,
-                background: b.image
+                background: (isMobile ? b.mobileImage || b.image : b.image)
                   ? isMobile
                     ? `linear-gradient(180deg, ${b.bgColor}cc 0%, ${b.bgColor}dd 60%, ${b.bgColor}f5 100%)`
                     : `linear-gradient(90deg, ${b.bgColor}f0 0%, ${b.bgColor}bb 45%, ${b.bgColor}44 75%, transparent 100%)`
@@ -418,6 +479,16 @@ export default function HeroBanner() {
         ))}
       </div>
 
+      {/* Focus-visible rings for carousel controls (inline styles can't express
+          :focus-visible). Uses a bright ring that reads on any admin bgColor. */}
+      <style>{`
+        .hero-ctrl:focus-visible {
+          outline: 3px solid #fff;
+          outline-offset: 2px;
+          box-shadow: 0 0 0 5px rgba(0,0,0,0.45);
+        }
+      `}</style>
+
       {/* Prev / Next arrows — hidden on mobile (dots + autoplay handle nav, and
           edge-anchored arrows would overlap the stacked content) */}
       {banners.length > 1 && !isMobile && (
@@ -425,6 +496,7 @@ export default function HeroBanner() {
           <button
             onClick={prev}
             aria-label="Previous banner"
+            className="hero-ctrl"
             style={{
               position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
               zIndex: 10, width: 40, height: 40, borderRadius: "50%",
@@ -442,6 +514,7 @@ export default function HeroBanner() {
           <button
             onClick={next}
             aria-label="Next banner"
+            className="hero-ctrl"
             style={{
               position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)",
               zIndex: 10, width: 40, height: 40, borderRadius: "50%",
@@ -470,7 +543,9 @@ export default function HeroBanner() {
             <button
               key={i}
               onClick={() => goTo(i)}
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={`Go to slide ${i + 1} of ${banners.length}`}
+              aria-current={i === current ? "true" : undefined}
+              className="hero-ctrl"
               style={{
                 width: i === current ? 24 : 7, height: 7,
                 borderRadius: 999,

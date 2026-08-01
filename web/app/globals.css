@@ -183,6 +183,21 @@ textarea:focus-visible {
   animation: marquee 28s linear infinite;
 }
 
+/* Pause on hover/focus so users can read a message (WCAG 2.2.2 pause control). */
+.marquee-bar:hover .marquee-inner,
+.marquee-bar:focus-within .marquee-inner {
+  animation-play-state: paused;
+}
+
+/* Respect reduced-motion: stop the scroll entirely (WCAG 2.3.3 / 2.2.2). The
+   messages remain readable — the row just wraps/clips statically instead of moving. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-inner {
+    animation: none;
+    transform: none;
+  }
+}
+
 @keyframes skeleton-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }

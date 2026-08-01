@@ -51,7 +51,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   const { category, brand, search, stockStatus, isNewArrival, isBestSeller, sort, page, limit } = parse.data;
   const skip = (page - 1) * limit;
 
-  const where: Prisma.ProductWhereInput = {};
+  // Storefront only ever shows active products; hidden ones are admin-only.
+  const where: Prisma.ProductWhereInput = { active: true };
 
   if (category) where.category = { slug: category };
   if (brand) where.brand = { equals: brand, mode: 'insensitive' };
@@ -85,6 +86,11 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
           category: { select: { id: true, name: true, slug: true } },
           attributes: { include: { attributeType: { select: { name: true, unit: true } } } },
           compatibilityTags: { select: { tag: true } },
+          features: {
+            where: { feature: { active: true } },
+            orderBy: { displayOrder: 'asc' },
+            include: { feature: { select: { name: true, slug: true, logo: true, image: true, displayMode: true, category: true, description: true } } },
+          },
         },
       }),
       prisma.product.count({ where }),
@@ -106,11 +112,17 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 
   try {
     const product = await prisma.product.findFirst({
-      where: { OR: [{ id }, { sku: id }] },
+      // active: true so a hidden product is not reachable via its direct URL either.
+      where: { active: true, OR: [{ id }, { sku: id }] },
       include: {
         category: { include: { parent: { select: { id: true, name: true, slug: true } } } },
         attributes: { include: { attributeType: { select: { name: true, unit: true } } } },
         compatibilityTags: { select: { tag: true } },
+        features: {
+          where: { feature: { active: true } },
+          orderBy: { displayOrder: 'asc' },
+          include: { feature: { select: { name: true, slug: true, logo: true, image: true, displayMode: true, category: true, description: true } } },
+        },
       },
     });
 
@@ -151,6 +163,7 @@ function sanitizeProduct(product: {
   category?: { id: string; name: string; slug: string; parent?: { id: string; name: string; slug: string } | null } | null;
   attributes?: Array<{ attributeType: { name: string; unit: string | null }; value: string }>;
   compatibilityTags?: Array<{ tag: string }>;
+  features?: Array<{ feature: { name: string; slug: string; logo: string; image: string; displayMode: string; category: string; description: string } }>;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -176,6 +189,15 @@ function sanitizeProduct(product: {
       unit: a.attributeType.unit,
     })),
     compatibilityTags: product.compatibilityTags?.map((t) => t.tag),
+    features: product.features?.map((f) => ({
+      name: f.feature.name,
+      slug: f.feature.slug,
+      logo: f.feature.logo,
+      image: f.feature.image,
+      displayMode: f.feature.displayMode,
+      category: f.feature.category,
+      description: f.feature.description,
+    })),
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
   };

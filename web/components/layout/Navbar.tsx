@@ -251,6 +251,32 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
             )}
           </Link>
 
+          {/* Register CTA — logged-out visitors only. The primary conversion
+              goal of this site is dealer registration, so it needs a named,
+              visible action in the persistent nav rather than only the
+              generic account icon (CRO review recommendation). */}
+          {!isLoggedIn && (
+            <Link
+              href="/register"
+              className="hidden md:inline-flex"
+              style={{
+                alignItems: 'center',
+                gap: 6,
+                background: '#F47920',
+                color: '#fff',
+                fontSize: 13,
+                fontWeight: 700,
+                padding: '8px 16px',
+                borderRadius: 8,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+                marginLeft: 4,
+              }}
+            >
+              Register as a Dealer
+            </Link>
+          )}
+
           {/* Account */}
           <Link
             href={isLoggedIn ? '/account' : '/auth'}

@@ -3,9 +3,10 @@
 /**
  * ProductCard — catalog/home product tile: image gallery (autoplay + swipe/arrows/
  * dots), brand/SKU/MOQ, stock badge, and add-to-cart or notify-me CTA. No price
- * (B2B inquiry model). NOTE: images are passed straight to next/image — uploads
- * stored as absolute localhost URLs break on other devices until the upload
- * pipeline stores relative paths (see production audit NEW-3).
+ * (B2B inquiry model). Product images stored as absolute localhost upload URLs are
+ * rewritten to the configured API origin via normalizeImg() so they resolve on
+ * phones/LAN devices (localhost = the device itself). Cloudinary/remote URLs pass
+ * through untouched. Mirrors HeroBanner's normalizeImg (see production audit NEW-3).
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -15,8 +16,10 @@ import Image from 'next/image';
 import BrandChip from '@/components/ui/BrandChip';
 import SkuLabel from '@/components/ui/SkuLabel';
 import StockBadge from '@/components/ui/StockBadge';
+import FeatureIcons from '@/components/products/FeatureIcons';
 import type { Product } from '@/types';
 import { cartApi } from '@/lib/api';
+import { normalizeImageUrl } from '@/lib/config';
 
 const SLIDE_INTERVAL = 3000;
 // How long autoplay stays paused after a manual interaction (swipe / arrow / dot).
@@ -35,9 +38,14 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
+  // Track image URLs that 404 at runtime so we can drop them and show the
+  // brand-initial fallback box instead of the browser's broken-image glyph +
+  // alt text inside the card frame (some products have stale/missing uploads).
+  const [failedSrcs, setFailedSrcs] = useState<Set<string>>(new Set());
   const resumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const images = product.images?.length ? product.images : [];
+  const allImages = product.images?.length ? product.images.map(normalizeImageUrl) : [];
+  const images = allImages.filter((src) => !failedSrcs.has(src));
   const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK';
   const hasMultiple = images.length > 1;
 
@@ -166,13 +174,19 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Image
               key={i}
               src={src}
-              alt={`${product.name} view ${i + 1}`}
+              // Only the first image carries the descriptive alt (accessibility);
+              // the rest are empty so a broken/404 image renders as blank space
+              // instead of dumping raw alt text ("<name> view 2") over the badges
+              // inside the image frame. The product name is always shown in the
+              // card body below, so no information is lost.
+              alt={i === 0 ? product.name : ''}
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
+              onError={() => setFailedSrcs((prev) => new Set(prev).add(src))}
               style={{
                 objectFit: 'contain',
                 padding: '12px',
-                opacity: i === currentIdx ? 1 : 0,
+                opacity: i === (currentIdx % images.length) ? 1 : 0,
                 transition: 'opacity 0.5s ease',
                 pointerEvents: 'none',
               }}
@@ -184,16 +198,29 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Category chip — top left */}
-        {product.category?.name && (
-          <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 2, background: '#1A1A2E', color: '#fff', fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap' }}>
-            {product.category.name.toUpperCase()}
-          </div>
-        )}
-
-        {/* Stock badge — top right */}
-        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
-          <StockBadge status={product.stockStatus} size="sm" />
+        {/* Top overlay bar — category chip (left) + stock badge (right) laid out
+            in a single flex row so they can never overlap. The chip flexes and
+            truncates with an ellipsis when the category name is long (e.g.
+            "STANDS & HOLDERS" on a ~150px-wide mobile card); the stock badge is
+            fixed-width and always fully visible. gap + min-width:0 let the chip
+            shrink instead of pushing the badge off-card. */}
+        <div
+          style={{
+            position: 'absolute', top: 8, left: 8, right: 8, zIndex: 2,
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+            gap: 8, pointerEvents: 'none',
+          }}
+        >
+          {product.category?.name ? (
+            <span style={{ minWidth: 0, flexShrink: 1, background: '#1A1A2E', color: '#fff', fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {product.category.name.toUpperCase()}
+            </span>
+          ) : (
+            <span />
+          )}
+          <span style={{ flexShrink: 0 }}>
+            <StockBadge status={product.stockStatus} size="sm" />
+          </span>
         </div>
 
         {/* Prev / Next arrows — desktop hover (mobile uses swipe) */}
@@ -260,6 +287,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div style={{ fontSize: 12, color: '#6B6B7D', marginTop: 2 }}>
           MOQ: <strong style={{ color: '#1A1A2E' }}>{product.moq} pcs</strong>
         </div>
+
+        {/* Key features — up to 4 highlighted 48px badges (icon + label) + overflow badge */}
+        {product.features && product.features.length > 0 && (
+          <div style={{ marginTop: 8 }}>
+            <FeatureIcons features={product.features} max={4} />
+          </div>
+        )}
 
         {/* CTA */}
         <div style={{ marginTop: 'auto', paddingTop: 10 }}>

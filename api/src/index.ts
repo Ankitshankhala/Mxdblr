@@ -12,6 +12,10 @@
  */
 import 'dotenv/config';
 import path from 'path';
+import { initObservability, captureError } from './lib/observability';
+
+// Initialise error monitoring as early as possible (no-op unless SENTRY_DSN set).
+initObservability();
 
 // Fail fast before any imports that need env vars
 const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET'];
@@ -50,8 +54,12 @@ import adminSettingsRouter from './routes/admin/settings';
 import adminUploadRouter from './routes/admin/upload';
 import bannersRouter from './routes/banners';
 import brandsRouter from './routes/brands';
+import featuresRouter from './routes/features';
 import announcementsRouter from './routes/announcements';
+import eventsRouter from './routes/events';
 import adminAnnouncementsRouter from './routes/admin/announcements';
+import adminEventsRouter from './routes/admin/events';
+import adminFeaturesRouter from './routes/admin/features';
 import adminRbacRouter from './routes/admin/rbac';
 import adminUsersRouter from './routes/admin/users';
 
@@ -118,7 +126,9 @@ app.use('/api/products', geoCheckMiddleware, productsRouter);
 app.use('/api/categories', geoCheckMiddleware, categoriesRouter);
 app.use('/api/banners', bannersRouter);
 app.use('/api/brands', brandsRouter);
+app.use('/api/features', featuresRouter);
 app.use('/api/announcements', announcementsRouter);
+app.use('/api/events', eventsRouter);
 
 // Auth-required dealer routes
 app.use('/api/cart', cartRouter);
@@ -144,9 +154,11 @@ app.use('/api/admin/notify', requirePermission('MANAGE_CUSTOMERS'), adminNotific
 app.use('/api/admin/geo', requirePermission('SYSTEM_SETTINGS'), adminGeoRouter);
 app.use('/api/admin/banners', requirePermission('MANAGE_PRODUCTS'), adminBannersRouter);
 app.use('/api/admin/brands', requirePermission('MANAGE_PRODUCTS'), adminBrandsRouter);
+app.use('/api/admin/features', requirePermission('MANAGE_PRODUCTS'), adminFeaturesRouter);
 app.use('/api/admin/settings', requirePermission('SYSTEM_SETTINGS'), adminSettingsRouter);
 app.use('/api/admin/upload', requirePermission('MANAGE_PRODUCTS'), adminUploadRouter);
 app.use('/api/admin/announcements', requirePermission('MANAGE_PRODUCTS'), adminAnnouncementsRouter);
+app.use('/api/admin/events', requirePermission('MANAGE_PRODUCTS'), adminEventsRouter);
 
 // Local image uploads (dev fallback — used when Cloudinary credentials are not set).
 // Override CORP header: helmet() sets same-origin by default, which blocks <img> tags
@@ -170,6 +182,9 @@ app.use((err: Error & { status?: number; statusCode?: number }, _req: Request, r
   if (process.env.NODE_ENV !== 'test') {
     process.stderr.write(`[ERROR] ${status} ${err.message}\n${err.stack}\n`);
   }
+
+  // Report unexpected failures (5xx) to Sentry when enabled; 4xx are expected.
+  if (status >= 500) captureError(err);
 
   res.status(status).json({
     success: false,

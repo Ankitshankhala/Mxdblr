@@ -14,6 +14,35 @@ import prisma from '../lib/prisma';
 
 const DEFAULT_ALLOWED_STATES = ['Karnataka', 'Tamil Nadu', 'Andhra Pradesh', 'Telangana'];
 
+// In-memory IP→state cache (CRIT-8 fix). ipapi.co's free tier is ~1000
+// req/day; without caching, a few hundred concurrent users exhaust the quota
+// in hours and the gate silently fails open for everyone after that, while
+// also paying a 3s external-call tax per request until then. TTL keeps this
+// safe if a user's IP genuinely changes region (e.g. mobile network handoff).
+// Resets on process restart — acceptable for a single-node deploy; note for
+// growth (§13 of the audit) if this ever needs to survive restarts/scale out.
+const GEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const geoCache = new Map<string, { state: string | null; expiresAt: number }>();
+
+function getCachedState(ip: string): string | null | undefined {
+  const entry = geoCache.get(ip);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    geoCache.delete(ip);
+    return undefined;
+  }
+  return entry.state;
+}
+
+function setCachedState(ip: string, state: string | null): void {
+  geoCache.set(ip, { state, expiresAt: Date.now() + GEO_CACHE_TTL_MS });
+  // Cheap unbounded-growth guard — evict oldest-ish entries if the map gets large.
+  if (geoCache.size > 50000) {
+    const firstKey = geoCache.keys().next().value;
+    if (firstKey) geoCache.delete(firstKey);
+  }
+}
+
 export async function geoCheckMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const ip = extractClientIp(req);
@@ -55,14 +84,20 @@ export async function getClientState(ip: string): Promise<string | null> {
     return null;
   }
 
+  const cached = getCachedState(ip);
+  if (cached !== undefined) return cached;
+
   try {
     // ipapi.co free tier — HTTPS, 1000 req/day free
     const response = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(3000) });
     if (!response.ok) return null;
     const data = await response.json() as { region?: string; error?: boolean };
     if (data.error || !data.region) return null;
+    setCachedState(ip, data.region);
     return data.region;
   } catch {
+    // Don't cache transient failures — a real outage should keep failing
+    // open (existing behavior) without poisoning the cache for the TTL window.
     return null;
   }
 }

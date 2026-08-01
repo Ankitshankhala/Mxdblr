@@ -7,7 +7,7 @@
 import { usePathname } from "next/navigation";
 import { whatsappLink } from "@/lib/config";
 
-const DEFAULT_MESSAGE = "Hi MXD, I'd like to know more about wholesale orders.";
+const DEFAULT_MESSAGE = "Hello Team, I would like more information.";
 
 /**
  * Fixed WhatsApp chat button shown on all customer-facing pages. Hidden on the admin

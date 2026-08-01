@@ -18,8 +18,8 @@ const BENEFITS = [
     Icon: Zap,
     color: '#EEF0FE',
     iconColor: '#6366F1',
-    title: '2-Hour WhatsApp Response',
-    desc: 'Dedicated support team handles all order inquiries within 2 business hours on working days.',
+    title: 'Fast WhatsApp Response',
+    desc: 'Dedicated support team confirms pricing and availability on the same business day.',
   },
   {
     Icon: Truck,

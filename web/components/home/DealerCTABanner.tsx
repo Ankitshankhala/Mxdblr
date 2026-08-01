@@ -6,6 +6,7 @@
  */
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { whatsappLink } from '@/lib/config';
 
 export default function DealerCTABanner() {
   return (
@@ -93,7 +94,7 @@ export default function DealerCTABanner() {
             <span style={{ color: '#F47920' }}>MXD Dealer</span>
           </h2>
           <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7 }}>
-            Access wholesale pricing, exclusive stock alerts, and priority WhatsApp support. Serving 500+ retailers across Karnataka, Tamil Nadu &amp; Andhra Pradesh.
+            Access wholesale pricing, exclusive stock alerts, and priority WhatsApp support across Karnataka, Tamil Nadu &amp; Andhra Pradesh.
           </p>
         </div>
 
@@ -103,11 +104,14 @@ export default function DealerCTABanner() {
             className="btn-orange"
             style={{ padding: '14px 32px', fontSize: 15, borderRadius: 10, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
           >
-            Register as Dealer
+            Register as a Dealer
             <ArrowRight size={16} />
           </Link>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+            Takes ~2 min · Valid GST number required
+          </p>
           <a
-            href="https://wa.me/919769444053"
+            href={whatsappLink()}
             target="_blank"
             rel="noopener noreferrer"
             style={{
