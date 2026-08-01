@@ -4,6 +4,15 @@
  * logo + name + description per item. Presentational Server Component (no client
  * state), so it stays SSR-friendly. Logos resolve from
  * /public/product-features/<slug>.svg (served by Next directly).
+ *
+ * NOTE — unlike the compact FeatureIcons strip on the card, the name is kept here.
+ * This is an informational list: each row pairs the name with a description, so the
+ * text is content rather than a redundant caption on a wordmark.
+ *
+ * The logo is NOT wrapped in a bordered white tile. Both the placeholder SVGs and
+ * the real brand logos already carry their own rounded border/background, so the
+ * tile drew a box inside a box and shrank the artwork by its border + 4px padding.
+ * Same rule the FeatureIcons header documents.
  */
 import type { ProductFeature, ProductFeatureCategory } from '@/types';
 import { normalizeImageUrl } from '@/lib/config';
@@ -104,11 +113,9 @@ export default function SupportedTechnologies({ features }: { features: ProductF
                     {showIcon && (
                       <span
                         style={{
-                          width: 44,
+                          width: f.logo ? 'auto' : 48,
                           height: 44,
-                          borderRadius: 8,
-                          border: '1px solid #E5E3DE',
-                          background: '#fff',
+                          maxWidth: 84,
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -117,16 +124,33 @@ export default function SupportedTechnologies({ features }: { features: ProductF
                         }}
                       >
                         {f.logo ? (
+                          // No frame/padding, and height-locked with free width so a
+                          // wide wordmark is not capped by a square slot. See header.
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={normalizeImageUrl(f.logo)}
                             alt={f.name}
-                            width={44}
-                            height={44}
-                            style={{ objectFit: 'contain', padding: 4, width: '100%', height: '100%' }}
+                            width={96}
+                            height={96}
+                            style={{ objectFit: 'contain', height: '100%', width: 'auto', maxWidth: '100%' }}
                           />
                         ) : (
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1A2E' }}>{monogram(f)}</span>
+                          <span
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              borderRadius: 8,
+                              background: '#EEF0FE',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: '#4A4AE0',
+                            }}
+                          >
+                            {monogram(f)}
+                          </span>
                         )}
                       </span>
                     )}
