@@ -41,6 +41,11 @@ logs/
 .vscode/
 .idea/
 
+# ── Claude Code ─────────────────────────────────────────────
+# launch.json is shared (how to run api + web locally);
+# settings.local.json is a per-machine permission allowlist.
+.claude/settings.local.json
+
 # ── Deploy ──────────────────────────────────────────────────
 .vercel
 .gstack/
