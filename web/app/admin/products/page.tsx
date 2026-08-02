@@ -137,6 +137,73 @@ function ProductsContent() {
   const [apiBrands, setApiBrands] = useState<string[]>([]);
   const [apiFeatures, setApiFeatures] = useState<AdminFeature[]>([]);
 
+  // ── Bulk feature assignment ────────────────────────────────────────────────
+  // Row selection is per-page on purpose: selecting rows you cannot see is how
+  // people accidentally retag a whole catalog. To cover everything, raise the
+  // page size (PAGE_SIZES tops out at 100) or narrow the filters first — the
+  // action bar always states exactly how many products will be written.
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkSlugs, setBulkSlugs] = useState<string[]>([]);
+  const [bulkMode, setBulkMode] = useState<"add" | "replace" | "remove">("add");
+  const [bulkSaving, setBulkSaving] = useState(false);
+
+  const pageIds = products.map((p) => p.id);
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
+
+  function toggleRow(id: string) {
+    setSelectedIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
+  }
+
+  function toggleAllOnPage() {
+    setSelectedIds((cur) =>
+      allOnPageSelected ? cur.filter((id) => !pageIds.includes(id)) : [...new Set([...cur, ...pageIds])]
+    );
+  }
+
+  function openBulk() {
+    setBulkSlugs([]);
+    setBulkMode("add");
+    setBulkOpen(true);
+  }
+
+  function toggleBulkSlug(slug: string) {
+    setBulkSlugs((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
+  }
+
+  async function applyBulkFeatures() {
+    // "replace" with nothing selected is the documented way to clear features;
+    // add/remove with nothing selected is a no-op the API rejects, so catch it here.
+    if (bulkSlugs.length === 0 && bulkMode !== "replace") {
+      showToast("Pick at least one technology", "error");
+      return;
+    }
+    setBulkSaving(true);
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await fetch(`${API_BASE}/admin/products/bulk-features`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ productIds: selectedIds, featureSlugs: bulkSlugs, mode: bulkMode }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Bulk update failed");
+
+      const missing = (data.data?.slugsNotFound ?? []).length;
+      showToast(
+        `${data.data.updated} product${data.data.updated === 1 ? "" : "s"} updated` +
+          (missing > 0 ? ` — ${missing} unknown technolog${missing === 1 ? "y" : "ies"} skipped` : "")
+      );
+      setBulkOpen(false);
+      setSelectedIds([]);
+      loadProducts();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Bulk update failed", "error");
+    } finally {
+      setBulkSaving(false);
+    }
+  }
+
   // ── Load categories + brands + features once ───────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -602,12 +669,50 @@ function ProductsContent() {
         )}
       </div>
 
+      {/* ── Bulk action bar — only present while rows are selected ───────────── */}
+      {selectedIds.length > 0 && (
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+            background: "#FFF3E8", border: "1px solid #F9C89B", borderRadius: 10,
+            padding: "10px 14px", marginBottom: 12,
+          }}
+        >
+          <strong style={{ fontSize: 13, color: "#B8560F" }}>
+            {selectedIds.length} product{selectedIds.length === 1 ? "" : "s"} selected
+          </strong>
+          <button
+            type="button"
+            onClick={openBulk}
+            style={{ padding: "6px 14px", borderRadius: 8, border: "none", background: "#F47920", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+          >
+            Assign technologies
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedIds([])}
+            style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 13, cursor: "pointer", color: "#6B6B7D" }}
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
+
       {/* ── Table ────────────────────────────────────────────────────────────── */}
       <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
+                <th style={{ padding: "10px 0 10px 14px", width: 34 }}>
+                  <input
+                    type="checkbox"
+                    checked={allOnPageSelected}
+                    onChange={toggleAllOnPage}
+                    aria-label={allOnPageSelected ? "Deselect all rows on this page" : "Select all rows on this page"}
+                    style={{ width: 15, height: 15, cursor: "pointer", accentColor: "#F47920" }}
+                  />
+                </th>
                 {["Image", "Name", "Brand", "SKU", "Category", "MOQ", "Stock Status", "Visibility", "Best Seller", "New Arrival", "Actions"].map((h) => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
@@ -615,10 +720,19 @@ function ProductsContent() {
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={11} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading products…</td></tr>
+                <tr><td colSpan={12} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading products…</td></tr>
               )}
               {!loading && products.map((p) => (
-                <tr key={p.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
+                <tr key={p.id} style={{ borderBottom: "1px solid #F0EDEA", background: selectedIds.includes(p.id) ? "#FFFaf5" : undefined }}>
+                  <td style={{ padding: "10px 0 10px 14px" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(p.id)}
+                      onChange={() => toggleRow(p.id)}
+                      aria-label={`Select ${p.name}`}
+                      style={{ width: 15, height: 15, cursor: "pointer", accentColor: "#F47920" }}
+                    />
+                  </td>
                   <td style={{ padding: "10px 14px" }}>
                     <div style={{ width: 40, height: 40, borderRadius: 6, background: "#F8F6F2", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {p.images[0] ? (
@@ -712,7 +826,7 @@ function ProductsContent() {
                 </tr>
               ))}
               {!loading && products.length === 0 && (
-                <tr><td colSpan={11} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No products found</td></tr>
+                <tr><td colSpan={12} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No products found</td></tr>
               )}
             </tbody>
           </table>
@@ -1143,6 +1257,117 @@ function ProductsContent() {
             <div style={{ padding: "14px 24px", borderTop: "1px solid #E8E4DE", display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button onClick={() => setShowModal(false)} style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
               <button onClick={handleSave} className="btn-orange" style={{ padding: "9px 20px", fontSize: 13 }}>Save Product</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bulk "Assign technologies" modal ─────────────────────────────────── */}
+      {bulkOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 12, width: "100%", maxWidth: 620, maxHeight: "88vh", display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid #E8E4DE" }}>
+              <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A2E" }}>Assign technologies</h2>
+              <p style={{ fontSize: 12, color: "#6B6B7D", marginTop: 3 }}>
+                Applies to the {selectedIds.length} selected product{selectedIds.length === 1 ? "" : "s"}.
+              </p>
+            </div>
+
+            <div style={{ padding: "16px 24px", overflowY: "auto" }}>
+              <label style={{ ...labelStyle }}>Mode</label>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                {([
+                  { key: "add", label: "Add", hint: "Keep existing, add these" },
+                  { key: "replace", label: "Replace", hint: "These become the full set" },
+                  { key: "remove", label: "Remove", hint: "Unlink these only" },
+                ] as const).map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setBulkMode(m.key)}
+                    aria-pressed={bulkMode === m.key}
+                    title={m.hint}
+                    style={{
+                      padding: "7px 14px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 700,
+                      border: bulkMode === m.key ? "1px solid #F47920" : "1px solid #E8E4DE",
+                      background: bulkMode === m.key ? "#FFF3E8" : "#fff",
+                      color: bulkMode === m.key ? "#B8560F" : "#6B6B7D",
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize: 11, color: "#A8A39A", marginBottom: 14 }}>
+                {bulkMode === "add" && "Existing technologies are kept; these are appended. Re-running changes nothing."}
+                {bulkMode === "replace" && "Existing technologies are discarded. Selecting none clears them entirely."}
+                {bulkMode === "remove" && "Only the technologies picked below are unlinked; the rest are kept."}
+              </p>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <label style={{ ...labelStyle, margin: 0 }}>Technologies</label>
+                <span style={{ fontSize: 11, color: "#A8A39A" }}>{bulkSlugs.length} selected</span>
+              </div>
+
+              {apiFeatures.length === 0 ? (
+                <p style={{ fontSize: 12, color: "#A8A39A" }}>No features defined yet. Add them under Product Features.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {["CHARGING", "WIRELESS", "CABLE", "DATA", "PROTECTION", "CERTIFICATION"]
+                    .map((cat) => ({ cat, items: apiFeatures.filter((f) => f.category === cat) }))
+                    .filter((g) => g.items.length > 0)
+                    .map(({ cat, items }) => (
+                      <div key={cat}>
+                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#A8A39A", marginBottom: 6 }}>{cat}</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                          {items.map((f) => {
+                            const on = bulkSlugs.includes(f.slug);
+                            return (
+                              <button
+                                key={f.slug}
+                                type="button"
+                                onClick={() => toggleBulkSlug(f.slug)}
+                                aria-pressed={on}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 6,
+                                  padding: "5px 10px", borderRadius: 16, cursor: "pointer",
+                                  fontSize: 12, fontWeight: 600,
+                                  border: on ? "1px solid #F47920" : "1px solid #E8E4DE",
+                                  background: on ? "#FFF3E8" : "#fff",
+                                  color: on ? "#B8560F" : "#6B6B7D",
+                                }}
+                              >
+                                {f.logo && (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={f.logo} alt="" width={16} height={16} style={{ objectFit: "contain" }} />
+                                )}
+                                {f.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ padding: "14px 24px", borderTop: "1px solid #E8E4DE", display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                onClick={() => setBulkOpen(false)}
+                disabled={bulkSaving}
+                style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: bulkSaving ? "not-allowed" : "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={applyBulkFeatures}
+                disabled={bulkSaving}
+                className="btn-orange"
+                style={{ padding: "9px 20px", fontSize: 13, opacity: bulkSaving ? 0.6 : 1, cursor: bulkSaving ? "not-allowed" : "pointer" }}
+              >
+                {bulkSaving ? "Applying…" : `Apply to ${selectedIds.length}`}
+              </button>
             </div>
           </div>
         </div>

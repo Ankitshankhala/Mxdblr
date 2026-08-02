@@ -6,7 +6,8 @@
  *
  * List/create/update/delete products, toggle new-arrival/best-seller, update
  * stock (PATCH|PUT /:id/stock), GET /stock-summary (dashboard low-stock counts),
- * and POST /csv-import (bulk import). All mutating routes map Prisma P2025 →
+ * POST /csv-import (bulk import), and POST /bulk-features (assign supported
+ * technologies to many products at once). All mutating routes map Prisma P2025 →
  * 404 rather than 500. Includes inline CSV parsing helpers.
  */
 import express, { Router, Request, Response } from 'express';
@@ -225,6 +226,113 @@ router.post('/csv-import', requireLoadedPermission('MANAGE_PRODUCTS'), express.j
   }
 
   res.json({ success: true, ...results });
+});
+
+// POST /api/admin/products/bulk-features
+// Assign supported technologies to many products in one call, so a catalog does
+// not have to be feature-tagged one edit-modal at a time.
+//
+//   { productIds: string[], featureSlugs: string[], mode: "add"|"replace"|"remove" }
+//   → { success, data: { updated, productsNotFound, slugsNotFound } }
+//
+// add     — link the given features, leaving existing links untouched
+// replace — the given features become the product's complete feature set
+// remove  — unlink the given features, leaving the rest untouched
+//
+// Unknown slugs are reported back rather than silently dropped (the per-product
+// PUT drops them, which is fine for a picker UI but hides typos in a bulk call).
+// `add` appends after a product's current highest displayOrder so the existing
+// card ordering is preserved; `replace` orders by the supplied array.
+const bulkFeaturesSchema = z.object({
+  productIds: z.array(z.string().min(1)).min(1).max(500),
+  featureSlugs: z.array(z.string().min(1)).max(100),
+  mode: z.enum(['add', 'replace', 'remove']),
+});
+
+router.post('/bulk-features', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request, res: Response): Promise<void> => {
+  const parse = bulkFeaturesSchema.safeParse(req.body);
+  if (!parse.success) {
+    res.status(400).json({ success: false, error: parse.error.issues[0]?.message ?? 'Invalid payload' });
+    return;
+  }
+  const { productIds, featureSlugs, mode } = parse.data;
+
+  // `replace` with an empty list is a legitimate "clear all features" request;
+  // add/remove with nothing to do is a no-op the caller almost certainly didn't mean.
+  if (featureSlugs.length === 0 && mode !== 'replace') {
+    res.status(400).json({ success: false, error: 'featureSlugs cannot be empty for add or remove' });
+    return;
+  }
+
+  const features = await prisma.productFeature.findMany({
+    where: { slug: { in: featureSlugs } },
+    select: { id: true, slug: true },
+  });
+  const idBySlug = new Map(features.map((f) => [f.slug, f.id]));
+  const slugsNotFound = featureSlugs.filter((s) => !idBySlug.has(s));
+  const featureIds = featureSlugs.map((s) => idBySlug.get(s)).filter((id): id is string => Boolean(id));
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    select: { id: true },
+  });
+  const foundIds = products.map((p) => p.id);
+  const productsNotFound = productIds.filter((id) => !foundIds.includes(id));
+
+  if (foundIds.length === 0) {
+    res.status(404).json({ success: false, error: 'No matching products' });
+    return;
+  }
+
+  // One transaction: a partially-applied bulk edit is worse than a failed one,
+  // because the admin cannot tell which products were touched.
+  await prisma.$transaction(async (tx) => {
+    if (mode === 'replace') {
+      await tx.productFeatureLink.deleteMany({ where: { productId: { in: foundIds } } });
+      if (featureIds.length > 0) {
+        await tx.productFeatureLink.createMany({
+          data: foundIds.flatMap((productId) =>
+            featureIds.map((featureId, i) => ({ productId, featureId, displayOrder: i }))
+          ),
+        });
+      }
+      return;
+    }
+
+    if (mode === 'remove') {
+      await tx.productFeatureLink.deleteMany({
+        where: { productId: { in: foundIds }, featureId: { in: featureIds } },
+      });
+      return;
+    }
+
+    // add — append after each product's current max displayOrder. skipDuplicates
+    // leans on @@unique([productId, featureId]) so re-applying is idempotent.
+    const existing = await tx.productFeatureLink.findMany({
+      where: { productId: { in: foundIds } },
+      select: { productId: true, featureId: true, displayOrder: true },
+    });
+    const nextOrder = new Map<string, number>();
+    const alreadyLinked = new Set<string>();
+    for (const link of existing) {
+      alreadyLinked.add(`${link.productId}:${link.featureId}`);
+      nextOrder.set(link.productId, Math.max(nextOrder.get(link.productId) ?? -1, link.displayOrder));
+    }
+    const rows = foundIds.flatMap((productId) => {
+      let order = (nextOrder.get(productId) ?? -1) + 1;
+      return featureIds
+        .filter((featureId) => !alreadyLinked.has(`${productId}:${featureId}`))
+        .map((featureId) => ({ productId, featureId, displayOrder: order++ }));
+    });
+    if (rows.length > 0) {
+      await tx.productFeatureLink.createMany({ data: rows, skipDuplicates: true });
+    }
+  });
+
+  res.json({
+    success: true,
+    data: { updated: foundIds.length, productsNotFound, slugsNotFound },
+  });
 });
 
 const SORT_MAP: Record<string, Prisma.ProductOrderByWithRelationInput> = {
