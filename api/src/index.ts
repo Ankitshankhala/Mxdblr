@@ -53,6 +53,22 @@ if (process.env.NODE_ENV === 'production') {
   if (!process.env.SETTINGS_ENCRYPTION_KEY) {
     fatal.push('SETTINGS_ENCRYPTION_KEY is unset; encrypted settings cannot be read or written.');
   }
+  // Without these, lib/cloudinary.ts silently falls back to writing ./uploads and
+  // handing out absolute http://localhost URLs — unreachable for real visitors, and
+  // lost on the next container redeploy.
+  const cloudinary = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'].filter(
+    (k) => !process.env[k]
+  );
+  if (cloudinary.length > 0) {
+    fatal.push(
+      `${cloudinary.join(', ')} unset; image uploads would fall back to local disk and be lost on redeploy.`
+    );
+  }
+  // Gate 4 requires error monitoring live before handover. initObservability()
+  // above is a no-op without a DSN, so production would run blind.
+  if (!process.env.SENTRY_DSN) {
+    fatal.push('SENTRY_DSN is unset; the API would run with no error monitoring.');
+  }
 
   if (fatal.length > 0) {
     process.stderr.write('[FATAL] Refusing to start in production:\n');
