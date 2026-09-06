@@ -169,18 +169,33 @@ sudo chown -R deploy:deploy /var/www/mxdblr
 sudo chmod -R 755 /var/www/mxdblr
 ```
 
-### 5.2 — Upload via rsync (from your local machine)
+### 5.2 — Clone from GitHub (on the VPS)
+
+The project now lives at **https://github.com/Ankitshankhala/Mxdblr**, so pull the
+code on the server rather than pushing a copy of your laptop at it. Deploys then
+correspond to a commit you can name, diff and roll back to.
 
 ```bash
-rsync -avz --exclude node_modules --exclude .git --exclude .env --exclude .env.local \
-  ./mxdblr/ deploy@YOUR_VPS_IP:/var/www/mxdblr/
+cd /var/www
+git clone https://github.com/Ankitshankhala/Mxdblr.git mxdblr
+cd mxdblr && git log --oneline -1
 ```
 
-Or use **FileZilla** via SFTP:
-- Host: `sftp://YOUR_VPS_IP`
-- Username: `deploy`
-- Auth: Private key
-- Upload to: `/var/www/mxdblr/`
+Private repo → generate a deploy key on the VPS and add it to the repo under
+Settings → Deploy keys (read-only):
+
+```bash
+ssh-keygen -t ed25519 -C "mxdblr-vps" -f ~/.ssh/id_ed25519 -N ""
+cat ~/.ssh/id_ed25519.pub
+git clone git@github.com:Ankitshankhala/Mxdblr.git mxdblr
+```
+
+`.env` / `.env.local` are gitignored, so they are never cloned — you create them
+directly on the server in Step 6, and they survive every later `git pull`.
+
+> Do NOT rsync or SFTP the project across. It silently ships whatever is on your
+> laptop — uncommitted edits, stale files, local `.env` — so the server stops
+> matching any commit and nothing is reproducible or reviewable.
 
 ### 5.3 — Expected directory structure
 
@@ -553,26 +568,47 @@ sudo certbot certificates
 
 ## 14. Deploy Updates (After Code Changes)
 
-```bash
-# Upload new files via rsync from local machine
-rsync -avz --exclude node_modules --exclude .git --exclude .env \
-  ./mxdblr/api/ deploy@YOUR_VPS_IP:/var/www/mxdblr/api/
-rsync -avz --exclude node_modules --exclude .git --exclude .env.local \
-  ./mxdblr/web/ deploy@YOUR_VPS_IP:/var/www/mxdblr/web/
+Run entirely on the VPS. Deploy only commits that are green in CI.
 
-# On the server — rebuild and restart API
-cd /var/www/mxdblr/api
-npm install
+```bash
+# 1. Pull the reviewed commit
+cd /var/www/mxdblr
+git pull --ff-only origin main
+git log --oneline -1                 # note this hash — it is your rollback point
+
+# 2. API — install, build, migrate, restart
+cd api
+npm ci                               # ci, not install: honours package-lock exactly
 npm run build
 npx prisma migrate deploy --schema=src/prisma/schema.prisma
 pm2 restart mxdblr-api
 
-# Rebuild and restart frontend
-cd /var/www/mxdblr/web
-npm install
+# 3. Confirm the API actually came back up before touching the frontend.
+#    With NODE_ENV=production it REFUSES to boot on missing/weak config and
+#    prints exactly what is wrong — a restart that silently died shows here.
+pm2 logs mxdblr-api --lines 30 --nostream
+curl -fsS http://localhost:4000/health && echo " API OK"
+
+# 4. Frontend — only once the API is healthy
+cd ../web
+npm ci
 npm run build
 pm2 restart mxdblr-web
+curl -fsS -o /dev/null -w "web %{http_code}\n" http://localhost:3000
 ```
+
+**Rollback** — the reason step 1 records the hash:
+
+```bash
+cd /var/www/mxdblr
+git checkout <previous-good-hash>
+cd api && npm ci && npm run build && pm2 restart mxdblr-api
+cd ../web && npm ci && npm run build && pm2 restart mxdblr-web
+```
+
+Note that a migration is **not** undone by a code rollback. Reverting a deploy
+that added a column is safe (old code ignores it); reverting one that dropped or
+renamed something is not, and needs a compensating migration written first.
 
 ---
 
