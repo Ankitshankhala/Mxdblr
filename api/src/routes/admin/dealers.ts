@@ -20,7 +20,9 @@
 import { Router, Request, Response } from 'express';
 import { DealerStatus, BusinessType, Prisma } from '@prisma/client';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import { requireAdminAuth } from '../../middleware/auth';
+import { writeAuditLog } from '../../lib/audit';
 import prisma from '../../lib/prisma';
 
 const router = Router();
@@ -371,6 +373,86 @@ router.put('/:id/moderate', async (req: Request, res: Response): Promise<void> =
   ]);
 
   res.json({ success: true, data: dealer });
+});
+
+// POST /api/admin/dealers/login-code
+//
+// STOPGAP until WhatsApp OTP delivery is live (Meta approval pending). Mints a
+// one-time login code for a mobile number so an admin can relay it to the dealer
+// by hand over the WhatsApp Business app. Deliberately reuses the OtpCode table
+// and hashing that verify-otp already reads, so the dealer-facing flow is
+// unchanged and this can be deleted in one piece once sendOtp() is wired to
+// WhatsApp.
+//
+// The code is returned exactly ONCE, in this response. It is stored bcrypt-hashed
+// like every other OTP and cannot be read back afterwards -- not from the admin
+// UI, not from the database, not from the audit trail.
+//
+// Works for numbers with no dealer row yet: verify-otp answers newDealer:true and
+// the caller proceeds into registration, exactly as it does for a real OTP.
+const loginCodeSchema = z.object({
+  mobile: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number'),
+});
+
+// Longer than the 5-minute SMS OTP: a human has to read this out of the admin UI
+// and send it through a separate app before the dealer can use it.
+const LOGIN_CODE_TTL_MS = 30 * 60 * 1000;
+
+router.post('/login-code', async (req: Request, res: Response): Promise<void> => {
+  const parse = loginCodeSchema.safeParse(req.body);
+  if (!parse.success) {
+    res.status(400).json({ success: false, message: parse.error.issues[0].message });
+    return;
+  }
+
+  const { mobile } = parse.data;
+
+  const dealer = await prisma.dealer.findUnique({
+    where: { mobile },
+    select: { id: true, ownerName: true, shopName: true, status: true },
+  });
+
+  // Refuse to hand a working credential to an account that is barred from
+  // logging in -- verify-otp would reject it anyway, so issuing one would only
+  // waste the admin's time and the dealer's.
+  if (dealer && (dealer.status === 'BLOCKED' || dealer.status === 'REJECTED')) {
+    res.status(409).json({
+      success: false,
+      message: `This dealer is ${dealer.status.toLowerCase()} and cannot sign in. Reactivate the account first.`,
+    });
+    return;
+  }
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + LOGIN_CODE_TTL_MS);
+
+  // Supersede any outstanding code for this number, mirroring POST /auth/send-otp.
+  await prisma.otpCode.updateMany({ where: { mobile, used: false }, data: { used: true } });
+  await prisma.otpCode.create({
+    data: { mobile, code: await bcrypt.hash(code, 10), expiresAt },
+  });
+
+  // Records WHO issued a credential for WHICH number -- never the code itself.
+  await writeAuditLog({
+    actorId: req.admin!.adminId,
+    actorName: req.admin!.username,
+    action: 'DEALER_LOGIN_CODE_ISSUED',
+    targetType: 'Dealer',
+    targetId: dealer?.id ?? null,
+    targetName: mobile,
+    details: { newDealer: !dealer, expiresAt: expiresAt.toISOString() } as Prisma.InputJsonValue,
+  });
+
+  res.status(201).json({
+    success: true,
+    data: {
+      code,
+      mobile,
+      expiresAt: expiresAt.toISOString(),
+      newDealer: !dealer,
+      dealer: dealer ?? null,
+    },
+  });
 });
 
 export default router;

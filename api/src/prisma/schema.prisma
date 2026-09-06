@@ -354,6 +354,7 @@ enum AuditAction {
   USER_ACTIVATED
   USER_DEACTIVATED
   USER_DELETED
+  DEALER_LOGIN_CODE_ISSUED
 }
 
 // Immutable audit trail for every role/permission/user change (Security req #6).

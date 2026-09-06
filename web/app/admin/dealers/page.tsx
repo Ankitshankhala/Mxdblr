@@ -188,6 +188,17 @@ function DealersContent() {
   const [viewDealer, setViewDealer] = useState<ApiDealer | null>(null);
   const [moderating, setModerating] = useState(false);
 
+  // Admin-issued login code (stopgap until WhatsApp OTP delivery is approved).
+  // `issuedCode` holds the one and only copy of a freshly minted code — it is
+  // stored hashed server-side and can never be retrieved again once dismissed.
+  const [codeModalOpen, setCodeModalOpen] = useState(false);
+  const [codeMobile, setCodeMobile] = useState("");
+  const [issuingCode, setIssuingCode] = useState(false);
+  const [issuedCode, setIssuedCode] = useState<{
+    code: string; mobile: string; expiresAt: string; newDealer: boolean;
+    dealer: { ownerName: string; shopName: string } | null;
+  } | null>(null);
+
   // Reflect the applied filters into the URL so refresh/back preserves them.
   const syncUrl = useCallback((f: Filters) => {
     const q = filtersToQuery(f);
@@ -326,6 +337,34 @@ function DealersContent() {
     }
   }
 
+  async function issueLoginCode() {
+    if (!/^[6-9]\d{9}$/.test(codeMobile)) {
+      showToast("Enter a valid 10-digit Indian mobile number", "error");
+      return;
+    }
+    setIssuingCode(true);
+    try {
+      const res = await fetch(`${API}/admin/dealers/login-code`, {
+        method: "POST",
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: codeMobile }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || `HTTP ${res.status}`);
+      setIssuedCode(json.data);
+    } catch (err) {
+      showToast(`Could not issue code: ${err instanceof Error ? err.message : "unknown"}`, "error");
+    } finally {
+      setIssuingCode(false);
+    }
+  }
+
+  function closeCodeModal() {
+    setCodeModalOpen(false);
+    setIssuedCode(null);
+    setCodeMobile("");
+  }
+
   async function applyModeration() {
     if (!confirmAction) return;
     setModerating(true);
@@ -373,6 +412,11 @@ function DealersContent() {
           </p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => setCodeModalOpen(true)}
+            title="Mint a one-time login code to send the dealer by hand"
+            style={{ padding: "8px 14px", borderRadius: 7, border: "none", background: "#F47920", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            Issue Login Code
+          </button>
           <button onClick={() => handleExport("csv")} disabled={exporting || pagination.total === 0}
             style={{ padding: "8px 14px", borderRadius: 7, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 700, cursor: exporting ? "wait" : "pointer", opacity: pagination.total === 0 ? 0.5 : 1 }}>
             ⬇ CSV
@@ -383,6 +427,70 @@ function DealersContent() {
           </button>
         </div>
       </div>
+
+      {/* Issue login code — stopgap while WhatsApp OTP delivery is pending */}
+      {codeModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 12, width: "100%", maxWidth: 440, padding: 24 }}>
+            {!issuedCode ? (
+              <>
+                <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Issue Login Code</div>
+                <p style={{ fontSize: 12, color: "#6E6257", lineHeight: 1.6, marginBottom: 16 }}>
+                  Generates a one-time code for this number. Send it to the dealer yourself
+                  on WhatsApp — they enter it on the sign-in screen exactly like an OTP.
+                  Works for new numbers too; they continue into registration.
+                </p>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "#6E6257", letterSpacing: "0.04em" }}>MOBILE NUMBER</label>
+                <input
+                  value={codeMobile}
+                  onChange={(e) => setCodeMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  onKeyDown={(e) => { if (e.key === "Enter") issueLoginCode(); }}
+                  placeholder="9876543210"
+                  inputMode="numeric"
+                  autoFocus
+                  style={{ width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8, border: "1px solid #E8E4DE", fontSize: 14, fontFamily: "var(--font-mono)" }}
+                />
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
+                  <button onClick={closeCodeModal}
+                    style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                    Cancel
+                  </button>
+                  <button onClick={issueLoginCode} disabled={issuingCode}
+                    style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#F47920", color: "#fff", fontWeight: 700, fontSize: 13, cursor: issuingCode ? "wait" : "pointer", opacity: issuingCode ? 0.6 : 1 }}>
+                    {issuingCode ? "Issuing…" : "Issue Code"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Code for {issuedCode.mobile}</div>
+                <p style={{ fontSize: 12, color: "#DC2626", fontWeight: 600, marginBottom: 14 }}>
+                  Shown once. It is stored hashed and cannot be retrieved again — copy it now.
+                </p>
+                <div style={{ background: "#F8F6F2", border: "1px solid #E8E4DE", borderRadius: 10, padding: "18px 0", textAlign: "center", fontSize: 34, fontWeight: 800, letterSpacing: "0.22em", fontFamily: "var(--font-mono)" }}>
+                  {issuedCode.code}
+                </div>
+                <div style={{ fontSize: 12, color: "#6E6257", marginTop: 14, lineHeight: 1.7 }}>
+                  <div>{issuedCode.newDealer
+                    ? "No account on this number yet — they'll be taken into registration after entering it."
+                    : `${issuedCode.dealer?.shopName ?? ""} — ${issuedCode.dealer?.ownerName ?? ""}`}</div>
+                  <div>Valid until <strong>{new Date(issuedCode.expiresAt).toLocaleTimeString()}</strong> (30 minutes).</div>
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
+                  <button onClick={() => { setIssuedCode(null); setCodeMobile(""); }}
+                    style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                    Issue Another
+                  </button>
+                  <button onClick={closeCodeModal}
+                    style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#1F1813", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Search + sort */}
       <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>

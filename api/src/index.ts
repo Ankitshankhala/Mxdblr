@@ -26,6 +26,41 @@ for (const key of REQUIRED_ENV) {
   }
 }
 
+// Production-only hardening. These conditions are survivable in development but
+// are silent, total failures in production: an unset messaging credential makes
+// sendOtp() no-op and return success, so every dealer is locked out while the API
+// reports healthy, and a leftover OTP bypass authenticates any mobile number.
+// Refusing to boot is the only failure mode that gets noticed.
+if (process.env.NODE_ENV === 'production') {
+  const fatal: string[] = [];
+
+  const jwtSecret = process.env.JWT_SECRET || '';
+  if (jwtSecret.length < 64) {
+    fatal.push(`JWT_SECRET is ${jwtSecret.length} chars; needs >= 64 (256-bit). Generate with: openssl rand -hex 32`);
+  }
+  if (/dev|test|local|change ?me|secret123/i.test(jwtSecret)) {
+    fatal.push('JWT_SECRET looks like a development placeholder.');
+  }
+  if (process.env.ENABLE_OTP_BYPASS === 'true') {
+    fatal.push('ENABLE_OTP_BYPASS=true in production would accept 000000 as a valid OTP for any number. Remove it.');
+  }
+  if (!process.env.MSG91_AUTH_KEY) {
+    fatal.push('MSG91_AUTH_KEY is unset, so OTP delivery silently no-ops and no dealer can sign in.');
+  }
+  if (!process.env.MSG91_TEMPLATE_ID) {
+    fatal.push('MSG91_TEMPLATE_ID is unset; the MSG91 v5 OTP endpoint requires it.');
+  }
+  if (!process.env.SETTINGS_ENCRYPTION_KEY) {
+    fatal.push('SETTINGS_ENCRYPTION_KEY is unset; encrypted settings cannot be read or written.');
+  }
+
+  if (fatal.length > 0) {
+    process.stderr.write('[FATAL] Refusing to start in production:\n');
+    for (const msg of fatal) process.stderr.write(`  - ${msg}\n`);
+    process.exit(1);
+  }
+}
+
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
