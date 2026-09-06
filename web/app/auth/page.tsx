@@ -10,6 +10,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Logo } from '@/components/layout/Logo';
 import { authApi, setToken } from '@/lib/api';
 
 type Step = 'mobile' | 'otp' | 'done';
@@ -124,7 +125,7 @@ export default function AuthPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#1A1A2E',
+        background: '#1F1813',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -134,8 +135,10 @@ export default function AuthPage() {
     >
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <div style={{ fontWeight: 900, fontSize: 36, color: '#F47920', letterSpacing: '-1px' }}>MXD®</div>
-        <div style={{ fontSize: 11, color: '#6B6B7D', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4 }}>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Logo height={44} preload />
+        </div>
+        <div style={{ fontSize: 11, color: '#6E6257', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4 }}>
           Members Only
         </div>
       </div>
@@ -157,12 +160,12 @@ export default function AuthPage() {
               exit={{ opacity: 0, x: -20 }}
             >
               <h1 style={{ fontWeight: 800, fontSize: 22, marginBottom: 6 }}>Sign In</h1>
-              <p style={{ color: '#6B6B7D', fontSize: 14, marginBottom: 28 }}>
+              <p style={{ color: '#6E6257', fontSize: 14, marginBottom: 28 }}>
                 Enter your mobile number to continue
               </p>
 
               <form onSubmit={handleSendOtp}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6B6B7D', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6E6257', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   Mobile Number
                 </label>
                 <div
@@ -210,7 +213,7 @@ export default function AuthPage() {
                       <div style={{ flex: 1, background: '#fff' }} />
                       <div style={{ flex: 1, background: '#138808' }} />
                     </div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#1A1A2E', letterSpacing: '-0.01em' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#1F1813', letterSpacing: '-0.01em' }}>
                       +91
                     </span>
                   </div>
@@ -238,7 +241,7 @@ export default function AuthPage() {
                       fontWeight: 700,
                       background: 'transparent',
                       letterSpacing: '0.05em',
-                      color: '#1A1A2E',
+                      color: '#1F1813',
                     }}
                   />
                 </div>
@@ -271,13 +274,13 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => { setStep('mobile'); setOtp(['', '', '', '', '', '']); setError(''); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B6B7D', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, marginBottom: 20 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6E6257', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, marginBottom: 20 }}
               >
                 <ArrowLeft size={14} /> Change number
               </button>
 
               <h1 style={{ fontWeight: 800, fontSize: 22, marginBottom: 6 }}>Enter OTP</h1>
-              <p style={{ color: '#6B6B7D', fontSize: 14, marginBottom: 28 }}>
+              <p style={{ color: '#6E6257', fontSize: 14, marginBottom: 28 }}>
                 6-digit OTP sent to +91 {mobile.slice(0, 5)}XXXXX
               </p>
 
@@ -305,7 +308,7 @@ export default function AuthPage() {
                       borderRadius: 10,
                       outline: 'none',
                       background: digit ? '#FFF3E8' : '#F8F6F2',
-                      color: '#1A1A2E',
+                      color: '#1F1813',
                       transition: 'border-color 0.15s, background 0.15s',
                     }}
                   />
@@ -340,7 +343,7 @@ export default function AuthPage() {
         </AnimatePresence>
       </div>
 
-      <p style={{ marginTop: 24, fontSize: 12, color: '#6B6B7D', textAlign: 'center' }}>
+      <p style={{ marginTop: 24, fontSize: 12, color: '#6E6257', textAlign: 'center' }}>
         Dealer portal for Karnataka · Tamil Nadu · Andhra Pradesh
       </p>
     </div>

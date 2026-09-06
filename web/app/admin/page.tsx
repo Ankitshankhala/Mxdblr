@@ -147,7 +147,7 @@ function DashboardContent() {
         <StatCard
           value={stats.dealers}
           label="Total Dealers"
-          accent="#1A1A2E"
+          accent="#1F1813"
           href="/admin/dealers"
           icon={
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -218,7 +218,7 @@ function DashboardContent() {
         {canOrders && (
         <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
           <div style={{ padding: "16px 20px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>Recent Inquiries</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>Recent Inquiries</div>
             <a href="/admin/orders" style={{ fontSize: 12, color: "#F47920", fontWeight: 600, textDecoration: "none" }}>View all →</a>
           </div>
           <div style={{ overflowX: "auto" }}>
@@ -226,7 +226,7 @@ function DashboardContent() {
               <thead>
                 <tr style={{ borderBottom: "1px solid #F0EDEA" }}>
                   {["Dealer Name", "Shop", "Items", "Time", "Status", "Action"].map((h) => (
-                    <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>
+                    <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>
                       {h}
                     </th>
                   ))}
@@ -235,13 +235,13 @@ function DashboardContent() {
               <tbody>
                 {inquiriesLoading ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: "24px 14px", textAlign: "center", color: "#6B6B7D", fontSize: 13 }}>
+                    <td colSpan={6} style={{ padding: "24px 14px", textAlign: "center", color: "#6E6257", fontSize: 13 }}>
                       Loading…
                     </td>
                   </tr>
                 ) : inquiries.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: "24px 14px", textAlign: "center", color: "#6B6B7D", fontSize: 13 }}>
+                    <td colSpan={6} style={{ padding: "24px 14px", textAlign: "center", color: "#6E6257", fontSize: 13 }}>
                       No inquiries yet
                     </td>
                   </tr>
@@ -249,9 +249,9 @@ function DashboardContent() {
                   inquiries.map((row) => (
                     <tr key={row.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
                       <td style={{ padding: "10px 14px", fontWeight: 600 }}>{row.dealer.ownerName}</td>
-                      <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{row.dealer.shopName}</td>
+                      <td style={{ padding: "10px 14px", color: "#6E6257" }}>{row.dealer.shopName}</td>
                       <td style={{ padding: "10px 14px", fontWeight: 600 }}>{Array.isArray(row.cartSnapshot) ? row.cartSnapshot.length : 0}</td>
-                      <td style={{ padding: "10px 14px", color: "#6B6B7D", whiteSpace: "nowrap" }}>{timeAgo(row.createdAt)}</td>
+                      <td style={{ padding: "10px 14px", color: "#6E6257", whiteSpace: "nowrap" }}>{timeAgo(row.createdAt)}</td>
                       <td style={{ padding: "10px 14px" }}>
                         <StatusBadge status={row.status} />
                       </td>
@@ -266,7 +266,7 @@ function DashboardContent() {
                             background: "#fff",
                             fontSize: 12,
                             fontWeight: 600,
-                            color: "#1A1A2E",
+                            color: "#1F1813",
                             textDecoration: "none",
                             cursor: "pointer",
                           }}
@@ -292,19 +292,19 @@ function DashboardContent() {
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>Stock Alerts</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>Stock Alerts</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {stockAlertsLoading ? (
-              <div style={{ padding: "24px 20px", textAlign: "center", color: "#6B6B7D", fontSize: 13 }}>Loading…</div>
+              <div style={{ padding: "24px 20px", textAlign: "center", color: "#6E6257", fontSize: 13 }}>Loading…</div>
             ) : stockAlerts.length === 0 ? (
-              <div style={{ padding: "24px 20px", textAlign: "center", color: "#6B6B7D", fontSize: 13 }}>All products in stock</div>
+              <div style={{ padding: "24px 20px", textAlign: "center", color: "#6E6257", fontSize: 13 }}>All products in stock</div>
             ) : (
               stockAlerts.map((p, i) => (
                 <div key={p.sku} style={{ padding: "12px 20px", borderBottom: i < stockAlerts.length - 1 ? "1px solid #F0EDEA" : "none", display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A2E", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
-                    <div style={{ fontSize: 11, color: "#6B6B7D", fontFamily: "monospace", marginTop: 2 }}>{p.sku}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1F1813", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                    <div style={{ fontSize: 11, color: "#6E6257", fontFamily: "monospace", marginTop: 2 }}>{p.sku}</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
                     <StatusBadge status={p.status} />

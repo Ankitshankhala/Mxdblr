@@ -577,16 +577,16 @@ function ProductsContent() {
   }
   function removeAttr(idx: number) { setForm((f) => ({ ...f, attributes: f.attributes.filter((_, i) => i !== idx) })); }
 
-  const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none" };
-  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 5 };
-  const selectStyle: React.CSSProperties = { padding: "8px 10px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 12, background: "#fff", color: "#1A1A2E", cursor: "pointer", outline: "none", height: 36 };
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none" };
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 5 };
+  const selectStyle: React.CSSProperties = { padding: "8px 10px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 12, background: "#fff", color: "#1F1813", cursor: "pointer", outline: "none", height: 36 };
 
   return (
     <div>
       {/* ── Top bar: search + action buttons ─────────────────────────────────── */}
       <div style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "center", flexWrap: "wrap" }}>
         <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
-          <svg width="14" height="14" fill="none" stroke="#6B6B7D" strokeWidth="2" viewBox="0 0 24 24"
+          <svg width="14" height="14" fill="none" stroke="#6E6257" strokeWidth="2" viewBox="0 0 24 24"
             style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -599,7 +599,7 @@ function ProductsContent() {
         </div>
         <button
           onClick={() => { setShowImportModal(true); setImportResult(null); setCsvFile(null); }}
-          style={{ padding: "0 14px", height: 36, borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", color: "#1A1A2E", fontWeight: 600, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap" }}
+          style={{ padding: "0 14px", height: 36, borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", color: "#1F1813", fontWeight: 600, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap" }}
         >
           <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <polyline points="8 17 12 21 16 17" /><line x1="12" y1="12" x2="12" y2="21" />
@@ -691,7 +691,7 @@ function ProductsContent() {
           <button
             type="button"
             onClick={() => setSelectedIds([])}
-            style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 13, cursor: "pointer", color: "#6B6B7D" }}
+            style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 13, cursor: "pointer", color: "#6E6257" }}
           >
             Clear selection
           </button>
@@ -714,13 +714,13 @@ function ProductsContent() {
                   />
                 </th>
                 {["Image", "Name", "Brand", "SKU", "Category", "MOQ", "Stock Status", "Visibility", "Best Seller", "New Arrival", "Actions"].map((h) => (
-                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={12} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading products…</td></tr>
+                <tr><td colSpan={12} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading products…</td></tr>
               )}
               {!loading && products.map((p) => (
                 <tr key={p.id} style={{ borderBottom: "1px solid #F0EDEA", background: selectedIds.includes(p.id) ? "#FFFaf5" : undefined }}>
@@ -740,7 +740,7 @@ function ProductsContent() {
                         <img src={p.images[0]} alt={p.name} style={{ width: 40, height: 40, objectFit: "cover" }}
                           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                       ) : (
-                        <svg width="16" height="16" fill="none" stroke="#6B6B7D" strokeWidth="2" viewBox="0 0 24 24">
+                        <svg width="16" height="16" fill="none" stroke="#6E6257" strokeWidth="2" viewBox="0 0 24 24">
                           <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
                         </svg>
                       )}
@@ -749,9 +749,9 @@ function ProductsContent() {
                   <td style={{ padding: "10px 14px", fontWeight: 600, maxWidth: 180 }}>
                     <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
                   </td>
-                  <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{p.brand}</td>
+                  <td style={{ padding: "10px 14px", color: "#6E6257" }}>{p.brand}</td>
                   <td style={{ padding: "10px 14px", fontFamily: "monospace", fontSize: 11, color: "#6366F1" }}>{p.sku}</td>
-                  <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{getCategoryName(p.category)}</td>
+                  <td style={{ padding: "10px 14px", color: "#6E6257" }}>{getCategoryName(p.category)}</td>
                   <td style={{ padding: "10px 14px", fontWeight: 600 }}>{p.moq}</td>
                   <td style={{ padding: "10px 14px" }}><StatusBadge status={p.stockStatus} /></td>
                   <td style={{ padding: "10px 14px" }}>
@@ -789,7 +789,7 @@ function ProductsContent() {
                         fontSize: 11,
                         fontWeight: 700,
                         cursor: "pointer",
-                        color: p.isBestSeller ? "#6366F1" : "#6B6B7D",
+                        color: p.isBestSeller ? "#6366F1" : "#6E6257",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -810,7 +810,7 @@ function ProductsContent() {
                         fontSize: 11,
                         fontWeight: 700,
                         cursor: "pointer",
-                        color: p.isNewArrival ? "#F47920" : "#6B6B7D",
+                        color: p.isNewArrival ? "#F47920" : "#6E6257",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -819,14 +819,14 @@ function ProductsContent() {
                   </td>
                   <td style={{ padding: "10px 14px" }}>
                     <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={() => openEdit(p)} style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1A1A2E" }}>Edit</button>
+                      <button onClick={() => openEdit(p)} style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1F1813" }}>Edit</button>
                       <button onClick={() => setShowDeleteConfirm(p.id)} style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #FCE7E7", background: "#FCE7E7", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#DC2626" }}>Delete</button>
                     </div>
                   </td>
                 </tr>
               ))}
               {!loading && products.length === 0 && (
-                <tr><td colSpan={12} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No products found</td></tr>
+                <tr><td colSpan={12} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>No products found</td></tr>
               )}
             </tbody>
           </table>
@@ -837,13 +837,13 @@ function ProductsContent() {
 
           {/* Left: count + rows-per-page */}
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 12, color: "#6B6B7D" }}>
+            <span style={{ fontSize: 12, color: "#6E6257" }}>
               {totalCount === 0
                 ? "No products"
                 : `Showing ${showFrom}–${showTo} of ${totalCount} Products`}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 11, color: "#6B6B7D", whiteSpace: "nowrap" }}>Show:</span>
+              <span style={{ fontSize: 11, color: "#6E6257", whiteSpace: "nowrap" }}>Show:</span>
               <select
                 value={pageSize}
                 onChange={(e) => {
@@ -864,12 +864,12 @@ function ProductsContent() {
               <button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, cursor: currentPage === 1 ? "not-allowed" : "pointer", color: currentPage === 1 ? "#ccc" : "#1A1A2E" }}
+                style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, cursor: currentPage === 1 ? "not-allowed" : "pointer", color: currentPage === 1 ? "#ccc" : "#1F1813" }}
               >Prev</button>
 
               {buildPageRange(currentPage, totalPages).map((pg, i) =>
                 pg === "..." ? (
-                  <span key={`ellipsis-${i}`} style={{ padding: "4px 6px", fontSize: 12, color: "#6B6B7D", userSelect: "none" }}>…</span>
+                  <span key={`ellipsis-${i}`} style={{ padding: "4px 6px", fontSize: 12, color: "#6E6257", userSelect: "none" }}>…</span>
                 ) : (
                   <button
                     key={pg}
@@ -878,7 +878,7 @@ function ProductsContent() {
                       padding: "4px 9px", borderRadius: 6, border: "1px solid",
                       borderColor: pg === currentPage ? "#F47920" : "#E8E4DE",
                       background: pg === currentPage ? "#F47920" : "#fff",
-                      color: pg === currentPage ? "#fff" : "#1A1A2E",
+                      color: pg === currentPage ? "#fff" : "#1F1813",
                       fontSize: 12, fontWeight: pg === currentPage ? 700 : 400, cursor: "pointer",
                       minWidth: 32,
                     }}
@@ -889,7 +889,7 @@ function ProductsContent() {
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, cursor: currentPage === totalPages ? "not-allowed" : "pointer", color: currentPage === totalPages ? "#ccc" : "#1A1A2E" }}
+                style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, cursor: currentPage === totalPages ? "not-allowed" : "pointer", color: currentPage === totalPages ? "#ccc" : "#1F1813" }}
               >Next</button>
             </div>
           )}
@@ -911,9 +911,9 @@ function ProductsContent() {
                         width: 20, height: 20, borderRadius: "50%", fontSize: 10, fontWeight: 700,
                         display: "flex", alignItems: "center", justifyContent: "center",
                         background: importStep === s ? "#F47920" : i < ["upload", "map", "result"].indexOf(importStep) ? "#22C55E" : "#E8E4DE",
-                        color: importStep === s || i < ["upload", "map", "result"].indexOf(importStep) ? "#fff" : "#6B6B7D",
+                        color: importStep === s || i < ["upload", "map", "result"].indexOf(importStep) ? "#fff" : "#6E6257",
                       }}>{i + 1}</div>
-                      <span style={{ fontSize: 11, color: importStep === s ? "#F47920" : "#6B6B7D", fontWeight: importStep === s ? 700 : 400 }}>
+                      <span style={{ fontSize: 11, color: importStep === s ? "#F47920" : "#6E6257", fontWeight: importStep === s ? 700 : 400 }}>
                         {s === "upload" ? "Upload" : s === "map" ? "Map Columns" : "Done"}
                       </span>
                       {i < 2 && <div style={{ width: 20, height: 1, background: "#E8E4DE" }} />}
@@ -921,14 +921,14 @@ function ProductsContent() {
                   ))}
                 </div>
               </div>
-              <button onClick={closeImportModal} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 20, lineHeight: 1 }}>×</button>
+              <button onClick={closeImportModal} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 20, lineHeight: 1 }}>×</button>
             </div>
 
             <div style={{ padding: "20px 24px", overflowY: "auto", flex: 1 }}>
               {importStep === "upload" && (
                 <>
-                  <div style={{ background: "#F8F6F2", borderRadius: 8, padding: "12px 14px", marginBottom: 16, fontSize: 12, color: "#6B6B7D", lineHeight: 1.7 }}>
-                    Upload <strong style={{ color: "#1A1A2E" }}>any CSV file</strong> — you will map your column names in the next step.
+                  <div style={{ background: "#F8F6F2", borderRadius: 8, padding: "12px 14px", marginBottom: 16, fontSize: 12, color: "#6E6257", lineHeight: 1.7 }}>
+                    Upload <strong style={{ color: "#1F1813" }}>any CSV file</strong> — you will map your column names in the next step.
                     Multiple images: pipe-separated URLs in your image column.
                   </div>
                   <input ref={csvInputRef} type="file" accept=".csv,text/csv" style={{ display: "none" }}
@@ -940,7 +940,7 @@ function ProductsContent() {
                       <polyline points="14 2 14 8 20 8" />
                       <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
                     </svg>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A2E" }}>Click to select CSV file</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1F1813" }}>Click to select CSV file</div>
                     <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 4 }}>Any CSV format — column mapping in the next step</div>
                   </div>
                   <button onClick={downloadTemplate}
@@ -959,13 +959,13 @@ function ProductsContent() {
 
               {importStep === "map" && (
                 <>
-                  <div style={{ background: "#F8F6F2", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#6B6B7D" }}>
-                    <strong style={{ color: "#1A1A2E" }}>{csvFile?.name}</strong>
+                  <div style={{ background: "#F8F6F2", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#6E6257" }}>
+                    <strong style={{ color: "#1F1813" }}>{csvFile?.name}</strong>
                     {" "}— {csvRows.length} row{csvRows.length !== 1 ? "s" : ""} detected. Map your CSV columns to the product fields below.
                   </div>
                   {csvHeaders.length > 0 && (
-                    <div style={{ marginBottom: 14, background: "#FAFAF9", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#6B6B7D" }}>
-                      <strong style={{ color: "#1A1A2E" }}>Detected columns: </strong>
+                    <div style={{ marginBottom: 14, background: "#FAFAF9", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#6E6257" }}>
+                      <strong style={{ color: "#1F1813" }}>Detected columns: </strong>
                       {csvHeaders.map(h => (
                         <code key={h} style={{ background: "#E8E4DE", padding: "1px 5px", borderRadius: 3, marginRight: 4 }}>{h}</code>
                       ))}
@@ -974,14 +974,14 @@ function ProductsContent() {
                   <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                     {IMPORT_FIELDS.map(field => (
                       <div key={field.key} style={{ display: "grid", gridTemplateColumns: "160px 1fr", alignItems: "center", gap: 12 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: "#1A1A2E" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#1F1813" }}>
                           {field.label}
                           {field.required && <span style={{ color: "#DC2626", marginLeft: 3 }}>*</span>}
                         </div>
                         <select
                           value={colMap[field.key]}
                           onChange={(e) => setColMap(m => ({ ...m, [field.key]: e.target.value }))}
-                          style={{ padding: "7px 10px", borderRadius: 7, border: `1px solid ${colMap[field.key] ? "#22C55E" : "#E8E4DE"}`, fontSize: 12, background: colMap[field.key] ? "#F0FDF4" : "#fff", color: "#1A1A2E", outline: "none" }}
+                          style={{ padding: "7px 10px", borderRadius: 7, border: `1px solid ${colMap[field.key] ? "#22C55E" : "#E8E4DE"}`, fontSize: 12, background: colMap[field.key] ? "#F0FDF4" : "#fff", color: "#1F1813", outline: "none" }}
                         >
                           <option value="">— skip this field —</option>
                           {csvHeaders.map(h => (
@@ -1014,15 +1014,15 @@ function ProductsContent() {
                   <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
                     <div style={{ flex: 1, background: "#F0FDF4", borderRadius: 8, padding: "12px 14px", textAlign: "center" }}>
                       <div style={{ fontSize: 24, fontWeight: 800, color: "#16A34A" }}>{importResult.imported}</div>
-                      <div style={{ fontSize: 11, color: "#6B6B7D", fontWeight: 600 }}>NEW PRODUCTS</div>
+                      <div style={{ fontSize: 11, color: "#6E6257", fontWeight: 600 }}>NEW PRODUCTS</div>
                     </div>
                     <div style={{ flex: 1, background: "#EFF6FF", borderRadius: 8, padding: "12px 14px", textAlign: "center" }}>
                       <div style={{ fontSize: 24, fontWeight: 800, color: "#2563EB" }}>{importResult.updated}</div>
-                      <div style={{ fontSize: 11, color: "#6B6B7D", fontWeight: 600 }}>UPDATED</div>
+                      <div style={{ fontSize: 11, color: "#6E6257", fontWeight: 600 }}>UPDATED</div>
                     </div>
                     <div style={{ flex: 1, background: "#FFF7ED", borderRadius: 8, padding: "12px 14px", textAlign: "center" }}>
                       <div style={{ fontSize: 24, fontWeight: 800, color: "#EA580C" }}>{importResult.skipped}</div>
-                      <div style={{ fontSize: 11, color: "#6B6B7D", fontWeight: 600 }}>SKIPPED</div>
+                      <div style={{ fontSize: 11, color: "#6E6257", fontWeight: 600 }}>SKIPPED</div>
                     </div>
                   </div>
                   {importResult.errors.length > 0 && (
@@ -1048,7 +1048,7 @@ function ProductsContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: 28, maxWidth: 360, width: "90%", textAlign: "center" }}>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Delete Product?</div>
-            <div style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>This action cannot be undone.</div>
+            <div style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>This action cannot be undone.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <button onClick={() => setShowDeleteConfirm(null)} style={{ padding: "9px 20px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => handleDelete(showDeleteConfirm)} style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#DC2626", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Delete</button>
@@ -1063,7 +1063,7 @@ function ProductsContent() {
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 560, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{editingProduct ? "Edit Product" : "Add Product"}</div>
-              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 18 }}>×</button>
+              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 18 }}>×</button>
             </div>
 
             <div style={{ overflowY: "auto", padding: "20px 24px", flex: 1 }}>
@@ -1149,7 +1149,7 @@ function ProductsContent() {
                           <polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" />
                           <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
                         </svg>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: isDragging ? "#F47920" : "#1A1A2E" }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: isDragging ? "#F47920" : "#1F1813" }}>
                           {isDragging ? "Drop images here" : "Click to upload or drag & drop"}
                         </div>
                         <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 4 }}>PNG, JPG, WEBP · Max 5 MB · Uploads to Cloudinary CDN</div>
@@ -1232,7 +1232,7 @@ function ProductsContent() {
                                     fontSize: 12, fontWeight: 600,
                                     border: on ? "1px solid #F47920" : "1px solid #E8E4DE",
                                     background: on ? "#FFF3E8" : "#fff",
-                                    color: on ? "#B8560F" : "#6B6B7D",
+                                    color: on ? "#B8560F" : "#6E6257",
                                   }}
                                 >
                                   {f.logo && (
@@ -1267,8 +1267,8 @@ function ProductsContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#fff", borderRadius: 12, width: "100%", maxWidth: 620, maxHeight: "88vh", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid #E8E4DE" }}>
-              <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1A1A2E" }}>Assign technologies</h2>
-              <p style={{ fontSize: 12, color: "#6B6B7D", marginTop: 3 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1F1813" }}>Assign technologies</h2>
+              <p style={{ fontSize: 12, color: "#6E6257", marginTop: 3 }}>
                 Applies to the {selectedIds.length} selected product{selectedIds.length === 1 ? "" : "s"}.
               </p>
             </div>
@@ -1291,7 +1291,7 @@ function ProductsContent() {
                       padding: "7px 14px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 700,
                       border: bulkMode === m.key ? "1px solid #F47920" : "1px solid #E8E4DE",
                       background: bulkMode === m.key ? "#FFF3E8" : "#fff",
-                      color: bulkMode === m.key ? "#B8560F" : "#6B6B7D",
+                      color: bulkMode === m.key ? "#B8560F" : "#6E6257",
                     }}
                   >
                     {m.label}
@@ -1334,7 +1334,7 @@ function ProductsContent() {
                                   fontSize: 12, fontWeight: 600,
                                   border: on ? "1px solid #F47920" : "1px solid #E8E4DE",
                                   background: on ? "#FFF3E8" : "#fff",
-                                  color: on ? "#B8560F" : "#6B6B7D",
+                                  color: on ? "#B8560F" : "#6E6257",
                                 }}
                               >
                                 {f.logo && (

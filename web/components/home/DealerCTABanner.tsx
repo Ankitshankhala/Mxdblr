@@ -15,7 +15,7 @@ export default function DealerCTABanner() {
         style={{
           maxWidth: 1280,
           margin: '0 auto',
-          background: '#1A1A2E',
+          background: '#1F1813',
           borderRadius: 20,
           padding: '56px 48px',
           display: 'flex',

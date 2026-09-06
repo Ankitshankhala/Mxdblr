@@ -7,6 +7,7 @@
  */
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/layout/Logo";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function AdminLoginPage() {
     border: "1px solid #E8E4DE",
     fontSize: 14,
     background: "#fff",
-    color: "#1A1A2E",
+    color: "#1F1813",
     outline: "none",
     fontFamily: "inherit",
   };
@@ -61,7 +62,7 @@ export default function AdminLoginPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#1A1A2E",
+        background: "#1F1813",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -80,28 +81,20 @@ export default function AdminLoginPage() {
       >
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 900,
-              color: "#F47920",
-              letterSpacing: "-0.02em",
-              lineHeight: 1,
-            }}
-          >
-            MXD®
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Logo height={38} preload />
           </div>
           <div
             style={{
               fontSize: 18,
               fontWeight: 700,
-              color: "#1A1A2E",
+              color: "#1F1813",
               marginTop: 8,
             }}
           >
             Admin Login
           </div>
-          <div style={{ fontSize: 12, color: "#6B6B7D", marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: "#6E6257", marginTop: 4 }}>
             Restricted access — authorised personnel only
           </div>
         </div>
@@ -113,7 +106,7 @@ export default function AdminLoginPage() {
                 display: "block",
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#6B6B7D",
+                color: "#6E6257",
                 marginBottom: 6,
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
@@ -138,7 +131,7 @@ export default function AdminLoginPage() {
                 display: "block",
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#6B6B7D",
+                color: "#6E6257",
                 marginBottom: 6,
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",

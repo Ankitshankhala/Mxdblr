@@ -75,11 +75,11 @@ function toSlug(name: string): string {
 
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE",
-  fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none",
+  fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none",
   boxSizing: "border-box",
 };
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase",
+  fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase",
   letterSpacing: "0.05em", display: "block", marginBottom: 5,
 };
 
@@ -177,7 +177,7 @@ function AssetField({
         <div style={{ display: "flex", gap: 12, alignItems: "center", border: "1px solid #E8E4DE", borderRadius: 8, padding: 10, background: "#FAFAF9" }}>
           <AssetThumb url={value} size={kind === "image" ? 56 : 44} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, color: "#1A1A2E", fontWeight: 600, wordBreak: "break-all", lineHeight: 1.4, maxHeight: 34, overflow: "hidden" }}>
+            <div style={{ fontSize: 12, color: "#1F1813", fontWeight: 600, wordBreak: "break-all", lineHeight: 1.4, maxHeight: 34, overflow: "hidden" }}>
               {value.startsWith("data:") ? "Uploaded file (inline)" : value}
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
@@ -208,7 +208,7 @@ function AssetField({
             transition: "border-color 0.15s, background 0.15s",
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A2E" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#1F1813" }}>
             {uploading ? "Uploading…" : `Drop ${label.toLowerCase()} here or click to upload`}
           </div>
           <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 3 }}>PNG, JPG, WebP, GIF, SVG — max 5 MB</div>
@@ -250,7 +250,7 @@ function LibraryPicker({
       <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 560, maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>Choose {kind === "icon" ? "an Icon" : "an Image"}</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 20, lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 20, lineHeight: 1 }}>×</button>
         </div>
         <div style={{ padding: "12px 20px", display: "flex", gap: 10, borderBottom: "1px solid #F0EDEA" }}>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search library…" style={{ ...inputStyle, flex: 1 }} autoFocus />
@@ -261,7 +261,7 @@ function LibraryPicker({
         </div>
         <div style={{ padding: 16, overflowY: "auto" }}>
           {filtered.length === 0 ? (
-            <div style={{ padding: 30, textAlign: "center", color: "#6B6B7D", fontSize: 13 }}>
+            <div style={{ padding: 30, textAlign: "center", color: "#6E6257", fontSize: 13 }}>
               {pool.length === 0 ? `No ${kind}s in the library yet — upload one to reuse it later.` : "No matches."}
             </div>
           ) : (
@@ -271,7 +271,7 @@ function LibraryPicker({
                   title={a.name}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: 8, borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", cursor: "pointer" }}>
                   <AssetThumb url={a.url} size={54} />
-                  <span style={{ fontSize: 10, color: "#6B6B7D", textAlign: "center", lineHeight: 1.3, maxHeight: 26, overflow: "hidden" }}>{a.name}</span>
+                  <span style={{ fontSize: 10, color: "#6E6257", textAlign: "center", lineHeight: 1.3, maxHeight: 26, overflow: "hidden" }}>{a.name}</span>
                 </button>
               ))}
             </div>
@@ -408,7 +408,7 @@ function FeaturesContent() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
           <h1 style={{ fontWeight: 800, fontSize: 20 }}>Product Features</h1>
-          <p style={{ fontSize: 13, color: "#6B6B7D", marginTop: 2, maxWidth: 620 }}>
+          <p style={{ fontSize: 13, color: "#6E6257", marginTop: 2, maxWidth: 620 }}>
             The master list of supported technologies. Each feature has an icon and/or image —
             upload your own (PNG/JPG/WebP/GIF/SVG) or reuse one from the library. Products reference
             features by slug and the storefront shows the media automatically.
@@ -420,11 +420,11 @@ function FeaturesContent() {
       </div>
 
       {loading && (
-        <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D", background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: "center", color: "#6E6257", background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12 }}>Loading…</div>
       )}
 
       {!loading && features.length === 0 && (
-        <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D", background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12 }}>
+        <div style={{ padding: 40, textAlign: "center", color: "#6E6257", background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12 }}>
           No features yet. Add your first supported technology.
         </div>
       )}
@@ -440,7 +440,7 @@ function FeaturesContent() {
                 <thead>
                   <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
                     {["Icon", "Image", "Name", "Mode", "Slug", "Used By", "Status", "Actions"].map((h) => (
-                      <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
+                      <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -454,7 +454,7 @@ function FeaturesContent() {
                         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "#EEF0FE", color: "#6366F1", whiteSpace: "nowrap" }}>{modeLabel(f.displayMode ?? "ICON")}</span>
                       </td>
                       <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: 11, color: "#6366F1" }}>{f.slug}</td>
-                      <td style={{ padding: "12px 16px", color: "#6B6B7D" }}>{f.productCount ?? 0}</td>
+                      <td style={{ padding: "12px 16px", color: "#6E6257" }}>{f.productCount ?? 0}</td>
                       <td style={{ padding: "12px 16px" }}>
                         <button onClick={() => toggleActive(f)}
                           style={{ padding: "3px 10px", borderRadius: 12, border: "none", fontSize: 11, fontWeight: 700, cursor: "pointer", background: f.active ? "#D1FAE5" : "#F3F4F6", color: f.active ? "#059669" : "#6B7280" }}>
@@ -463,7 +463,7 @@ function FeaturesContent() {
                       </td>
                       <td style={{ padding: "12px 16px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button onClick={() => openEdit(f)} style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1A1A2E" }}>Edit</button>
+                          <button onClick={() => openEdit(f)} style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1F1813" }}>Edit</button>
                           <button onClick={() => setDeleteConfirm(f)} style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #FCE7E7", background: "#FCE7E7", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#DC2626" }}>Delete</button>
                         </div>
                       </td>
@@ -477,7 +477,7 @@ function FeaturesContent() {
       ))}
 
       {!loading && features.length > 0 && (
-        <div style={{ fontSize: 12, color: "#6B6B7D" }}>{features.length} feature{features.length !== 1 ? "s" : ""} total</div>
+        <div style={{ fontSize: 12, color: "#6E6257" }}>{features.length} feature{features.length !== 1 ? "s" : ""} total</div>
       )}
 
       {/* Add / Edit Modal */}
@@ -486,7 +486,7 @@ function FeaturesContent() {
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 520, maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{editing ? "Edit Feature" : "Add Feature"}</div>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D" }}>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257" }}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
@@ -516,7 +516,7 @@ function FeaturesContent() {
                 <div style={{ display: "flex", gap: 4, background: "#F8F6F2", borderRadius: 8, padding: 4 }}>
                   {DISPLAY_MODES.map((m) => (
                     <button key={m.value} type="button" onClick={() => setForm((f) => ({ ...f, displayMode: m.value }))}
-                      style={{ flex: 1, padding: "7px 8px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: form.displayMode === m.value ? 700 : 500, cursor: "pointer", background: form.displayMode === m.value ? "#fff" : "transparent", color: form.displayMode === m.value ? "#1A1A2E" : "#6B6B7D", boxShadow: form.displayMode === m.value ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
+                      style={{ flex: 1, padding: "7px 8px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: form.displayMode === m.value ? 700 : 500, cursor: "pointer", background: form.displayMode === m.value ? "#fff" : "transparent", color: form.displayMode === m.value ? "#1F1813" : "#6E6257", boxShadow: form.displayMode === m.value ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
                       {m.label}
                     </button>
                   ))}
@@ -553,7 +553,7 @@ function FeaturesContent() {
             </div>
 
             <div style={{ padding: "16px 24px", borderTop: "1px solid #E8E4DE", display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={() => setShowModal(false)} style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#1A1A2E" }}>Cancel</button>
+              <button onClick={() => setShowModal(false)} style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#1F1813" }}>Cancel</button>
               <button onClick={handleSave} disabled={saving} className="btn-orange" style={{ padding: "9px 22px", fontSize: 13 }}>
                 {saving ? "Saving…" : editing ? "Update Feature" : "Add Feature"}
               </button>
@@ -579,7 +579,7 @@ function FeaturesContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 400, padding: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Delete “{deleteConfirm.name}”?</div>
-            <p style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>
+            <p style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>
               {deleteConfirm.productCount
                 ? `This feature is used by ${deleteConfirm.productCount} product${deleteConfirm.productCount !== 1 ? "s" : ""} — it will be removed from all of them.`
                 : "This removes the feature from the master list."}

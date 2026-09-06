@@ -82,10 +82,10 @@ function StatCard({
         {icon}
       </div>
       <div>
-        <div style={{ fontSize: 26, fontWeight: 800, color: '#1A1A2E', lineHeight: 1 }}>
+        <div style={{ fontSize: 26, fontWeight: 800, color: '#1F1813', lineHeight: 1 }}>
           {value}
         </div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#6B6B7D', marginTop: 4 }}>{label}</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#6E6257', marginTop: 4 }}>{label}</div>
         {sub && <div style={{ fontSize: 11, color: '#A8A39A', marginTop: 2 }}>{sub}</div>}
       </div>
     </div>
@@ -95,7 +95,7 @@ function StatCard({
 function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-      <h2 style={{ fontWeight: 700, fontSize: 15, color: '#1A1A2E' }}>{title}</h2>
+      <h2 style={{ fontWeight: 700, fontSize: 15, color: '#1F1813' }}>{title}</h2>
       {action}
     </div>
   );
@@ -107,7 +107,7 @@ function QuickLink({ href, icon, label, description, isExternal }: {
   const linkContent = (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-      textDecoration: 'none', color: '#1A1A2E',
+      textDecoration: 'none', color: '#1F1813',
       borderBottom: '1px solid #F8F6F2', cursor: 'pointer',
     }}>
       <div style={{
@@ -118,8 +118,8 @@ function QuickLink({ href, icon, label, description, isExternal }: {
         {icon}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: 13, color: '#1A1A2E' }}>{label}</div>
-        <div style={{ fontSize: 12, color: '#6B6B7D', marginTop: 1 }}>{description}</div>
+        <div style={{ fontWeight: 600, fontSize: 13, color: '#1F1813' }}>{label}</div>
+        <div style={{ fontSize: 12, color: '#6E6257', marginTop: 1 }}>{description}</div>
       </div>
       <ChevronRight size={15} color="#A8A39A" />
     </div>
@@ -208,7 +208,7 @@ export default function AccountDashboard() {
         <Navbar />
         <MobileBottomNav />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-          <div style={{ textAlign: 'center', color: '#6B6B7D' }}>
+          <div style={{ textAlign: 'center', color: '#6E6257' }}>
             <div style={{
               width: 36, height: 36, borderRadius: '50%', border: '3px solid #F47920',
               borderTopColor: 'transparent', margin: '0 auto 12px',
@@ -235,7 +235,7 @@ export default function AccountDashboard() {
 
         {/* ── Hero header ────────────────────────────────────────────────── */}
         <div style={{
-          background: '#1A1A2E', borderRadius: 16, padding: '24px 24px',
+          background: '#1F1813', borderRadius: 16, padding: '24px 24px',
           marginBottom: 20, display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', gap: 16, flexWrap: 'wrap',
         }}>
@@ -248,7 +248,7 @@ export default function AccountDashboard() {
               {dealer.ownerName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div style={{ fontSize: 11, color: '#6B6B7D', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>
+              <div style={{ fontSize: 11, color: '#6E6257', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>
                 Welcome back
               </div>
               <h1 style={{ fontWeight: 800, fontSize: 20, color: '#fff', marginBottom: 2, lineHeight: 1.2 }}>
@@ -262,7 +262,7 @@ export default function AccountDashboard() {
                 }}>
                   {dealerStatus.label}
                 </span>
-                <span style={{ fontSize: 11, color: '#6B6B7D' }}>
+                <span style={{ fontSize: 11, color: '#6E6257' }}>
                   Member since {memberSince}
                 </span>
               </div>
@@ -293,10 +293,10 @@ export default function AccountDashboard() {
         }}
           className="stats-grid"
         >
-          <StatCard icon={<ClipboardList size={18} />} label="Total Inquiries" value={stats.total}    accent="#1A1A2E" sub="All time" />
+          <StatCard icon={<ClipboardList size={18} />} label="Total Inquiries" value={stats.total}    accent="#1F1813" sub="All time" />
           <StatCard icon={<Clock size={18} />}         label="Pending Reply"   value={stats.pending}  accent="#F47920" sub="Awaiting response" />
           <StatCard icon={<CheckCheck size={18} />}    label="Responded"       value={stats.responded} accent="#059669" sub="Dealt with" />
-          <StatCard icon={<Archive size={18} />}       label="Closed"          value={stats.closed}   accent="#6B6B7D" sub="Completed" />
+          <StatCard icon={<Archive size={18} />}       label="Closed"          value={stats.closed}   accent="#6E6257" sub="Completed" />
         </div>
 
         {/* ── Recent Inquiries ───────────────────────────────────────────── */}
@@ -313,7 +313,7 @@ export default function AccountDashboard() {
           />
 
           {recentInquiries.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px 20px', color: '#6B6B7D' }}>
+            <div style={{ textAlign: 'center', padding: '32px 20px', color: '#6E6257' }}>
               <Package size={32} style={{ margin: '0 auto 10px', opacity: 0.35 }} />
               <p style={{ fontSize: 14, fontWeight: 600 }}>No inquiries yet</p>
               <p style={{ fontSize: 12, marginTop: 4 }}>Browse the catalog and submit your first inquiry.</p>
@@ -337,7 +337,7 @@ export default function AccountDashboard() {
                     {['Inquiry #', 'Date', 'Items', 'Status'].map(h => (
                       <th key={h} style={{
                         textAlign: 'left', padding: '8px 10px',
-                        fontSize: 11, fontWeight: 700, color: '#6B6B7D',
+                        fontSize: 11, fontWeight: 700, color: '#6E6257',
                         textTransform: 'uppercase', letterSpacing: '0.05em',
                         borderBottom: '1px solid #E8E4DE', whiteSpace: 'nowrap',
                       }}>
@@ -355,15 +355,15 @@ export default function AccountDashboard() {
                     const shortId = inq.id.slice(-8).toUpperCase();
                     return (
                       <tr key={inq.id} style={{ borderBottom: '1px solid #F8F6F2' }}>
-                        <td style={{ padding: '12px 10px', fontWeight: 700, color: '#1A1A2E', fontFamily: 'monospace', fontSize: 12 }}>
+                        <td style={{ padding: '12px 10px', fontWeight: 700, color: '#1F1813', fontFamily: 'monospace', fontSize: 12 }}>
                           #{shortId}
                         </td>
-                        <td style={{ padding: '12px 10px', color: '#6B6B7D', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 10px', color: '#6E6257', whiteSpace: 'nowrap' }}>
                           {date}
                         </td>
-                        <td style={{ padding: '12px 10px', color: '#1A1A2E' }}>
+                        <td style={{ padding: '12px 10px', color: '#1F1813' }}>
                           <span style={{ fontWeight: 600 }}>{items}</span>
-                          <span style={{ color: '#6B6B7D', fontSize: 11 }}> units · {lines} SKU{lines !== 1 ? 's' : ''}</span>
+                          <span style={{ color: '#6E6257', fontSize: 11 }}> units · {lines} SKU{lines !== 1 ? 's' : ''}</span>
                         </td>
                         <td style={{ padding: '12px 10px' }}>
                           <span style={{
@@ -389,7 +389,7 @@ export default function AccountDashboard() {
             <SectionHeader
               title="Buy Again"
               action={
-                <span style={{ fontSize: 12, color: '#6B6B7D' }}>
+                <span style={{ fontSize: 12, color: '#6E6257' }}>
                   Based on your order history
                 </span>
               }
@@ -416,16 +416,16 @@ export default function AccountDashboard() {
                     </div>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 7px',
-                      borderRadius: 999, background: '#F3F4F6', color: '#6B6B7D',
+                      borderRadius: 999, background: '#F3F4F6', color: '#6E6257',
                     }}>
                       {p.totalQty} units
                     </span>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1A1A2E', lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1F1813', lineHeight: 1.3 }}>
                       {p.name.length > 32 ? p.name.slice(0, 32) + '…' : p.name}
                     </div>
-                    <div style={{ fontSize: 11, color: '#6B6B7D', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: '#6E6257', marginTop: 2 }}>
                       {p.brand} · {p.sku}
                     </div>
                   </div>
@@ -463,8 +463,8 @@ export default function AccountDashboard() {
                   padding: '9px 0', borderBottom: '1px solid #F8F6F2',
                 }}>
                   <div style={{ color: '#F47920', flexShrink: 0 }}>{row.icon}</div>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6B6B7D', minWidth: 44 }}>{row.label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1A2E', flex: 1, textAlign: 'right', wordBreak: 'break-word' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6E6257', minWidth: 44 }}>{row.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1F1813', flex: 1, textAlign: 'right', wordBreak: 'break-word' }}>
                     {row.value}
                   </span>
                 </div>
@@ -477,7 +477,7 @@ export default function AccountDashboard() {
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   gap: 6, padding: '9px 0', borderRadius: 8,
                   border: '1px solid #E8E4DE', background: '#fff',
-                  fontSize: 12, fontWeight: 700, color: '#1A1A2E', textDecoration: 'none',
+                  fontSize: 12, fontWeight: 700, color: '#1F1813', textDecoration: 'none',
                 }}
               >
                 View Full Profile
@@ -550,7 +550,7 @@ export default function AccountDashboard() {
           />
           <div style={{
             display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-            background: '#F8F6F2', borderRadius: 10, color: '#6B6B7D',
+            background: '#F8F6F2', borderRadius: 10, color: '#6E6257',
           }}>
             <Bell size={20} style={{ flexShrink: 0, opacity: 0.4 }} />
             <div>

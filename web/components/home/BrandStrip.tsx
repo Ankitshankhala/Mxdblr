@@ -29,14 +29,14 @@ export default function BrandStrip({ brands }: { brands: string[] }) {
           style={{
             fontSize: 15,
             fontWeight: 700,
-            color: '#6B6B7D',
+            color: '#6E6257',
             textDecoration: 'none',
             letterSpacing: '-0.02em',
             transition: 'color 0.15s',
             flexShrink: 0,
           }}
           onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = '#F47920')}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = '#6B6B7D')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = '#6E6257')}
         >
           {brand}
         </Link>

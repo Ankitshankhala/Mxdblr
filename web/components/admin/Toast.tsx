@@ -69,7 +69,7 @@ function ToastItem({ toast }: { toast: ToastItem }) {
   const bgMap = {
     success: "#2E7D32",
     error: "#DC2626",
-    info: "#1A1A2E",
+    info: "#1F1813",
   };
 
   return (

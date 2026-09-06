@@ -79,8 +79,8 @@ function GeoContent() {
     showToast("Geo rule removed");
   }
 
-  const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none" };
-  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 6 };
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none" };
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 6 };
 
   return (
     <div>
@@ -111,7 +111,7 @@ function GeoContent() {
             <thead>
               <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
                 {["State", "Districts", "Status", "Toggle", "Actions"].map((h) => (
-                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D" }}>{h}</th>
+                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257" }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -119,7 +119,7 @@ function GeoContent() {
               {rules.map((rule) => (
                 <tr key={rule.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
                   <td style={{ padding: "12px 16px", fontWeight: 700, fontSize: 13 }}>{rule.state}</td>
-                  <td style={{ padding: "12px 16px", color: "#6B6B7D" }}>{rule.districts}</td>
+                  <td style={{ padding: "12px 16px", color: "#6E6257" }}>{rule.districts}</td>
                   <td style={{ padding: "12px 16px" }}>
                     <span style={{
                       background: rule.status === "ALLOWED" ? "#E6F3E7" : "#FCE7E7",
@@ -178,7 +178,7 @@ function GeoContent() {
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 440 }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{editId ? "Edit Geo Rule" : "Add Geo Rule"}</div>
-              <button onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 18 }}>×</button>
+              <button onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 18 }}>×</button>
             </div>
             <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
@@ -202,7 +202,7 @@ function GeoContent() {
                         flex: 1, padding: "9px", borderRadius: 7, border: "2px solid",
                         borderColor: form.status === opt ? (opt === "ALLOWED" ? "#2E7D32" : "#DC2626") : "#E8E4DE",
                         background: form.status === opt ? (opt === "ALLOWED" ? "#E6F3E7" : "#FCE7E7") : "#fff",
-                        color: form.status === opt ? (opt === "ALLOWED" ? "#2E7D32" : "#DC2626") : "#6B6B7D",
+                        color: form.status === opt ? (opt === "ALLOWED" ? "#2E7D32" : "#DC2626") : "#6E6257",
                         fontWeight: 700, fontSize: 12, cursor: "pointer",
                       }}
                     >

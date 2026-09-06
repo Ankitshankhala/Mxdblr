@@ -232,7 +232,7 @@ export default function FeatureIcons({ features, max = 4, size = 56 }: FeatureIc
             justifyContent: 'center',
             fontSize: 12,
             fontWeight: 700,
-            color: '#6B6B7D',
+            color: '#6E6257',
             whiteSpace: 'nowrap',
             flexShrink: 0,
           }}

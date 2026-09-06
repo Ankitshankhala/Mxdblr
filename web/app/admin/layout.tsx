@@ -7,6 +7,7 @@
  */
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Logo } from "@/components/layout/Logo";
 import { ReactNode, useEffect, useState, useCallback } from "react";
 import { ToastProvider } from "@/components/admin/Toast";
 import { AdminAuthProvider, useAdminAuth, Permission } from "@/lib/admin/auth";
@@ -311,7 +312,7 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
     <aside
       style={{
         ...(isMobile ? mobileStyle : desktopStyle),
-        background: "#1A1A2E",
+        background: "#1F1813",
         display: "flex",
         flexDirection: "column",
       }}
@@ -327,13 +328,16 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
         }}
       >
         <div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#F47920", letterSpacing: "-0.02em" }}>
-            MXD® Admin
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <Logo height={22} variant="light" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#F47920", letterSpacing: "0.04em" }}>
+              Admin
+            </span>
           </div>
           <div
             style={{
               fontSize: 11,
-              color: "#6B6B7D",
+              color: "#6E6257",
               marginTop: 2,
               letterSpacing: "0.05em",
               textTransform: "uppercase",
@@ -367,7 +371,7 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
         )}
       </div>
 
-      <div style={{ width: "calc(100% - 40px)", margin: "0 20px", height: 1, background: "#2C2C4A", flexShrink: 0 }} />
+      <div style={{ width: "calc(100% - 40px)", margin: "0 20px", height: 1, background: "#352B22", flexShrink: 0 }} />
 
       {/* Nav links */}
       <nav
@@ -414,7 +418,7 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
 
       {/* Logout */}
       <div style={{ padding: "12px 12px 24px", flexShrink: 0 }}>
-        <div style={{ height: 1, background: "#2C2C4A", marginBottom: 12 }} />
+        <div style={{ height: 1, background: "#352B22", marginBottom: 12 }} />
         <button
           onClick={handleLogout}
           style={{
@@ -505,7 +509,7 @@ function AdminTopBar({ isMobile, onHamburgerClick }: TopBarProps) {
               background: "none",
               border: "none",
               cursor: "pointer",
-              color: "#1A1A2E",
+              color: "#1F1813",
               padding: 6,
               display: "flex",
               alignItems: "center",
@@ -525,7 +529,7 @@ function AdminTopBar({ isMobile, onHamburgerClick }: TopBarProps) {
           style={{
             fontSize: 16,
             fontWeight: 700,
-            color: "#1A1A2E",
+            color: "#1F1813",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -539,7 +543,7 @@ function AdminTopBar({ isMobile, onHamburgerClick }: TopBarProps) {
       {/* Right: datetime (hidden on mobile to prevent overflow) + Admin badge */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
         {!isMobile && (
-          <span style={{ fontSize: 12, color: "#6B6B7D", whiteSpace: "nowrap" }}>{now}</span>
+          <span style={{ fontSize: 12, color: "#6E6257", whiteSpace: "nowrap" }}>{now}</span>
         )}
         <span
           style={{
@@ -565,8 +569,8 @@ function AccessDenied({ roleName }: { roleName: string | null }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center", padding: 24 }}>
       <div style={{ fontSize: 48, fontWeight: 900, color: "#E8E4DE", lineHeight: 1 }}>403</div>
-      <div style={{ fontSize: 18, fontWeight: 700, color: "#1A1A2E", marginTop: 12 }}>Access Denied</div>
-      <p style={{ fontSize: 13, color: "#6B6B7D", marginTop: 8, maxWidth: 360 }}>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "#1F1813", marginTop: 12 }}>Access Denied</div>
+      <p style={{ fontSize: 13, color: "#6E6257", marginTop: 8, maxWidth: 360 }}>
         Your role{roleName ? ` (${roleName})` : ""} does not have permission to view this page.
         Contact a Super Admin if you believe this is a mistake.
       </p>
@@ -586,7 +590,7 @@ function RouteGate({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", color: "#6B6B7D", fontSize: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", color: "#6E6257", fontSize: 14 }}>
         Loading…
       </div>
     );
@@ -658,7 +662,7 @@ function ProtectedShell({ children }: { children: ReactNode }) {
           alignItems: "center",
           justifyContent: "center",
           minHeight: "100vh",
-          background: "#1A1A2E",
+          background: "#1F1813",
           color: "rgba(255,255,255,0.5)",
           fontSize: 14,
         }}

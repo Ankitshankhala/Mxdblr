@@ -66,10 +66,10 @@ const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 7,
   border: "1px solid #E8E4DE", fontSize: 13, background: "#fff",
-  color: "#1A1A2E", fontFamily: "inherit", outline: "none",
+  color: "#1F1813", fontFamily: "inherit", outline: "none",
 };
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: "#6B6B7D",
+  fontSize: 11, fontWeight: 700, color: "#6E6257",
   textTransform: "uppercase", letterSpacing: "0.05em",
   display: "block", marginBottom: 5,
 };
@@ -362,16 +362,16 @@ function EventsContent() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
           <h1 style={{ fontWeight: 800, fontSize: 20 }}>Events &amp; Activities</h1>
-          <p style={{ fontSize: 12, color: "#6B6B7D", marginTop: 2 }}>Manage the events showcase on the homepage. Latest events appear first.</p>
+          <p style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>Manage the events showcase on the homepage. Latest events appear first.</p>
         </div>
         <button onClick={openAdd} className="btn-orange" style={{ padding: "9px 18px", fontSize: 13 }}>+ Add Event</button>
       </div>
 
       {/* List */}
       {loading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading events…</div>
+        <div style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading events…</div>
       ) : events.length === 0 ? (
-        <div style={{ padding: 60, textAlign: "center", color: "#6B6B7D" }}>
+        <div style={{ padding: 60, textAlign: "center", color: "#6E6257" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📅</div>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>No events yet</div>
           <div style={{ fontSize: 13 }}>Click &quot;Add Event&quot; to create your first event.</div>
@@ -384,7 +384,7 @@ function EventsContent() {
             return (
               <div key={ev.id} style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden", display: "flex", opacity: ev.published ? 1 : 0.6 }}>
                 {/* Thumb */}
-                <div style={{ width: 160, minHeight: 104, background: "linear-gradient(135deg,#1A1A2E,#2C2C4A)", flexShrink: 0, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 160, minHeight: 104, background: "linear-gradient(135deg,#1F1813,#352B22)", flexShrink: 0, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {thumb ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
@@ -400,11 +400,11 @@ function EventsContent() {
                 <div style={{ flex: 1, padding: "14px 18px", display: "flex", alignItems: "center", gap: 16, minWidth: 0 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                      <span style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>{ev.title}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: ev.published ? "#E6F3E7" : "#F0EDEA", color: ev.published ? "#2E7D32" : "#6B6B7D" }}>{ev.published ? "PUBLISHED" : "DRAFT"}</span>
+                      <span style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>{ev.title}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: ev.published ? "#E6F3E7" : "#F0EDEA", color: ev.published ? "#2E7D32" : "#6E6257" }}>{ev.published ? "PUBLISHED" : "DRAFT"}</span>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "#EEF0FE", color: "#6366F1" }}>{CATEGORY_LABELS[ev.category]}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: "#6B6B7D", marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, color: "#6E6257", marginBottom: 6 }}>
                       {fmtDate(ev.eventDate)}{ev.location ? ` · ${ev.location}` : ""}
                     </div>
                     <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#A8A39A", flexWrap: "wrap" }}>
@@ -417,16 +417,16 @@ function EventsContent() {
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => move(ev, -1)} disabled={idx === 0} title="Move up" style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", cursor: idx === 0 ? "not-allowed" : "pointer", opacity: idx === 0 ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <svg width="12" height="12" fill="none" stroke="#1A1A2E" strokeWidth="2" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15" /></svg>
+                        <svg width="12" height="12" fill="none" stroke="#1F1813" strokeWidth="2" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15" /></svg>
                       </button>
                       <button onClick={() => move(ev, 1)} disabled={idx === sorted.length - 1} title="Move down" style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", cursor: idx === sorted.length - 1 ? "not-allowed" : "pointer", opacity: idx === sorted.length - 1 ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <svg width="12" height="12" fill="none" stroke="#1A1A2E" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+                        <svg width="12" height="12" fill="none" stroke="#1F1813" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
                       </button>
                     </div>
                     <button onClick={() => patch(ev, { published: !ev.published }, !ev.published ? "Event published" : "Event unpublished")} style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: ev.published ? "#FEF3D7" : "#E6F3E7", color: ev.published ? "#D97706" : "#2E7D32", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                       {ev.published ? "Unpublish" : "Publish"}
                     </button>
-                    <button onClick={() => patch(ev, { featured: !ev.featured }, !ev.featured ? "Marked featured" : "Removed from featured")} style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: ev.featured ? "#FFF3E8" : "#fff", color: ev.featured ? "#F47920" : "#6B6B7D", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                    <button onClick={() => patch(ev, { featured: !ev.featured }, !ev.featured ? "Marked featured" : "Removed from featured")} style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: ev.featured ? "#FFF3E8" : "#fff", color: ev.featured ? "#F47920" : "#6E6257", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                       {ev.featured ? "★ Featured" : "☆ Feature"}
                     </button>
                     <div style={{ display: "flex", gap: 6 }}>
@@ -446,7 +446,7 @@ function EventsContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: 28, maxWidth: 340, width: "90%", textAlign: "center" }}>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Delete Event?</div>
-            <div style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>This permanently removes the event and its media references.</div>
+            <div style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>This permanently removes the event and its media references.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <button onClick={() => setShowDeleteConfirm(null)} style={{ padding: "9px 20px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => handleDelete(showDeleteConfirm)} style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#DC2626", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Delete</button>
@@ -463,10 +463,10 @@ function EventsContent() {
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{editing ? "Edit Event" : "New Event"}</div>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <button onClick={() => setPreview((p) => !p)} style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid #E8E4DE", background: preview ? "#1A1A2E" : "#fff", color: preview ? "#fff" : "#1A1A2E", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => setPreview((p) => !p)} style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid #E8E4DE", background: preview ? "#1F1813" : "#fff", color: preview ? "#fff" : "#1F1813", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
                   {preview ? "Edit" : "Preview"}
                 </button>
-                <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 20, lineHeight: 1 }}>×</button>
+                <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 20, lineHeight: 1 }}>×</button>
               </div>
             </div>
 
@@ -478,7 +478,7 @@ function EventsContent() {
                     Card preview {form.published ? "" : "· (still a draft — not visible on site)"}
                   </div>
                   <div style={{ maxWidth: 340, border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
-                    <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 10", background: "linear-gradient(135deg,#1A1A2E,#2C2C4A)" }}>
+                    <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 10", background: "linear-gradient(135deg,#1F1813,#352B22)" }}>
                       {(form.coverImage || form.images[0]) ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={form.coverImage || form.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -491,9 +491,9 @@ function EventsContent() {
                       )}
                     </div>
                     <div style={{ padding: "16px 18px" }}>
-                      <div style={{ fontSize: 12, color: "#6B6B7D", marginBottom: 6 }}>{fmtDate(form.eventDate)}{form.location ? ` · ${form.location}` : ""}</div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: "#1A1A2E", marginBottom: 6 }}>{form.title || "Event title"}</div>
-                      <div style={{ fontSize: 13, color: "#6B6B7D", lineHeight: 1.6 }}>{form.description || "Event description preview…"}</div>
+                      <div style={{ fontSize: 12, color: "#6E6257", marginBottom: 6 }}>{fmtDate(form.eventDate)}{form.location ? ` · ${form.location}` : ""}</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: "#1F1813", marginBottom: 6 }}>{form.title || "Event title"}</div>
+                      <div style={{ fontSize: 13, color: "#6E6257", lineHeight: 1.6 }}>{form.description || "Event description preview…"}</div>
                     </div>
                   </div>
                   {form.images.length > 0 && (
@@ -558,7 +558,7 @@ function EventsContent() {
                       </div>
                     ) : (
                       <div onClick={() => coverRef.current?.click()} style={{ border: "2px dashed #E8E4DE", borderRadius: 8, padding: "14px", textAlign: "center", cursor: "pointer", background: "#FAFAF9" }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A2E" }}>Upload cover image</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1F1813" }}>Upload cover image</div>
                         <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 2 }}>PNG, JPG, WEBP — max 5 MB</div>
                       </div>
                     )}
@@ -576,7 +576,7 @@ function EventsContent() {
                           <button onClick={() => removeImage(i)} style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", background: "#DC2626", border: "2px solid #fff", color: "#fff", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>×</button>
                         </div>
                       ))}
-                      <button onClick={() => imagesRef.current?.click()} style={{ width: 76, height: 56, borderRadius: 6, border: "2px dashed #E8E4DE", background: "#FAFAF9", cursor: "pointer", color: "#6B6B7D", fontSize: 22 }}>+</button>
+                      <button onClick={() => imagesRef.current?.click()} style={{ width: 76, height: 56, borderRadius: 6, border: "2px dashed #E8E4DE", background: "#FAFAF9", cursor: "pointer", color: "#6E6257", fontSize: 22 }}>+</button>
                     </div>
                   </div>
 
@@ -589,7 +589,7 @@ function EventsContent() {
                         const typeLabel = v.source === "upload" ? "File" : ytId(v.url) ? "YouTube" : vmId(v.url) ? "Vimeo" : v.url ? "Link" : "—";
                         return (
                           <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                            <div style={{ width: 56, height: 36, borderRadius: 6, background: "#1A1A2E", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <div style={{ width: 56, height: 36, borderRadius: 6, background: "#1F1813", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                               {thumb ? (
                                 /* eslint-disable-next-line @next/next/no-img-element */
                                 <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -599,7 +599,7 @@ function EventsContent() {
                             </div>
                             <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 7px", borderRadius: 5, background: v.source === "upload" ? "#E6F3E7" : "#EEF0FE", color: v.source === "upload" ? "#2E7D32" : "#6366F1", flexShrink: 0, textTransform: "uppercase" }}>{typeLabel}</span>
                             {v.source === "upload" ? (
-                              <span style={{ ...inputStyle, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#6B6B7D" }}>{v.url}</span>
+                              <span style={{ ...inputStyle, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#6E6257" }}>{v.url}</span>
                             ) : (
                               <input value={v.url} onChange={(e) => updateVideoUrl(i, e.target.value)} style={inputStyle} placeholder="https://youtube.com/watch?v=… or Vimeo / .mp4 URL" />
                             )}
@@ -620,11 +620,11 @@ function EventsContent() {
 
                   {/* Toggles */}
                   <div style={{ gridColumn: "1 / -1", display: "flex", gap: 24, marginTop: 4 }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#1A1A2E" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#1F1813" }}>
                       <input type="checkbox" checked={form.published} onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))} />
                       Published (visible on homepage)
                     </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#1A1A2E" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#1F1813" }}>
                       <input type="checkbox" checked={form.featured} onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))} />
                       Featured (shown first)
                     </label>

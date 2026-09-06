@@ -156,7 +156,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <motion.div
       className="card overflow-hidden flex flex-col"
       style={{ transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s' }}
-      whileHover={{ y: -3, boxShadow: '0 8px 28px rgba(26,26,46,0.12)', borderColor: '#1A1A2E' }}
+      whileHover={{ y: -3, boxShadow: '0 8px 28px rgba(26,26,46,0.12)', borderColor: '#1F1813' }}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
     >
@@ -212,7 +212,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           }}
         >
           {product.category?.name ? (
-            <span style={{ minWidth: 0, flexShrink: 1, background: '#1A1A2E', color: '#fff', fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span style={{ minWidth: 0, flexShrink: 1, background: '#1F1813', color: '#fff', fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {product.category.name.toUpperCase()}
             </span>
           ) : (
@@ -277,15 +277,15 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         <Link
           href={`/product/${product.sku}`}
-          style={{ fontWeight: 700, fontSize: 14, color: '#1A1A2E', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textDecoration: 'none' }}
+          style={{ fontWeight: 700, fontSize: 14, color: '#1F1813', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textDecoration: 'none' }}
         >
           {product.name}
         </Link>
 
         <SkuLabel sku={product.sku} />
 
-        <div style={{ fontSize: 12, color: '#6B6B7D', marginTop: 2 }}>
-          MOQ: <strong style={{ color: '#1A1A2E' }}>{product.moq} pcs</strong>
+        <div style={{ fontSize: 12, color: '#6E6257', marginTop: 2 }}>
+          MOQ: <strong style={{ color: '#1F1813' }}>{product.moq} pcs</strong>
         </div>
 
         {/* Key features — up to 4 highlighted 48px badges (icon + label) + overflow badge */}

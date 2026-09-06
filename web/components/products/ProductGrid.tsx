@@ -51,7 +51,7 @@ export default function ProductGrid({ products, loading = false, columns = 3 }: 
         style={{
           textAlign: 'center',
           padding: '60px 20px',
-          color: '#6B6B7D',
+          color: '#6E6257',
         }}
       >
         <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>

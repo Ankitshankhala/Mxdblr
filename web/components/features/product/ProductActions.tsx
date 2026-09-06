@@ -40,7 +40,7 @@ function Accordion({
           cursor: 'pointer',
           fontWeight: 700,
           fontSize: 14,
-          color: '#1A1A2E',
+          color: '#1F1813',
           textAlign: 'left',
         }}
       >
@@ -59,7 +59,7 @@ function Accordion({
             transition={{ duration: 0.2 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ paddingBottom: 16, fontSize: 14, color: '#6B6B7D', lineHeight: 1.7 }}>
+            <div style={{ paddingBottom: 16, fontSize: 14, color: '#6E6257', lineHeight: 1.7 }}>
               {children}
             </div>
           </motion.div>
@@ -141,7 +141,7 @@ export default function ProductActions({ product }: { product: Product }) {
               <Heart
                 size={16}
                 fill={wishlisted ? '#F47920' : 'none'}
-                color={wishlisted ? '#F47920' : '#1A1A2E'}
+                color={wishlisted ? '#F47920' : '#1F1813'}
               />
               {wishlisted ? 'Saved' : 'Save'}
             </button>
@@ -175,7 +175,7 @@ export default function ProductActions({ product }: { product: Product }) {
             <Heart
               size={16}
               fill={wishlisted ? '#F47920' : 'none'}
-              color={wishlisted ? '#F47920' : '#1A1A2E'}
+              color={wishlisted ? '#F47920' : '#1F1813'}
             />
             {wishlisted ? 'Saved' : 'Save'}
           </button>
@@ -184,7 +184,7 @@ export default function ProductActions({ product }: { product: Product }) {
             <div style={{ fontWeight: 700, fontSize: 14, color: '#DC2626', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Bell size={16} /> Out of Stock — Get Notified
             </div>
-            <p style={{ fontSize: 13, color: '#6B6B7D', marginBottom: 12 }}>
+            <p style={{ fontSize: 13, color: '#6E6257', marginBottom: 12 }}>
               Enter your mobile number to be notified when this product is back in stock.
             </p>
             {notifySent ? (
@@ -194,7 +194,7 @@ export default function ProductActions({ product }: { product: Product }) {
             ) : (
               <form onSubmit={handleNotifyMe} style={{ display: 'flex', gap: 8 }}>
                 <div style={{ display: 'flex', flex: 1, alignItems: 'center', border: '1px solid #E8E4DE', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
-                  <span style={{ padding: '0 10px', fontSize: 13, color: '#6B6B7D', borderRight: '1px solid #E8E4DE' }}>+91</span>
+                  <span style={{ padding: '0 10px', fontSize: 13, color: '#6E6257', borderRight: '1px solid #E8E4DE' }}>+91</span>
                   <input
                     type="tel"
                     pattern="[6-9][0-9]{9}"
@@ -223,7 +223,7 @@ export default function ProductActions({ product }: { product: Product }) {
       {/* Compatibility tags */}
       {product.compatibilityTags && product.compatibilityTags.length > 0 && (
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#6B6B7D', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#6E6257', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Compatible with
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -237,7 +237,7 @@ export default function ProductActions({ product }: { product: Product }) {
                   padding: '3px 8px',
                   fontSize: 12,
                   fontWeight: 600,
-                  color: '#1A1A2E',
+                  color: '#1F1813',
                 }}
               >
                 {tag}
@@ -258,7 +258,7 @@ export default function ProductActions({ product }: { product: Product }) {
               <tbody>
                 {product.attributes.map((attr, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid #F8F6F2' }}>
-                    <td style={{ padding: '6px 0', color: '#6B6B7D', fontSize: 13, width: '40%' }}>{attr.name}</td>
+                    <td style={{ padding: '6px 0', color: '#6E6257', fontSize: 13, width: '40%' }}>{attr.name}</td>
                     <td style={{ padding: '6px 0', fontWeight: 600, fontSize: 13 }}>{attr.value}{attr.unit ? ` ${attr.unit}` : ''}</td>
                   </tr>
                 ))}

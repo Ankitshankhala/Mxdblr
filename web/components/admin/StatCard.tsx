@@ -15,7 +15,7 @@ type StatCardProps = {
   href?: string;
 };
 
-export default function StatCard({ icon, value, label, accent = "#1A1A2E", href }: StatCardProps) {
+export default function StatCard({ icon, value, label, accent = "#1F1813", href }: StatCardProps) {
   const inner = (
     <div
       style={{
@@ -60,10 +60,10 @@ export default function StatCard({ icon, value, label, accent = "#1A1A2E", href 
         {icon}
       </div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 26, fontWeight: 800, color: "#1A1A2E", lineHeight: 1 }}>
+        <div style={{ fontSize: 26, fontWeight: 800, color: "#1F1813", lineHeight: 1 }}>
           {value}
         </div>
-        <div style={{ fontSize: 12, color: "#6B6B7D", marginTop: 4, fontWeight: 500 }}>
+        <div style={{ fontSize: 12, color: "#6E6257", marginTop: 4, fontWeight: 500 }}>
           {label}
         </div>
       </div>

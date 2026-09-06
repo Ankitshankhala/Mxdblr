@@ -40,7 +40,7 @@ interface EditForm {
 const inputStyle: React.CSSProperties = {
   width: '100%', border: '1px solid #E8E4DE', borderRadius: 10,
   padding: '10px 14px', fontSize: 14, outline: 'none',
-  background: '#F8F6F2', color: '#1A1A2E', fontFamily: 'inherit', boxSizing: 'border-box',
+  background: '#F8F6F2', color: '#1F1813', fontFamily: 'inherit', boxSizing: 'border-box',
 };
 
 function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
@@ -53,7 +53,7 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
         }}>
           {icon}
         </div>
-        <h2 style={{ fontWeight: 700, fontSize: 15, color: '#1A1A2E' }}>{title}</h2>
+        <h2 style={{ fontWeight: 700, fontSize: 15, color: '#1F1813' }}>{title}</h2>
       </div>
       {children}
     </div>
@@ -66,15 +66,15 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
       display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
       paddingBottom: 10, marginBottom: 10, borderBottom: '1px solid #F8F6F2', gap: 16,
     }}>
-      <span style={{ fontSize: 12, color: '#6B6B7D', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 14, color: '#1A1A2E', fontWeight: 600, textAlign: 'right' }}>{value || '—'}</span>
+      <span style={{ fontSize: 12, color: '#6E6257', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 14, color: '#1F1813', fontWeight: 600, textAlign: 'right' }}>{value || '—'}</span>
     </div>
   );
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6B6B7D', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>
+    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6E6257', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>
       {children}
     </label>
   );
@@ -83,7 +83,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 function PhoneInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #E8E4DE', borderRadius: 10, overflow: 'hidden', background: '#F8F6F2' }}>
-      <span style={{ padding: '10px 10px', fontSize: 12, color: '#6B6B7D', borderRight: '1px solid #E8E4DE', whiteSpace: 'nowrap' }}>+91</span>
+      <span style={{ padding: '10px 10px', fontSize: 12, color: '#6E6257', borderRight: '1px solid #E8E4DE', whiteSpace: 'nowrap' }}>+91</span>
       <input
         type="tel" maxLength={10} value={value}
         onChange={e => onChange(e.target.value.replace(/\D/g, '').slice(0, 10))}
@@ -204,7 +204,7 @@ export default function ProfileSettingsPage() {
         <Navbar />
         <MobileBottomNav />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-          <div style={{ textAlign: 'center', color: '#6B6B7D' }}>
+          <div style={{ textAlign: 'center', color: '#6E6257' }}>
             <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #F47920', borderTopColor: 'transparent', margin: '0 auto 12px', animation: 'spin 0.8s linear infinite' }} />
             <p style={{ fontSize: 14 }}>Loading your profile...</p>
           </div>
@@ -225,12 +225,12 @@ export default function ProfileSettingsPage() {
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px 40px' }}>
 
         {/* ── Breadcrumb ───────────────────────────────────────────────── */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B6B7D', marginBottom: 20 }}>
-          <Link href="/" style={{ color: '#6B6B7D', textDecoration: 'none' }}>Home</Link>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6E6257', marginBottom: 20 }}>
+          <Link href="/" style={{ color: '#6E6257', textDecoration: 'none' }}>Home</Link>
           <ChevronRight size={12} />
-          <Link href="/account" style={{ color: '#6B6B7D', textDecoration: 'none' }}>My Account</Link>
+          <Link href="/account" style={{ color: '#6E6257', textDecoration: 'none' }}>My Account</Link>
           <ChevronRight size={12} />
-          <span style={{ color: '#1A1A2E', fontWeight: 600 }}>Profile Settings</span>
+          <span style={{ color: '#1F1813', fontWeight: 600 }}>Profile Settings</span>
         </nav>
 
         {/* ── Back button + header ─────────────────────────────────────── */}
@@ -242,7 +242,7 @@ export default function ProfileSettingsPage() {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: 36, height: 36, borderRadius: 9, border: '1px solid #E8E4DE',
-                  background: '#fff', color: '#1A1A2E', textDecoration: 'none', flexShrink: 0,
+                  background: '#fff', color: '#1F1813', textDecoration: 'none', flexShrink: 0,
                 }}
               >
                 <ArrowLeft size={16} />
@@ -256,7 +256,7 @@ export default function ProfileSettingsPage() {
                   {dealer.ownerName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h1 style={{ fontWeight: 800, fontSize: 16, color: '#1A1A2E', marginBottom: 2 }}>
+                  <h1 style={{ fontWeight: 800, fontSize: 16, color: '#1F1813', marginBottom: 2 }}>
                     {dealer.ownerName}
                   </h1>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -266,7 +266,7 @@ export default function ProfileSettingsPage() {
                     }}>
                       {statusStyle.label}
                     </span>
-                    <span style={{ fontSize: 11, color: '#6B6B7D' }}>
+                    <span style={{ fontSize: 11, color: '#6E6257' }}>
                       Since {new Date(dealer.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
                     </span>
                   </div>
@@ -283,7 +283,7 @@ export default function ProfileSettingsPage() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '9px 16px', borderRadius: 8, border: '1px solid #E8E4DE',
-                    background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#1A1A2E',
+                    background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#1F1813',
                   }}
                 >
                   <Edit2 size={14} /> Edit Profile
@@ -296,7 +296,7 @@ export default function ProfileSettingsPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
                       padding: '9px 14px', borderRadius: 8, border: '1px solid #E8E4DE',
-                      background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#6B6B7D',
+                      background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#6E6257',
                     }}
                   >
                     <X size={14} /> Cancel
@@ -423,7 +423,7 @@ export default function ProfileSettingsPage() {
                 placeholder="15-digit GSTIN"
                 maxLength={15}
               />
-              <p style={{ fontSize: 11, color: '#6B6B7D', marginTop: 6 }}>
+              <p style={{ fontSize: 11, color: '#6E6257', marginTop: 6 }}>
                 Leave blank if you do not have a GST number.
               </p>
             </div>
@@ -444,16 +444,16 @@ export default function ProfileSettingsPage() {
         {/* ── Account Security ─────────────────────────────────────────── */}
         <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid #F8F6F2' }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: '#1A1A2E', marginBottom: 2 }}>Account Security</div>
-            <div style={{ fontSize: 12, color: '#6B6B7D' }}>Your login mobile number cannot be changed for security reasons.</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: '#1F1813', marginBottom: 2 }}>Account Security</div>
+            <div style={{ fontSize: 12, color: '#6E6257' }}>Your login mobile number cannot be changed for security reasons.</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 9, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B6B7D' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 9, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6E6257' }}>
               <Phone size={15} />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1A2E' }}>Login Mobile</div>
-              <div style={{ fontSize: 12, color: '#6B6B7D' }}>+91 {dealer.mobile}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#1F1813' }}>Login Mobile</div>
+              <div style={{ fontSize: 12, color: '#6E6257' }}>+91 {dealer.mobile}</div>
             </div>
             <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#D1FAE5', color: '#065F46' }}>
               Verified
@@ -468,7 +468,7 @@ export default function ProfileSettingsPage() {
             display: 'inline-flex', alignItems: 'center', gap: 7,
             padding: '11px 20px', borderRadius: 9,
             border: '1px solid #E8E4DE', background: '#fff',
-            color: '#1A1A2E', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+            color: '#1F1813', fontSize: 13, fontWeight: 600, textDecoration: 'none',
           }}
         >
           <ArrowLeft size={14} /> Back to Dashboard

@@ -17,13 +17,13 @@ const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> =
   ACTIVE:     { bg: "#E6F3E7", color: "#2E7D32", label: "Active" },
   SUSPENDED:  { bg: "#FEF3D7", color: "#F59E0B", label: "Suspended" },
   BLOCKED:    { bg: "#FCE7E7", color: "#DC2626", label: "Blocked" },
-  REJECTED:   { bg: "#F0F0F0", color: "#6B6B7D", label: "Rejected" },
+  REJECTED:   { bg: "#F0F0F0", color: "#6E6257", label: "Rejected" },
   PENDING:    { bg: "#EEF0FE", color: "#6366F1", label: "Pending" },
   // Inquiry statuses
   NEW:        { bg: "#FFF3E8", color: "#F47920", label: "New" },
   VIEWED:     { bg: "#EEF0FE", color: "#6366F1", label: "Viewed" },
   RESPONDED:  { bg: "#E6F3E7", color: "#2E7D32", label: "Responded" },
-  CLOSED:     { bg: "#F0F0F0", color: "#6B6B7D", label: "Closed" },
+  CLOSED:     { bg: "#F0F0F0", color: "#6E6257", label: "Closed" },
   // Notification statuses
   SENT:       { bg: "#E6F3E7", color: "#2E7D32", label: "Sent" },
   FAILED:     { bg: "#FCE7E7", color: "#DC2626", label: "Failed" },
@@ -33,7 +33,7 @@ const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> =
 };
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
-  const config = STATUS_MAP[status] ?? { bg: "#F0F0F0", color: "#6B6B7D", label: status };
+  const config = STATUS_MAP[status] ?? { bg: "#F0F0F0", color: "#6E6257", label: status };
   return (
     <span
       style={{

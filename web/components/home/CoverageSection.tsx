@@ -30,7 +30,7 @@ const STATES = [
 
 export default function CoverageSection() {
   return (
-    <section style={{ background: '#1A1A2E', padding: '60px 20px', marginTop: 60 }}>
+    <section style={{ background: '#1F1813', padding: '60px 20px', marginTop: 60 }}>
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <p

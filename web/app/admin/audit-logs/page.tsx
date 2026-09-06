@@ -67,7 +67,7 @@ function AuditLogsContent() {
 
   return (
     <div>
-      <p style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20, maxWidth: 620 }}>
+      <p style={{ fontSize: 13, color: "#6E6257", marginBottom: 20, maxWidth: 620 }}>
         A record of every role, permission, and staff-account change — who did what, and when. Most recent first.
       </p>
 
@@ -77,18 +77,18 @@ function AuditLogsContent() {
             <thead>
               <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
                 {["When", "Actor", "Action", "Target", "Details"].map((h) => (
-                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading…</td></tr>}
-              {!loading && logs.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No audit entries yet.</td></tr>}
+              {loading && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading…</td></tr>}
+              {!loading && logs.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>No audit entries yet.</td></tr>}
               {!loading && logs.map((log) => {
                 const style = ACTION_STYLE[log.action] ?? { label: log.action, color: "#6B7280", bg: "#F3F4F6" };
                 return (
                   <tr key={log.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
-                    <td style={{ padding: "12px 16px", color: "#6B6B7D", whiteSpace: "nowrap" }}>
+                    <td style={{ padding: "12px 16px", color: "#6E6257", whiteSpace: "nowrap" }}>
                       {new Date(log.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                     </td>
                     <td style={{ padding: "12px 16px", fontWeight: 600 }}>{log.actorName}</td>
@@ -98,17 +98,17 @@ function AuditLogsContent() {
                       </span>
                     </td>
                     <td style={{ padding: "12px 16px" }}>
-                      <span style={{ color: "#1A1A2E" }}>{log.targetName || "—"}</span>
+                      <span style={{ color: "#1F1813" }}>{log.targetName || "—"}</span>
                       <span style={{ color: "#A8A39A", fontSize: 11, marginLeft: 6 }}>{log.targetType}</span>
                     </td>
-                    <td style={{ padding: "12px 16px", color: "#6B6B7D", fontSize: 12 }}>{summarizeDetails(log.details)}</td>
+                    <td style={{ padding: "12px 16px", color: "#6E6257", fontSize: 12 }}>{summarizeDetails(log.details)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-        <div style={{ padding: "10px 16px", borderTop: "1px solid #E8E4DE", fontSize: 12, color: "#6B6B7D" }}>
+        <div style={{ padding: "10px 16px", borderTop: "1px solid #E8E4DE", fontSize: 12, color: "#6E6257" }}>
           Showing {logs.length} most recent {logs.length === 1 ? "entry" : "entries"}
         </div>
       </div>

@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Logo } from '@/components/layout/Logo';
 import { authApi, setToken } from '@/lib/api';
 import type { BusinessType } from '@/types';
 
@@ -74,7 +75,7 @@ function FormField({
 }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6B6B7D', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6E6257', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
         {label} {required && <span style={{ color: '#DC2626' }}>*</span>}
       </label>
       {children}
@@ -90,7 +91,7 @@ const inputStyle: React.CSSProperties = {
   fontSize: 14,
   outline: 'none',
   background: '#F8F6F2',
-  color: '#1A1A2E',
+  color: '#1F1813',
   fontFamily: 'inherit',
 };
 
@@ -172,8 +173,10 @@ export default function RegisterPage() {
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', padding: '32px 0 24px' }}>
-          <div style={{ fontWeight: 900, fontSize: 28, color: '#F47920' }}>MXD®</div>
-          <div style={{ fontSize: 12, color: '#6B6B7D', marginTop: 4 }}>Dealer Registration</div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Logo height={38} preload />
+          </div>
+          <div style={{ fontSize: 12, color: '#6E6257', marginTop: 4 }}>Dealer Registration</div>
         </div>
 
         {/* Progress */}
@@ -192,13 +195,13 @@ export default function RegisterPage() {
                     fontWeight: 700,
                     fontSize: 13,
                     background: i < step ? '#2E7D32' : i === step ? '#F47920' : '#E8E4DE',
-                    color: i <= step ? '#fff' : '#6B6B7D',
+                    color: i <= step ? '#fff' : '#6E6257',
                     transition: 'background 0.2s',
                   }}
                 >
                   {i < step ? <Check size={14} /> : i + 1}
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 600, color: i === step ? '#F47920' : '#6B6B7D', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: i === step ? '#F47920' : '#6E6257', whiteSpace: 'nowrap' }}>
                   {label}
                 </span>
               </div>
@@ -238,7 +241,7 @@ export default function RegisterPage() {
 
                   <FormField label="WhatsApp Number" required>
                     <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${errors.whatsappNumber ? '#DC2626' : '#E8E4DE'}`, borderRadius: 10, overflow: 'hidden', background: '#F8F6F2' }}>
-                      <span style={{ padding: '11px 12px', fontSize: 13, color: '#6B6B7D', borderRight: '1px solid #E8E4DE' }}>+91</span>
+                      <span style={{ padding: '11px 12px', fontSize: 13, color: '#6E6257', borderRight: '1px solid #E8E4DE' }}>+91</span>
                       <input
                         type="tel"
                         maxLength={10}
@@ -253,7 +256,7 @@ export default function RegisterPage() {
 
                   <FormField label="Alternate Mobile">
                     <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #E8E4DE', borderRadius: 10, overflow: 'hidden', background: '#F8F6F2' }}>
-                      <span style={{ padding: '11px 12px', fontSize: 13, color: '#6B6B7D', borderRight: '1px solid #E8E4DE' }}>+91</span>
+                      <span style={{ padding: '11px 12px', fontSize: 13, color: '#6E6257', borderRight: '1px solid #E8E4DE' }}>+91</span>
                       <input
                         type="tel"
                         maxLength={10}
@@ -361,8 +364,8 @@ export default function RegisterPage() {
                     { label: 'Pincode', value: form.pincode },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #F8F6F2', paddingBottom: 8 }}>
-                      <span style={{ color: '#6B6B7D' }}>{label}</span>
-                      <span style={{ fontWeight: 600, color: '#1A1A2E' }}>{value}</span>
+                      <span style={{ color: '#6E6257' }}>{label}</span>
+                      <span style={{ fontWeight: 600, color: '#1F1813' }}>{value}</span>
                     </div>
                   ))}
                 </div>

@@ -33,7 +33,7 @@ const STATS = [
 export default function TrustStats() {
   if (STATS.length === 0) return null;
   return (
-    <section style={{ background: '#1A1A2E', padding: '0 20px', marginTop: 60 }}>
+    <section style={{ background: '#1F1813', padding: '0 20px', marginTop: 60 }}>
       <div
         style={{
           maxWidth: 1280,

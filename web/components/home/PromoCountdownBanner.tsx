@@ -94,7 +94,7 @@ export default function PromoCountdownBanner() {
     <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 20px 0' }}>
       <div
         style={{
-          background: 'linear-gradient(135deg, #1A1A2E 0%, #2A1A0E 100%)',
+          background: 'linear-gradient(135deg, #1F1813 0%, #2A1A0E 100%)',
           borderRadius: 16,
           padding: '28px 32px',
           display: 'flex',

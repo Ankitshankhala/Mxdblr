@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
         ctaLink: ctaLink || '/catalog',
         image: image || '',
         mobileImage: mobileImage || '',
-        bgColor: bgColor || '#1A1A2E',
+        bgColor: bgColor || '#1F1813',
         accentColor: accentColor || '#F47920',
         logoImage: logoImage || '',
         productImage1: productImage1 || '',

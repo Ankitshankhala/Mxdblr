@@ -55,12 +55,12 @@ export default function WishlistPage() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontWeight: 800, fontSize: 22, color: '#1A1A2E', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h1 style={{ fontWeight: 800, fontSize: 22, color: '#1F1813', display: 'flex', alignItems: 'center', gap: 10 }}>
               <Heart size={22} color="#F47920" fill="#F47920" />
               Wishlist
             </h1>
             {!loading && (
-              <p style={{ fontSize: 13, color: '#6B6B7D', marginTop: 4 }}>
+              <p style={{ fontSize: 13, color: '#6E6257', marginTop: 4 }}>
                 {products.length} saved {products.length === 1 ? 'item' : 'items'}
               </p>
             )}
@@ -103,10 +103,10 @@ export default function WishlistPage() {
             }}>
               <Heart size={32} strokeWidth={1.5} />
             </div>
-            <h2 style={{ fontWeight: 800, fontSize: 20, color: '#1A1A2E', marginBottom: 10 }}>
+            <h2 style={{ fontWeight: 800, fontSize: 20, color: '#1F1813', marginBottom: 10 }}>
               Your wishlist is empty
             </h2>
-            <p style={{ fontSize: 14, color: '#6B6B7D', lineHeight: 1.6, marginBottom: 32 }}>
+            <p style={{ fontSize: 14, color: '#6E6257', lineHeight: 1.6, marginBottom: 32 }}>
               Save products you love by tapping the heart icon on any product page.
             </p>
             <Link
@@ -172,14 +172,14 @@ export default function WishlistPage() {
 
                   <Link
                     href={`/product/${product.sku}`}
-                    style={{ textDecoration: 'none', color: '#1A1A2E', fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}
+                    style={{ textDecoration: 'none', color: '#1F1813', fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}
                   >
                     {product.name}
                   </Link>
 
                   <SkuLabel sku={product.sku} />
 
-                  <div style={{ fontSize: 12, color: '#6B6B7D', marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: '#6E6257', marginTop: 2 }}>
                     MOQ: <strong>{product.moq} units</strong>
                   </div>
 

@@ -98,7 +98,7 @@ function CartItemRow({ item, onRemove, onUpdateQty }: CartItemRowProps) {
         <BrandChip brand={item.product.brand} />
         <Link
           href={`/product/${item.product.sku}`}
-          style={{ display: 'block', fontWeight: 700, fontSize: 14, color: '#1A1A2E', textDecoration: 'none', marginTop: 4, lineHeight: 1.3 }}
+          style={{ display: 'block', fontWeight: 700, fontSize: 14, color: '#1F1813', textDecoration: 'none', marginTop: 4, lineHeight: 1.3 }}
         >
           {item.product.name}
         </Link>
@@ -123,7 +123,7 @@ function CartItemRow({ item, onRemove, onUpdateQty }: CartItemRowProps) {
           moq={item.product.moq}
           onChange={(qty) => onUpdateQty(item.productId, qty)}
         />
-        <div style={{ fontSize: 12, color: '#6B6B7D', textAlign: 'right' }}>
+        <div style={{ fontSize: 12, color: '#6E6257', textAlign: 'right' }}>
           {item.quantity} pcs
         </div>
       </div>
@@ -149,7 +149,7 @@ function WhatsAppPreview({ message }: { message: string }) {
           cursor: 'pointer',
           fontWeight: 600,
           fontSize: 13,
-          color: '#6B6B7D',
+          color: '#6E6257',
           padding: '10px 0',
         }}
       >
@@ -180,7 +180,7 @@ function WhatsAppPreview({ message }: { message: string }) {
               >
                 {message}
               </div>
-              <div style={{ fontSize: 10, color: '#6B6B7D', textAlign: 'right', marginTop: 4 }}>
+              <div style={{ fontSize: 10, color: '#6E6257', textAlign: 'right', marginTop: 4 }}>
                 Delivered
               </div>
             </div>
@@ -261,12 +261,12 @@ export default function CartPage() {
         <h1 style={{ fontWeight: 800, fontSize: 24, marginBottom: 4 }}>
           Inquiry Cart
           {count > 0 && (
-            <span style={{ fontSize: 15, fontWeight: 600, color: '#6B6B7D', marginLeft: 10 }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: '#6E6257', marginLeft: 10 }}>
               {count} items
             </span>
           )}
         </h1>
-        <p style={{ color: '#6B6B7D', fontSize: 13, marginBottom: 28 }}>
+        <p style={{ color: '#6E6257', fontSize: 13, marginBottom: 28 }}>
           No pricing shown. Send inquiry via WhatsApp to get wholesale pricing.
         </p>
 
@@ -274,7 +274,7 @@ export default function CartPage() {
           <div className="card" style={{ textAlign: 'center', padding: '60px 20px' }}>
             <ShoppingBag size={48} color="#E8E4DE" style={{ margin: '0 auto 16px' }} />
             <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Your cart is empty</h3>
-            <p style={{ color: '#6B6B7D', marginBottom: 24 }}>Add products from the catalog to build your inquiry.</p>
+            <p style={{ color: '#6E6257', marginBottom: 24 }}>Add products from the catalog to build your inquiry.</p>
             <Link href="/catalog" className="btn-orange" style={{ padding: '12px 24px', textDecoration: 'none' }}>
               Browse Catalog <ArrowRight size={15} />
             </Link>
@@ -302,11 +302,11 @@ export default function CartPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: '#6B6B7D' }}>Total Items</span>
+                    <span style={{ color: '#6E6257' }}>Total Items</span>
                     <span style={{ fontWeight: 600 }}>{count} pcs</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: '#6B6B7D' }}>Product Lines</span>
+                    <span style={{ color: '#6E6257' }}>Product Lines</span>
                     <span style={{ fontWeight: 600 }}>{items.length}</span>
                   </div>
                 </div>

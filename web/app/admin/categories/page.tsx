@@ -47,10 +47,10 @@ interface Product {
 const inp: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 7,
   border: "1px solid #E8E4DE", fontSize: 13, background: "#fff",
-  color: "#1A1A2E", fontFamily: "inherit", outline: "none",
+  color: "#1F1813", fontFamily: "inherit", outline: "none",
 };
 const lbl: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: "#6B6B7D",
+  fontSize: 11, fontWeight: 700, color: "#6E6257",
   textTransform: "uppercase", letterSpacing: "0.05em",
   display: "block", marginBottom: 5,
 };
@@ -111,7 +111,7 @@ function ImageUpload({ value, onChange, label, hint, maxH = 120 }: {
           style={{ border: `2px dashed ${drag ? "#F47920" : "#E8E4DE"}`, borderRadius: 8, padding: "18px 12px", textAlign: "center", cursor: "pointer", background: drag ? "#FFF3E8" : "#FAFAF9", transition: "all 0.15s" }}
         >
           <div style={{ fontSize: 22, marginBottom: 4 }}>🖼️</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: drag ? "#F47920" : "#1A1A2E" }}>Click or drag & drop</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: drag ? "#F47920" : "#1F1813" }}>Click or drag & drop</div>
           {hint && <div style={{ fontSize: 10, color: "#A8A39A", marginTop: 2 }}>{hint}</div>}
         </div>
       )}
@@ -176,7 +176,7 @@ function CategoryModal({ editing, categories, onClose, onSaved }: {
       <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 520, maxHeight: "92vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>{editing ? "Edit Category" : "New Category"}</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 20 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 20 }}>×</button>
         </div>
 
         <div style={{ overflowY: "auto", padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -213,7 +213,7 @@ function CategoryModal({ editing, categories, onClose, onSaved }: {
           {/* Active toggle */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Toggle value={form.active} onChange={(v) => setForm((f) => ({ ...f, active: v }))} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#1A1A2E" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#1F1813" }}>
               {form.active ? "Visible on storefront" : "Hidden from storefront"}
             </span>
           </div>
@@ -276,9 +276,9 @@ function QuickProductModal({ category, onClose, onSaved }: {
         <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 15 }}>Add Product</div>
-            <div style={{ fontSize: 11, color: "#6B6B7D", marginTop: 2 }}>Category: <strong style={{ color: "#F47920" }}>{category.name}</strong> — auto-assigned</div>
+            <div style={{ fontSize: 11, color: "#6E6257", marginTop: 2 }}>Category: <strong style={{ color: "#F47920" }}>{category.name}</strong> — auto-assigned</div>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 20 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 20 }}>×</button>
         </div>
 
         <div style={{ overflowY: "auto", padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -406,35 +406,35 @@ function CategoryDetail({ category, categories, onClose, onRefresh }: {
             <img src={category.image} alt={category.name} style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "1px solid #E8E4DE" }} />
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 800, fontSize: 16, color: "#1A1A2E" }}>{category.name}</div>
-            <div style={{ fontSize: 12, color: "#6B6B7D", marginTop: 2 }}>
+            <div style={{ fontWeight: 800, fontSize: 16, color: "#1F1813" }}>{category.name}</div>
+            <div style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>
               {category.parent && <span>↳ {category.parent.name} · </span>}
               {category.productCount} product{category.productCount !== 1 ? "s" : ""}
               {category.childrenCount > 0 && ` · ${category.childrenCount} sub-categor${category.childrenCount !== 1 ? "ies" : "y"}`}
             </div>
           </div>
           <button onClick={() => setShowEditCat(true)} style={{ padding: "7px 14px", borderRadius: 7, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit Category</button>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 22, lineHeight: 1, padding: 4 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 22, lineHeight: 1, padding: 4 }}>×</button>
         </div>
 
         {/* Stats row */}
         <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #E8E4DE", flexShrink: 0 }}>
           {[
-            { label: "Total Products", value: category.productCount, color: "#1A1A2E" },
+            { label: "Total Products", value: category.productCount, color: "#1F1813" },
             { label: "In Stock", value: category.activeProductCount, color: "#2E7D32" },
             { label: "Out of Stock", value: category.outOfStockCount, color: "#C62828" },
             { label: "Sub-categories", value: category.childrenCount, color: "#6366F1" },
           ].map((s, i) => (
             <div key={i} style={{ flex: 1, padding: "12px 16px", borderRight: i < 3 ? "1px solid #E8E4DE" : "none", textAlign: "center" }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 10, color: "#6B6B7D", marginTop: 2, fontWeight: 600 }}>{s.label}</div>
+              <div style={{ fontSize: 10, color: "#6E6257", marginTop: 2, fontWeight: 600 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Description */}
         {category.description && (
-          <div style={{ padding: "12px 24px", background: "#FAFAF9", borderBottom: "1px solid #E8E4DE", fontSize: 13, color: "#6B6B7D", flexShrink: 0 }}>
+          <div style={{ padding: "12px 24px", background: "#FAFAF9", borderBottom: "1px solid #E8E4DE", fontSize: 13, color: "#6E6257", flexShrink: 0 }}>
             {category.description}
           </div>
         )}
@@ -443,9 +443,9 @@ function CategoryDetail({ category, categories, onClose, onRefresh }: {
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
           {/* Products toolbar */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E", flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#1F1813", flex: 1 }}>
               Products in {category.name}
-              <span style={{ fontWeight: 400, color: "#6B6B7D", fontSize: 12, marginLeft: 8 }}>{filtered.length} shown</span>
+              <span style={{ fontWeight: 400, color: "#6E6257", fontSize: 12, marginLeft: 8 }}>{filtered.length} shown</span>
             </div>
             {selectedProducts.size > 0 && (
               <button onClick={bulkDeleteProducts} style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid #FCE7E7", background: "#FCE7E7", color: "#DC2626", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
@@ -470,9 +470,9 @@ function CategoryDetail({ category, categories, onClose, onRefresh }: {
 
           {/* Products table */}
           {loadingProducts ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading products…</div>
+            <div style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading products…</div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>
+            <div style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>
               <div style={{ fontSize: 28, marginBottom: 10 }}>📦</div>
               <div style={{ fontWeight: 700, marginBottom: 6 }}>No products yet</div>
               <div style={{ fontSize: 13, marginBottom: 16 }}>Add your first product to this category.</div>
@@ -483,12 +483,12 @@ function CategoryDetail({ category, categories, onClose, onRefresh }: {
               {/* Table header */}
               <div style={{ display: "grid", gridTemplateColumns: "32px 44px 1fr 90px 90px 90px 80px", alignItems: "center", padding: "8px 12px", background: "#FAFAF9", borderBottom: "1px solid #E8E4DE" }}>
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: "pointer" }} />
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase" }}>Img</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase" }}>Name / SKU</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase" }}>Brand</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase" }}>Stock</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase" }}>MOQ</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase" }}>Actions</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6E6257", textTransform: "uppercase" }}>Img</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6E6257", textTransform: "uppercase" }}>Name / SKU</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6E6257", textTransform: "uppercase" }}>Brand</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6E6257", textTransform: "uppercase" }}>Stock</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6E6257", textTransform: "uppercase" }}>MOQ</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6E6257", textTransform: "uppercase" }}>Actions</div>
               </div>
               {filtered.map((p, idx) => {
                 const imgs = fromImages(p.images);
@@ -500,12 +500,12 @@ function CategoryDetail({ category, categories, onClose, onRefresh }: {
                       {imgs[0] && /* eslint-disable-next-line @next/next/no-img-element */ <img src={imgs[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1A1A2E", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1F1813", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
                       <div style={{ fontSize: 11, color: "#A8A39A" }}>{p.sku}</div>
                     </div>
-                    <div style={{ fontSize: 12, color: "#6B6B7D" }}>{p.brand}</div>
+                    <div style={{ fontSize: 12, color: "#6E6257" }}>{p.brand}</div>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 7px", borderRadius: 999, background: sc.bg, color: sc.color, whiteSpace: "nowrap" }}>{sc.label}</span>
-                    <div style={{ fontSize: 12, color: "#1A1A2E" }}>×{p.moq}</div>
+                    <div style={{ fontSize: 12, color: "#1F1813" }}>×{p.moq}</div>
                     <button onClick={() => setDeleteProductId(p.id)} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #FCE7E7", background: "#FCE7E7", color: "#DC2626", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Del</button>
                   </div>
                 );
@@ -526,7 +526,7 @@ function CategoryDetail({ category, categories, onClose, onRefresh }: {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: 28, maxWidth: 340, width: "90%", textAlign: "center" }}>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Delete Product?</div>
-            <div style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>This product will be permanently removed.</div>
+            <div style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>This product will be permanently removed.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <button onClick={() => setDeleteProductId(null)} style={{ padding: "9px 20px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => deleteProduct(deleteProductId)} style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#DC2626", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Delete</button>
@@ -618,7 +618,7 @@ function CategoriesContent() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
           <h1 style={{ fontWeight: 800, fontSize: 20 }}>Categories</h1>
-          <p style={{ fontSize: 12, color: "#6B6B7D", marginTop: 2 }}>
+          <p style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>
             {categories.length} categories · {categories.reduce((s, c) => s + c.productCount, 0)} total products
           </p>
         </div>
@@ -641,7 +641,7 @@ function CategoriesContent() {
               <option value="deactivate">Deactivate</option>
               <option value="delete">Delete (empty only)</option>
             </select>
-            <button onClick={runBulkAction} disabled={!bulkAction} style={{ padding: "9px 14px", borderRadius: 7, border: "1px solid #E8E4DE", background: bulkAction ? "#1A1A2E" : "#F5F3F0", color: bulkAction ? "#fff" : "#6B6B7D", fontSize: 13, fontWeight: 600, cursor: bulkAction ? "pointer" : "not-allowed" }}>
+            <button onClick={runBulkAction} disabled={!bulkAction} style={{ padding: "9px 14px", borderRadius: 7, border: "1px solid #E8E4DE", background: bulkAction ? "#1F1813" : "#F5F3F0", color: bulkAction ? "#fff" : "#6E6257", fontSize: 13, fontWeight: 600, cursor: bulkAction ? "pointer" : "not-allowed" }}>
               Apply to {selected.size}
             </button>
           </>
@@ -650,9 +650,9 @@ function CategoriesContent() {
 
       {/* Categories grid */}
       {loading ? (
-        <div style={{ padding: 60, textAlign: "center", color: "#6B6B7D" }}>Loading categories…</div>
+        <div style={{ padding: 60, textAlign: "center", color: "#6E6257" }}>Loading categories…</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 60, textAlign: "center", color: "#6B6B7D" }}>
+        <div style={{ padding: 60, textAlign: "center", color: "#6E6257" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📂</div>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>{search ? "No categories match your search" : "No categories yet"}</div>
           {!search && <button onClick={() => setShowModal(true)} className="btn-orange" style={{ padding: "9px 20px", marginTop: 8, fontSize: 13 }}>+ Create First Category</button>}
@@ -662,7 +662,7 @@ function CategoriesContent() {
           {/* Select all bar */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, padding: "8px 12px", background: selected.size > 0 ? "#FFF8F0" : "#FAFAF9", borderRadius: 8, border: "1px solid #E8E4DE" }}>
             <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ cursor: "pointer" }} />
-            <span style={{ fontSize: 12, color: "#6B6B7D" }}>
+            <span style={{ fontSize: 12, color: "#6E6257" }}>
               {selected.size > 0 ? `${selected.size} selected` : `Select all ${filtered.length}`}
             </span>
           </div>
@@ -719,7 +719,7 @@ function CategoriesContent() {
                   ) : null}
                   <div style={{ display: cat.image ? "none" : "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", fontSize: 36, position: "absolute", inset: 0 }}>📂</div>
                   {/* Active badge */}
-                  <span style={{ position: "absolute", top: 8, right: 8, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: cat.active ? "#E6F3E7" : "#F0EDEA", color: cat.active ? "#2E7D32" : "#6B6B7D" }}>
+                  <span style={{ position: "absolute", top: 8, right: 8, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: cat.active ? "#E6F3E7" : "#F0EDEA", color: cat.active ? "#2E7D32" : "#6E6257" }}>
                     {cat.active ? "ACTIVE" : "HIDDEN"}
                   </span>
                   {/* Checkbox */}
@@ -731,14 +731,14 @@ function CategoriesContent() {
                 {/* Card body */}
                 <div style={{ padding: "12px 14px" }}>
                   <div onClick={() => setDetailCat(cat)} style={{ cursor: "pointer" }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E", marginBottom: 2 }}>{cat.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: "#1F1813", marginBottom: 2 }}>{cat.name}</div>
                     {cat.parent && <div style={{ fontSize: 11, color: "#A8A39A", marginBottom: 4 }}>↳ {cat.parent.name}</div>}
-                    {cat.description && <div style={{ fontSize: 12, color: "#6B6B7D", marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{cat.description}</div>}
+                    {cat.description && <div style={{ fontSize: 12, color: "#6E6257", marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{cat.description}</div>}
                   </div>
 
                   {/* Stats row */}
                   <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#1A1A2E" }}>{cat.productCount} products</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#1F1813" }}>{cat.productCount} product{cat.productCount !== 1 ? "s" : ""}</span>
                     {cat.activeProductCount > 0 && <span style={{ fontSize: 11, color: "#2E7D32" }}>· {cat.activeProductCount} in stock</span>}
                     {cat.outOfStockCount > 0 && <span style={{ fontSize: 11, color: "#C62828" }}>· {cat.outOfStockCount} out</span>}
                     {cat.childrenCount > 0 && <span style={{ fontSize: 11, color: "#6366F1" }}>· {cat.childrenCount} sub</span>}
@@ -746,7 +746,7 @@ function CategoriesContent() {
 
                   {/* Actions */}
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <button onClick={() => setDetailCat(cat)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1A1A2E" }}>
+                    <button onClick={() => setDetailCat(cat)} style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1F1813" }}>
                       View & Manage
                     </button>
                     <button onClick={() => toggleActive(cat)} style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid #E8E4DE", background: cat.active ? "#FEF3D7" : "#E6F3E7", color: cat.active ? "#D97706" : "#2E7D32", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
@@ -787,7 +787,7 @@ function CategoriesContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: 28, maxWidth: 360, width: "90%", textAlign: "center" }}>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Delete Category?</div>
-            <div style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>Categories with products or sub-categories cannot be deleted.</div>
+            <div style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>Categories with products or sub-categories cannot be deleted.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <button onClick={() => setDeleteCatId(null)} style={{ padding: "9px 20px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => deleteCategory(deleteCatId)} style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#DC2626", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Delete</button>

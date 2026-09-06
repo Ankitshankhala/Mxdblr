@@ -57,7 +57,7 @@ export default function AdminTable<T extends Record<string, unknown>>({
           width: "100%",
           borderCollapse: "collapse",
           fontSize: 13,
-          color: "#1A1A2E",
+          color: "#1F1813",
         }}
       >
         <thead>
@@ -73,7 +73,7 @@ export default function AdminTable<T extends Record<string, unknown>>({
                   fontSize: 11,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
-                  color: "#6B6B7D",
+                  color: "#6E6257",
                   cursor: col.sortable ? "pointer" : "default",
                   userSelect: "none",
                   whiteSpace: "nowrap",
@@ -113,7 +113,7 @@ export default function AdminTable<T extends Record<string, unknown>>({
             <tr>
               <td
                 colSpan={columns.length}
-                style={{ padding: "32px 12px", textAlign: "center", color: "#6B6B7D" }}
+                style={{ padding: "32px 12px", textAlign: "center", color: "#6E6257" }}
               >
                 No records found
               </td>

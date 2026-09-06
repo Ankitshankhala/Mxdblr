@@ -410,7 +410,7 @@ model Banner {
   ctaLink       String     @default("/catalog")
   image         String     @default("")
   mobileImage   String     @default("")
-  bgColor       String     @default("#1A1A2E")
+  bgColor       String     @default("#1F1813")
   accentColor   String     @default("#F47920")
   logoImage     String     @default("")
   productImage1 String     @default("")

@@ -13,7 +13,7 @@ import Footer from '@/components/layout/Footer';
 import ProductGrid from '@/components/products/ProductGrid';
 import HeroBanner from '@/components/home/HeroBanner';
 import CategoryCardList from '@/components/home/CategoryCardList';
-import BrandStrip from '@/components/home/BrandStrip';
+// import BrandStrip from '@/components/home/BrandStrip'; // section removed 2026-08-12 — see section-order comment below
 import TrustStats from '@/components/home/TrustStats';
 import DealerCTABanner from '@/components/home/DealerCTABanner';
 import WhyChooseMXD from '@/components/home/WhyChooseMXD';
@@ -22,7 +22,7 @@ import HowItWorks from '@/components/home/HowItWorks';
 import CoverageSection from '@/components/home/CoverageSection';
 import Testimonials from '@/components/home/Testimonials';
 import HomeFAQ from '@/components/home/HomeFAQ';
-import AboutStory from '@/components/home/AboutStory';
+// import AboutStory from '@/components/home/AboutStory'; // re-enable with the <AboutStory /> render below
 import PromoCountdownBanner from '@/components/home/PromoCountdownBanner';
 import type { Product } from '@/types';
 
@@ -58,13 +58,14 @@ async function getData() {
     // `fallbackRes` (a plain latest-products list) is shared as the fallback for
     // BOTH best-sellers and new-arrivals when their flagged lists are empty —
     // previously this identical request was fired twice (audit #10).
-    const [categoriesRes, bestSellerRes, newArrivalRes, fallbackRes, brandsRes, announcementsRes, eventsRes] =
+    // The /products/brands fetch was dropped 2026-08-12 along with the
+    // BrandStrip section that was its only consumer.
+    const [categoriesRes, bestSellerRes, newArrivalRes, fallbackRes, announcementsRes, eventsRes] =
       await Promise.allSettled([
         fetch(`${API}/categories`, { next: { revalidate: 60 } }).then((r) => r.json()),
         fetch(`${API}/products?isBestSeller=true&limit=8&sort=newest`, { next: { revalidate: 60 } }).then((r) => r.json()),
         fetch(`${API}/products?isNewArrival=true&limit=8&sort=newest`, { next: { revalidate: 60 } }).then((r) => r.json()),
         fetch(`${API}/products?limit=8&sort=newest`, { next: { revalidate: 60 } }).then((r) => r.json()),
-        fetch(`${API}/products/brands`, { next: { revalidate: 300 } }).then((r) => r.json()),
         fetch(`${API}/announcements`, { next: { revalidate: 30 } }).then((r) => r.json()),
         fetch(`${API}/events?limit=12`, { next: { revalidate: 60 } }).then((r) => r.json()),
       ]);
@@ -83,9 +84,6 @@ async function getData() {
     const flaggedNewArrivals: Product[] =
       newArrivalRes.status === 'fulfilled' ? (newArrivalRes.value?.data ?? []) : [];
     const newArrivals: Product[] = flaggedNewArrivals.length ? flaggedNewArrivals : latestFallback;
-
-    const brands: string[] =
-      brandsRes.status === 'fulfilled' ? (brandsRes.value?.data ?? ['MXD']) : ['MXD'];
 
     const announcements: string[] =
       announcementsRes.status === 'fulfilled'
@@ -112,17 +110,16 @@ async function getData() {
       categories: flatCategories.slice(0, 12),
       bestSellers,
       newArrivals,
-      brands: brands.length ? brands : ['MXD'],
       announcements,
       events,
     };
   } catch {
-    return { categories: [], bestSellers: [], newArrivals: [], brands: ['MXD'], announcements: [], events: [] };
+    return { categories: [], bestSellers: [], newArrivals: [], announcements: [], events: [] };
   }
 }
 
 export default async function HomePage() {
-  const { categories, bestSellers, newArrivals, brands, announcements, events } = await getData();
+  const { categories, bestSellers, newArrivals, announcements, events } = await getData();
   const marqueeMessages = announcements.length ? announcements : MARQUEE_FALLBACK;
 
   return (
@@ -140,7 +137,7 @@ export default async function HomePage() {
         aria-label="Site announcements"
         tabIndex={0}
         style={{
-          background: '#1A1A2E',
+          background: '#1F1813',
           color: '#F47920',
           padding: '7px 0',
           overflow: 'hidden',
@@ -162,32 +159,54 @@ export default async function HomePage() {
       </div>
 
       {/*
-        Section order follows the CRO review's recommended sequence: orient
-        the visitor (hero) -> make the pitch (why us) -> back it with proof
-        (stats) -> establish it's a real business (about) -> explain the
-        process + requirements upfront -> show the catalog -> third-party
-        trust (brands) -> filter by service area -> social proof -> final
-        conversion push -> objection handling (FAQ). Previously stats and
-        product grids ran before the visitor had any reason established to
-        care about them.
+        SECTION ORDER — revised 2026-08-12. This supersedes the earlier CRO
+        sequence (hero -> why -> stats -> about -> process -> catalog -> ...);
+        do not restore that order without reading the reasoning below.
+
+        The page is now structured around the order a wholesale buyer actually
+        asks questions, in four acts:
+
+          QUALIFY   hero -> category map -> coverage
+          PERSUADE  why us -> stats -> events
+          GOODS     promo -> best sellers -> new arrivals
+          CONVERT   how it works -> dealer CTA -> FAQ
+
+        Two deliberate changes from the CRO order:
+
+        1. The CATEGORY MAP moves up to position 2. A dealer arriving from a
+           search already knows what they want to buy, so their first question
+           is range, and they leave if they cannot see their categories. The
+           category grid answers that in one screen (12 categories with live
+           counts). Note this does NOT contradict the CRO review's actual
+           finding, which was that PRODUCT GRIDS should not lead — those stay
+           low, at 8 and 9. Category map = range proof; grids = browsing depth.
+
+        2. COVERAGE moves up to position 3, from 11. Registration is
+           geo-restricted server-side (api/src/routes/auth.ts — out-of-state
+           applicants get a 403), so a dealer outside Karnataka / Tamil Nadu /
+           Andhra Pradesh was previously scrolling the whole page and filling
+           the form before being turned away. Stating the service area early
+           costs nothing: those registrations could never convert.
+
+        Sections currently not rendered:
+          - AboutStory   — placeholder only; slots in at 6 beside Events.
+          - Testimonials — self-hides while its quotes are placeholders
+                           (see Testimonials.tsx); reappears at 6 automatically
+                           once real dealer quotes are added.
+          - BrandStrip   — removed 2026-08-12. It rendered "ALL · MXD" (the
+                           house brand plus a data-entry error), which undercut
+                           the page in a third-party-trust slot. Component kept;
+                           it earns a place back if repurposed to show
+                           compatible handset brands.
       */}
+
+      {/* ── ACT 1 · QUALIFY ─────────────────────────────────────────────── */}
 
       {/* 1. Hero Slider */}
       <HeroBanner />
 
-      {/* 2. Why Choose MXD — the actual value proposition, right after hero */}
-      <WhyChooseMXD />
-
-      {/* 3. Trust Statistics — now validates the pitch just made */}
-      <TrustStats />
-
-      {/* 4. About / Our Story — establishes this is a real operation */}
-      <AboutStory />
-
-      {/* 5. How It Works — sets GST/requirement expectations before the CTA */}
-      <HowItWorks />
-
-      {/* 6. Browse by Category */}
+      {/* 2. Browse by Category — range proof; the first question a wholesale
+             buyer asks is "do you stock what I sell?" */}
       <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <h2 style={{ fontWeight: 800, fontSize: 20 }}>Browse by Category</h2>
@@ -198,17 +217,40 @@ export default async function HomePage() {
         <CategoryCardList categories={categories} />
       </section>
 
-      {/* 6b. Promo countdown banner — urgency pattern from competitor
-          benchmarking (Gaffarwala, greatchoice.co.in), placed right after
-          category browsing and before the product grids it drives traffic to. */}
+      {/* 3. Coverage Map / Area — hard qualifier. Registration is
+             geo-restricted server-side, so state the service area before the
+             visitor invests any time. */}
+      <CoverageSection />
+
+      {/* ── ACT 2 · PERSUADE ────────────────────────────────────────────── */}
+
+      {/* 4. Why Choose MXD — the value proposition (MOQ from 5, same-day
+             dispatch), now anchored to a catalog the visitor has just seen */}
+      <WhyChooseMXD />
+
+      {/* 5. Trust Statistics — backs the pitch just made */}
+      <TrustStats />
+
+      {/* 6. Events & Activities — evidence of an operating business.
+             AboutStory and Testimonials both belong in this slot; see the
+             header comment for why neither renders yet. */}
+      <EventsActivities events={events} />
+      {/* <AboutStory /> */}
+      <Testimonials />
+
+      {/* ── ACT 3 · SHOW THE GOODS ──────────────────────────────────────── */}
+
+      {/* 7. Promo countdown banner — urgency pattern from competitor
+          benchmarking (Gaffarwala, greatchoice.co.in). Must stay directly
+          above the product grids it drives traffic into. */}
       <PromoCountdownBanner />
 
-      {/* 7. Best Sellers */}
+      {/* 8. Best Sellers */}
       <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
             <h2 style={{ fontWeight: 800, fontSize: 20 }}>Best Sellers</h2>
-            <p style={{ fontSize: 13, color: '#6B6B7D', marginTop: 2 }}>Most popular products with our dealers</p>
+            <p style={{ fontSize: 13, color: '#6E6257', marginTop: 2 }}>Most popular products with our dealers</p>
           </div>
           <Link href="/catalog" style={{ fontSize: 13, color: '#F47920', textDecoration: 'none', fontWeight: 600 }}>
             View All <ArrowRight size={12} style={{ display: 'inline' }} />
@@ -217,12 +259,12 @@ export default async function HomePage() {
         <ProductGrid products={bestSellers} loading={false} columns={4} />
       </section>
 
-      {/* 8. New Arrivals */}
+      {/* 9. New Arrivals */}
       <section style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
             <h2 style={{ fontWeight: 800, fontSize: 20 }}>New Arrivals</h2>
-            <p style={{ fontSize: 13, color: '#6B6B7D', marginTop: 2 }}>Latest additions to the catalog</p>
+            <p style={{ fontSize: 13, color: '#6E6257', marginTop: 2 }}>Latest additions to the catalog</p>
           </div>
           <Link href="/catalog" style={{ fontSize: 13, color: '#F47920', textDecoration: 'none', fontWeight: 600 }}>
             View All <ArrowRight size={12} style={{ display: 'inline' }} />
@@ -231,33 +273,22 @@ export default async function HomePage() {
         <ProductGrid products={newArrivals} loading={false} columns={4} />
       </section>
 
-      {/* 9. Shop By Brand — third-party trust via known manufacturer logos */}
-      <section style={{ maxWidth: 1280, margin: '0 auto 0', padding: '0 20px' }}>
-        <p style={{ fontSize: 11, color: '#A8A39A', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 16, textAlign: 'center' }}>
-          Brands We Carry
-        </p>
-        <BrandStrip brands={brands} />
-      </section>
+      {/* ── ACT 4 · CONVERT ─────────────────────────────────────────────── */}
 
-      {/* 10. Events & Activities */}
-      <EventsActivities events={events} />
+      {/* 10. How It Works — sets GST/requirement expectations immediately
+              before the ask, so the CTA meets an informed visitor */}
+      <HowItWorks />
 
-      {/* 11. Coverage Map / Area — filters expectations by service area before final CTA */}
-      <CoverageSection />
-
-      {/* 12. Testimonials */}
-      <Testimonials />
-
-      {/* 13. Become Dealer CTA Banner — final conversion push */}
+      {/* 11. Become Dealer CTA Banner — the conversion push */}
       <DealerCTABanner />
 
-      {/* 14. FAQ — objection handling */}
+      {/* 12. FAQ — objection handling, last */}
       <HomeFAQ />
 
       {/* Spacer before footer */}
       <div style={{ height: 60 }} />
 
-      {/* 15. Footer */}
+      {/* Footer */}
       <Footer />
     </div>
   );

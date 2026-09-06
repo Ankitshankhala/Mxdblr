@@ -360,7 +360,7 @@ function Lightbox({ event, onClose }: { event: EventItem; onClose: () => void })
                     borderRadius: 8,
                     overflow: 'hidden',
                     border: active ? '2px solid #F47920' : '2px solid transparent',
-                    background: '#1A1A2E',
+                    background: '#1F1813',
                     cursor: 'pointer',
                     padding: 0,
                   }}
@@ -415,7 +415,7 @@ function EventCard({ event, onOpen, index }: { event: EventItem; onOpen: () => v
       }}
     >
       {/* Media */}
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: 'linear-gradient(135deg, #1A1A2E, #2C2C4A)', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: 'linear-gradient(135deg, #1F1813, #352B22)', overflow: 'hidden' }}>
         {safeMediaUrl(thumb) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -459,18 +459,18 @@ function EventCard({ event, onOpen, index }: { event: EventItem; onOpen: () => v
       {/* Body */}
       <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#6B6B7D', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 12, color: '#6E6257', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             <Calendar size={12} /> {formatDate(event.eventDate)}
           </span>
           {event.location && (
-            <span style={{ fontSize: 12, color: '#6B6B7D', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 12, color: '#6E6257', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               <MapPin size={12} /> {event.location}
             </span>
           )}
         </div>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1A1A2E', margin: 0, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{event.title}</h3>
+        <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1F1813', margin: 0, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{event.title}</h3>
         {event.description && (
-          <p style={{ fontSize: 13, color: '#6B6B7D', lineHeight: 1.6, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ fontSize: 13, color: '#6E6257', lineHeight: 1.6, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {event.description}
           </p>
         )}
@@ -502,10 +502,10 @@ export default function EventsActivities({ events }: { events: EventItem[] }) {
         <p style={{ fontSize: 11, color: '#F47920', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
           MXD Community
         </p>
-        <h2 style={{ fontWeight: 900, fontSize: 24, color: '#1A1A2E', letterSpacing: '-0.02em', marginBottom: 8 }}>
+        <h2 style={{ fontWeight: 900, fontSize: 24, color: '#1F1813', letterSpacing: '-0.02em', marginBottom: 8 }}>
           Events &amp; Activities
         </h2>
-        <p style={{ fontSize: 14, color: '#6B6B7D', maxWidth: 480, margin: '0 auto' }}>
+        <p style={{ fontSize: 14, color: '#6E6257', maxWidth: 480, margin: '0 auto' }}>
           Dealer meets, product launches, training programs and exhibitions from across the MXD network.
         </p>
       </div>

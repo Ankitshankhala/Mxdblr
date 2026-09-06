@@ -26,10 +26,10 @@ interface StaffUser {
 
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE",
-  fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+  fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none", boxSizing: "border-box",
 };
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 5,
+  fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 5,
 };
 
 function StaffContent() {
@@ -120,7 +120,7 @@ function StaffContent() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, gap: 12 }}>
-        <p style={{ fontSize: 13, color: "#6B6B7D", maxWidth: 620 }}>
+        <p style={{ fontSize: 13, color: "#6E6257", maxWidth: 620 }}>
           Invite staff and assign them a role. Permissions are applied automatically from the assigned role.
           You can only manage users at a lower privilege level than your own.
         </p>
@@ -138,20 +138,20 @@ function StaffContent() {
             <thead>
               <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
                 {["Username", "Role", "Status", "Created", "Actions"].map((h) => (
-                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading…</td></tr>}
-              {!loading && users.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>No staff accounts yet.</td></tr>}
+              {loading && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading…</td></tr>}
+              {!loading && users.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>No staff accounts yet.</td></tr>}
               {!loading && users.map((u) => {
                 const manageable = canManage(u);
                 const isSelf = u.id === me?.id;
                 return (
                   <tr key={u.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
                     <td style={{ padding: "12px 16px", fontWeight: 700 }}>
-                      {u.username}{isSelf && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#6B6B7D" }}>(you)</span>}
+                      {u.username}{isSelf && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#6E6257" }}>(you)</span>}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       {manageable ? (
@@ -168,7 +168,7 @@ function StaffContent() {
                           {assignableRoles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                         </select>
                       ) : (
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#1A1A2E", background: "#F0EDEA", padding: "3px 10px", borderRadius: 999 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#1F1813", background: "#F0EDEA", padding: "3px 10px", borderRadius: 999 }}>
                           {u.role?.name ?? "—"}
                         </span>
                       )}
@@ -178,14 +178,14 @@ function StaffContent() {
                         {u.active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td style={{ padding: "12px 16px", color: "#6B6B7D", whiteSpace: "nowrap" }}>
+                    <td style={{ padding: "12px 16px", color: "#6E6257", whiteSpace: "nowrap" }}>
                       {new Date(u.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       {manageable ? (
                         <div style={{ display: "flex", gap: 6 }}>
                           <button onClick={() => toggleActive(u)} disabled={busyId === u.id}
-                            style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1A1A2E" }}>
+                            style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1F1813" }}>
                             {u.active ? "Deactivate" : "Activate"}
                           </button>
                           <button onClick={() => setDeleteConfirm(u)}
@@ -203,7 +203,7 @@ function StaffContent() {
             </tbody>
           </table>
         </div>
-        <div style={{ padding: "10px 16px", borderTop: "1px solid #E8E4DE", fontSize: 12, color: "#6B6B7D" }}>
+        <div style={{ padding: "10px 16px", borderTop: "1px solid #E8E4DE", fontSize: 12, color: "#6E6257" }}>
           {users.length} user{users.length !== 1 ? "s" : ""} total
         </div>
       </div>
@@ -221,7 +221,7 @@ function StaffContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 380, padding: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Delete &ldquo;{deleteConfirm.username}&rdquo;?</div>
-            <p style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>This permanently removes the account. Consider deactivating instead if you may need it later.</p>
+            <p style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>This permanently removes the account. Consider deactivating instead if you may need it later.</p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button onClick={() => setDeleteConfirm(null)} style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => deleteUser(deleteConfirm)} style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: "#DC2626", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Delete</button>
@@ -272,7 +272,7 @@ function CreateStaffModal({
       <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 420, overflow: "hidden" }}>
         <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>Add Staff</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D" }}>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257" }}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>

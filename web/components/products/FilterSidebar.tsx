@@ -25,6 +25,36 @@ interface FilterSidebarProps {
   isMobile?: boolean;
 }
 
+/**
+ * Compatible Brand filter — hidden 2026-08-12.
+ *
+ * The filter cannot return results today, for two independent reasons:
+ *   1. The options are loaded from /api/brands (the Brand table: Samsung,
+ *      Apple, OnePlus…) but submitted as ?brand=, which the API resolves
+ *      against Product.brand — the MANUFACTURER field, which only ever holds
+ *      "MXD". Handset makers are compared against manufacturer names and can
+ *      never match. Note ?brand= is correct for its other caller (BrandStrip),
+ *      so the fix is a new ?compatibleWith= param, not repointing this one.
+ *   2. CompatibilityTag has zero rows across all products, so even correctly
+ *      wired the filter would return nothing.
+ *
+ * Shipping it visible means a dealer ticks "For Samsung", gets an empty
+ * catalog, and concludes we don't stock Samsung accessories — worse than
+ * having no filter. Flip this to true once products carry compatibility tags
+ * AND the API exposes a param that reads them.
+ */
+const SHOW_COMPATIBLE_BRAND_FILTER = false;
+
+/**
+ * Display label for a compatibility brand. The stored value is the bare brand
+ * name ("Samsung") because that is what the API filters on — only the visible
+ * label gets the "For " prefix, so the filter contract is unchanged. "ALL" is a
+ * sentinel meaning "fits every brand", which reads wrong as "For ALL".
+ */
+function brandLabel(brand: string): string {
+  return brand.trim().toUpperCase() === 'ALL' ? 'For all brands' : `For ${brand}`;
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
 
@@ -44,7 +74,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
           cursor: 'pointer',
           fontWeight: 700,
           fontSize: 13,
-          color: '#1A1A2E',
+          color: '#1F1813',
           letterSpacing: '0.02em',
         }}
       >
@@ -178,6 +208,7 @@ export default function FilterSidebar({ categories, filters, onApply, onClose, i
       </Section>
 
       {/* Brand */}
+      {SHOW_COMPATIBLE_BRAND_FILTER && (
       <Section title="Compatible Brand">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {brands.length === 0 ? (
@@ -190,12 +221,13 @@ export default function FilterSidebar({ categories, filters, onApply, onClose, i
                   checked={local.brands.includes(brand)}
                   onChange={() => toggleBrand(brand)}
                 />
-                {brand}
+                {brandLabel(brand)}
               </label>
             ))
           )}
         </div>
       </Section>
+      )}
 
       {/* Actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

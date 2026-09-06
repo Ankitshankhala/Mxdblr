@@ -67,10 +67,10 @@ export default function WhyChooseMXD() {
         >
           Why MXD
         </p>
-        <h2 style={{ fontWeight: 800, fontSize: 24, color: '#1A1A2E', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontWeight: 800, fontSize: 24, color: '#1F1813', letterSpacing: '-0.02em' }}>
           Why Dealers Choose MXD
         </h2>
-        <p style={{ fontSize: 14, color: '#6B6B7D', marginTop: 8, maxWidth: 440, margin: '8px auto 0' }}>
+        <p style={{ fontSize: 14, color: '#6E6257', marginTop: 8, maxWidth: 440, margin: '8px auto 0' }}>
           Built for retailers who need reliability, not just products.
         </p>
       </div>
@@ -117,8 +117,8 @@ export default function WhyChooseMXD() {
               <b.Icon size={20} color={b.iconColor} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: '#1A1A2E', marginBottom: 5 }}>{b.title}</div>
-              <div style={{ fontSize: 13, color: '#6B6B7D', lineHeight: 1.65 }}>{b.desc}</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#1F1813', marginBottom: 5 }}>{b.title}</div>
+              <div style={{ fontSize: 13, color: '#6E6257', lineHeight: 1.65 }}>{b.desc}</div>
             </div>
           </div>
         ))}

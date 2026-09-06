@@ -152,7 +152,7 @@ function OrdersContent() {
     border: "1px solid #E8E4DE",
     fontSize: 13,
     background: "#fff",
-    color: "#1A1A2E",
+    color: "#1F1813",
     fontFamily: "inherit",
     outline: "none",
   };
@@ -183,7 +183,7 @@ function OrdersContent() {
                 borderRadius: 6,
                 border: "none",
                 background: filterStatus === f ? "#fff" : "transparent",
-                color: filterStatus === f ? "#1A1A2E" : "#6B6B7D",
+                color: filterStatus === f ? "#1F1813" : "#6E6257",
                 fontWeight: filterStatus === f ? 700 : 500,
                 fontSize: 12,
                 cursor: "pointer",
@@ -194,7 +194,7 @@ function OrdersContent() {
             </button>
           ))}
         </div>
-        <span style={{ fontSize: 12, color: "#6B6B7D", marginLeft: "auto" }}>
+        <span style={{ fontSize: 12, color: "#6E6257", marginLeft: "auto" }}>
           {filtered.length} of {pagination.total} records
         </span>
       </div>
@@ -202,7 +202,7 @@ function OrdersContent() {
       {/* Table */}
       <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading inquiries...</div>
+          <div style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading inquiries...</div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -218,7 +218,7 @@ function OrdersContent() {
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
-                        color: "#6B6B7D",
+                        color: "#6E6257",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -234,14 +234,14 @@ function OrdersContent() {
                       {inq.id.slice(0, 8).toUpperCase()}
                     </td>
                     <td style={{ padding: "10px 14px", fontWeight: 600 }}>{inq.dealer.ownerName}</td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{inq.dealer.shopName}</td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D", fontSize: 12 }}>{inq.dealer.city}</td>
+                    <td style={{ padding: "10px 14px", color: "#6E6257" }}>{inq.dealer.shopName}</td>
+                    <td style={{ padding: "10px 14px", color: "#6E6257", fontSize: 12 }}>{inq.dealer.city}</td>
                     <td style={{ padding: "10px 14px" }}>
                       <span style={{ background: "#EEF0FE", color: "#6366F1", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>
                         {inq.cartSnapshot.length} items
                       </span>
                     </td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D", fontSize: 12, whiteSpace: "nowrap" }}>
+                    <td style={{ padding: "10px 14px", color: "#6E6257", fontSize: 12, whiteSpace: "nowrap" }}>
                       {formatDate(inq.createdAt)}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
@@ -258,7 +258,7 @@ function OrdersContent() {
                           fontSize: 12,
                           fontWeight: 600,
                           cursor: "pointer",
-                          color: "#1A1A2E",
+                          color: "#1F1813",
                         }}
                       >
                         View
@@ -268,7 +268,7 @@ function OrdersContent() {
                 ))}
                 {filtered.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={8} style={{ padding: 32, textAlign: "center", color: "#6B6B7D" }}>
+                    <td colSpan={8} style={{ padding: 32, textAlign: "center", color: "#6E6257" }}>
                       No inquiries found
                     </td>
                   </tr>
@@ -291,7 +291,7 @@ function OrdersContent() {
                 borderRadius: 6,
                 border: "1px solid #E8E4DE",
                 background: p === pagination.page ? "#F47920" : "#fff",
-                color: p === pagination.page ? "#fff" : "#1A1A2E",
+                color: p === pagination.page ? "#fff" : "#1F1813",
                 fontWeight: 600,
                 fontSize: 12,
                 cursor: "pointer",
@@ -310,11 +310,11 @@ function OrdersContent() {
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>Inquiry Details</div>
-                <div style={{ fontSize: 11, color: "#6B6B7D", fontFamily: "monospace", marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: "#6E6257", fontFamily: "monospace", marginTop: 2 }}>
                   {viewInquiry.id}
                 </div>
               </div>
-              <button onClick={() => setViewInquiry(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 18 }}>
+              <button onClick={() => setViewInquiry(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 18 }}>
                 ×
               </button>
             </div>
@@ -322,19 +322,19 @@ function OrdersContent() {
             <div style={{ padding: "20px 24px", overflowY: "auto", flex: 1 }}>
               {/* Dealer info */}
               <div style={{ background: "#F8F6F2", borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#6B6B7D", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Dealer</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#6E6257", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Dealer</div>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{viewInquiry.dealer.ownerName}</div>
-                <div style={{ fontSize: 13, color: "#6B6B7D" }}>
+                <div style={{ fontSize: 13, color: "#6E6257" }}>
                   {viewInquiry.dealer.shopName} · {viewInquiry.dealer.mobile}
                 </div>
-                <div style={{ fontSize: 12, color: "#6B6B7D", marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>
                   {viewInquiry.dealer.city}, {viewInquiry.dealer.district}, {viewInquiry.dealer.state}
                 </div>
               </div>
 
               {/* Products */}
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#6B6B7D", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#6E6257", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Products Requested
                 </div>
                 <div style={{ border: "1px solid #E8E4DE", borderRadius: 8, overflow: "hidden" }}>
@@ -368,13 +368,13 @@ function OrdersContent() {
 
               {/* Status update */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#6E6257", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 6 }}>
                   Update Status
                 </label>
                 <select
                   value={modalStatus}
                   onChange={(e) => setModalStatus(e.target.value as InquiryStatus)}
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none" }}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none" }}
                 >
                   {(["NEW", "VIEWED", "RESPONDED", "CLOSED"] as InquiryStatus[]).map((s) => (
                     <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>

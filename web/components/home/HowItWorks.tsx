@@ -18,7 +18,11 @@ const STEPS = [
   {
     step: '02',
     title: 'Browse the Catalog',
-    desc: 'Explore 1,200+ SKUs across 12 categories. Filter by brand, availability, and category.',
+    // Do not state a SKU count here unless it is verified against the live
+    // catalog — this previously read "1,200+ SKUs" against a catalog of 68.
+    // Brand filtering is not mentioned because the compatibility filter is
+    // currently hidden (see FilterSidebar.tsx).
+    desc: 'Explore the full catalog across 12 categories. Filter by category and availability.',
     cta: { label: 'Browse Catalog', href: '/catalog' },
   },
   {
@@ -45,10 +49,10 @@ export default function HowItWorks() {
         >
           Getting Started
         </p>
-        <h2 style={{ fontWeight: 900, fontSize: 24, color: '#1A1A2E', letterSpacing: '-0.02em', marginBottom: 8 }}>
+        <h2 style={{ fontWeight: 900, fontSize: 24, color: '#1F1813', letterSpacing: '-0.02em', marginBottom: 8 }}>
           How It Works
         </h2>
-        <p style={{ fontSize: 14, color: '#6B6B7D' }}>Start buying wholesale in three simple steps.</p>
+        <p style={{ fontSize: 14, color: '#6E6257' }}>Start buying wholesale in three simple steps.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
@@ -85,12 +89,12 @@ export default function HowItWorks() {
               >
                 {s.step}
               </div>
-              <h3 style={{ fontWeight: 700, fontSize: 15, color: '#1A1A2E', margin: 0, lineHeight: 1.3 }}>
+              <h3 style={{ fontWeight: 700, fontSize: 15, color: '#1F1813', margin: 0, lineHeight: 1.3 }}>
                 {s.title}
               </h3>
             </div>
 
-            <p style={{ fontSize: 13, color: '#6B6B7D', lineHeight: 1.7, margin: 0 }}>{s.desc}</p>
+            <p style={{ fontSize: 13, color: '#6E6257', lineHeight: 1.7, margin: 0 }}>{s.desc}</p>
 
             <Link
               href={s.cta.href}

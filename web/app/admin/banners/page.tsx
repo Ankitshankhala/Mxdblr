@@ -42,7 +42,7 @@ const EMPTY: Omit<Banner, "id" | "displayOrder"> = {
   ctaLink: "/catalog",
   image: "",
   mobileImage: "",
-  bgColor: "#1A1A2E",
+  bgColor: "#1F1813",
   accentColor: "#F47920",
   logoImage: "",
   productImage1: "",
@@ -67,10 +67,10 @@ const ACCEPT_ATTR = ".jpg,.jpeg,.png,.webp,.gif";
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 7,
   border: "1px solid #E8E4DE", fontSize: 13, background: "#fff",
-  color: "#1A1A2E", fontFamily: "inherit", outline: "none",
+  color: "#1F1813", fontFamily: "inherit", outline: "none",
 };
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: "#6B6B7D",
+  fontSize: 11, fontWeight: 700, color: "#6E6257",
   textTransform: "uppercase", letterSpacing: "0.05em",
   display: "block", marginBottom: 5,
 };
@@ -124,7 +124,7 @@ function ImageUploadSlot({
           }}
         >
           <div style={{ fontSize: 18, marginBottom: 4 }}>🖼️</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: dragging ? "#F47920" : "#1A1A2E" }}>Upload or drag & drop</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: dragging ? "#F47920" : "#1F1813" }}>Upload or drag & drop</div>
           {hint && <div style={{ fontSize: 10, color: "#A8A39A", marginTop: 2 }}>{hint}</div>}
         </div>
       )}
@@ -294,7 +294,7 @@ function BannersContent() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
           <h1 style={{ fontWeight: 800, fontSize: 20 }}>Hero Banners</h1>
-          <p style={{ fontSize: 12, color: "#6B6B7D", marginTop: 2 }}>Manage the sliding banners on the homepage hero section</p>
+          <p style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>Manage the sliding banners on the homepage hero section</p>
         </div>
         <button onClick={openAdd} className="btn-orange" style={{ padding: "9px 18px", fontSize: 13 }}>
           + Add Banner
@@ -303,9 +303,9 @@ function BannersContent() {
 
       {/* Banner cards */}
       {loading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading banners…</div>
+        <div style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading banners…</div>
       ) : banners.length === 0 ? (
-        <div style={{ padding: 60, textAlign: "center", color: "#6B6B7D" }}>
+        <div style={{ padding: 60, textAlign: "center", color: "#6E6257" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>🖼️</div>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>No banners yet</div>
           <div style={{ fontSize: 13 }}>Click "Add Banner" to create your first hero slide.</div>
@@ -364,26 +364,27 @@ function BannersContent() {
                 </div>
               </div>
 
-              {/* Details */}
-              <div style={{ flex: 1, padding: "14px 18px", display: "flex", alignItems: "center", gap: 16 }}>
+              {/* Details — minWidth:0 lets this column shrink below the nowrap
+                  subtitle's intrinsic width, so the actions never overflow the card. */}
+              <div style={{ flex: 1, minWidth: 0, padding: "14px 18px", display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>{b.title}</span>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>{b.title}</span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
                       background: b.active ? "#E6F3E7" : "#F0EDEA",
-                      color: b.active ? "#2E7D32" : "#6B6B7D",
+                      color: b.active ? "#2E7D32" : "#6E6257",
                     }}>{b.active ? "LIVE" : "HIDDEN"}</span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
                       background: typeBadgeColor[b.bannerType as BannerType] || "#F0EDEA",
-                      color: typeBadgeText[b.bannerType as BannerType] || "#6B6B7D",
+                      color: typeBadgeText[b.bannerType as BannerType] || "#6E6257",
                     }}>{BANNER_TYPE_LABELS[b.bannerType as BannerType] || b.bannerType}</span>
                     <span style={{ fontSize: 10, color: "#A8A39A" }}>Slide {idx + 1}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: "#6B6B7D", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.subtitle}</div>
+                  <div style={{ fontSize: 12, color: "#6E6257", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.subtitle}</div>
                   <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#A8A39A", flexWrap: "wrap" }}>
-                    <span>CTA: <strong style={{ color: "#1A1A2E" }}>{b.ctaText}</strong></span>
+                    <span>CTA: <strong style={{ color: "#1F1813" }}>{b.ctaText}</strong></span>
                     <span>→ <strong style={{ color: "#6366F1" }}>{b.ctaLink}</strong></span>
                     <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       BG: <span style={{ width: 12, height: 12, borderRadius: 3, background: b.bgColor, display: "inline-block", border: "1px solid #E8E4DE" }} />
@@ -401,10 +402,10 @@ function BannersContent() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => move(b, -1)} disabled={idx === 0} title="Move up" style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", cursor: idx === 0 ? "not-allowed" : "pointer", opacity: idx === 0 ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="12" height="12" fill="none" stroke="#1A1A2E" strokeWidth="2" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15" /></svg>
+                      <svg width="12" height="12" fill="none" stroke="#1F1813" strokeWidth="2" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15" /></svg>
                     </button>
                     <button onClick={() => move(b, 1)} disabled={idx === banners.length - 1} title="Move down" style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", cursor: idx === banners.length - 1 ? "not-allowed" : "pointer", opacity: idx === banners.length - 1 ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="12" height="12" fill="none" stroke="#1A1A2E" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+                      <svg width="12" height="12" fill="none" stroke="#1F1813" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
                     </button>
                   </div>
                   <button onClick={() => toggleActive(b)} style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: b.active ? "#FEF3D7" : "#E6F3E7", color: b.active ? "#D97706" : "#2E7D32", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
@@ -426,7 +427,7 @@ function BannersContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: 28, maxWidth: 340, width: "90%", textAlign: "center" }}>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Delete Banner?</div>
-            <div style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>This will remove the slide from the homepage immediately.</div>
+            <div style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>This will remove the slide from the homepage immediately.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <button onClick={() => setShowDeleteConfirm(null)} style={{ padding: "9px 20px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => handleDelete(showDeleteConfirm)} style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#DC2626", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Delete</button>
@@ -442,7 +443,7 @@ function BannersContent() {
             {/* Modal header */}
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{editing ? "Edit Banner" : "New Banner"}</div>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 20, lineHeight: 1 }}>×</button>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 20, lineHeight: 1 }}>×</button>
             </div>
 
             <div style={{ overflowY: "auto", padding: "20px 24px", flex: 1 }}>
@@ -457,9 +458,9 @@ function BannersContent() {
                       onClick={() => setForm((f) => ({ ...f, bannerType: type }))}
                       style={{
                         flex: 1, padding: "9px 8px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer",
-                        border: form.bannerType === type ? `2px solid ${type === "PRODUCT_PROMO" ? "#F47920" : "#1A1A2E"}` : "2px solid #E8E4DE",
+                        border: form.bannerType === type ? `2px solid ${type === "PRODUCT_PROMO" ? "#F47920" : "#1F1813"}` : "2px solid #E8E4DE",
                         background: form.bannerType === type ? (type === "PRODUCT_PROMO" ? "#FFF3E0" : "#F0F0F5") : "#fff",
-                        color: form.bannerType === type ? (type === "PRODUCT_PROMO" ? "#D97706" : "#1A1A2E") : "#6B6B7D",
+                        color: form.bannerType === type ? (type === "PRODUCT_PROMO" ? "#D97706" : "#1F1813") : "#6E6257",
                         transition: "all 0.15s",
                       }}
                     >
@@ -535,7 +536,7 @@ function BannersContent() {
                   <label style={labelStyle}>Background Color</label>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <input type="color" value={form.bgColor} onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))} style={{ width: 40, height: 36, borderRadius: 6, border: "1px solid #E8E4DE", cursor: "pointer", padding: 2 }} />
-                    <input value={form.bgColor} onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))} style={{ ...inputStyle, flex: 1 }} placeholder="#1A1A2E" />
+                    <input value={form.bgColor} onChange={(e) => setForm((f) => ({ ...f, bgColor: e.target.value }))} style={{ ...inputStyle, flex: 1 }} placeholder="#1F1813" />
                   </div>
                 </div>
                 <div>
@@ -580,7 +581,7 @@ function BannersContent() {
                       }}
                     >
                       <div style={{ fontSize: 20, marginBottom: 4 }}>🖼️</div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: isDragging ? "#F47920" : "#1A1A2E" }}>Click to upload or drag & drop</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: isDragging ? "#F47920" : "#1F1813" }}>Click to upload or drag & drop</div>
                       <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 3 }}>PNG, JPG, WEBP — max 5 MB. Recommended 1920 × 700. Shows as overlay behind text.</div>
                     </div>
                   )}
@@ -639,7 +640,7 @@ function BannersContent() {
                       boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
                     }} />
                   </button>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#1A1A2E" }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#1F1813" }}>
                     {form.active ? "Visible on homepage" : "Hidden from homepage"}
                   </span>
                 </div>

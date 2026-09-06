@@ -25,14 +25,6 @@ export const metadata: Metadata = {
     siteName: 'MXD Wholesale',
     title: 'MXD® — B2B Wholesale Mobile Accessories',
     description: 'Wholesale mobile accessories for registered dealers across South India.',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'MXD Wholesale Portal — B2B Mobile Accessories',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
@@ -54,8 +46,14 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // suppressHydrationWarning on <html> and <body>: browser extensions inject
+  // attributes onto these two elements before React hydrates (e.g.
+  // data-toolzbuy-ext="1"), which the server HTML cannot know about and which
+  // React would otherwise report as a hydration mismatch. The flag is one level
+  // deep — it only covers these elements' own attributes, so genuine mismatches
+  // inside the app are still reported.
   return (
-    <html lang="en-IN" className={inter.variable}>
+    <html lang="en-IN" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen" suppressHydrationWarning>
         {children}
         <FloatingWhatsApp />

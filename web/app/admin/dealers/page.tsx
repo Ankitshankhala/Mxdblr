@@ -127,11 +127,11 @@ const DEFAULT_FILTERS: Filters = {
 
 const inputStyle: React.CSSProperties = {
   padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE",
-  fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit",
+  fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit",
   outline: "none", width: "100%",
 };
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase",
+  fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase",
   letterSpacing: "0.05em", display: "block", marginBottom: 5,
 };
 
@@ -368,7 +368,7 @@ function DealersContent() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontWeight: 800, fontSize: 20 }}>Dealers</h1>
-          <p style={{ fontSize: 12, color: "#6B6B7D", marginTop: 2 }}>
+          <p style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>
             {pagination.total} dealer(s){activeTags.length ? " matching filters" : ""}.
           </p>
         </div>
@@ -387,7 +387,7 @@ function DealersContent() {
       {/* Search + sort */}
       <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
-          <svg width="14" height="14" fill="none" stroke="#6B6B7D" strokeWidth="2" viewBox="0 0 24 24"
+          <svg width="14" height="14" fill="none" stroke="#6E6257" strokeWidth="2" viewBox="0 0 24 24"
             style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}>
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -398,7 +398,7 @@ function DealersContent() {
             style={{ ...inputStyle, paddingLeft: 32 }} />
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <label htmlFor="sort" style={{ fontSize: 12, color: "#6B6B7D", fontWeight: 600 }}>Sort</label>
+          <label htmlFor="sort" style={{ fontSize: 12, color: "#6E6257", fontWeight: 600 }}>Sort</label>
           <select id="sort" value={filters.sort} onChange={(e) => changeSort(e.target.value, filters.dir)}
             style={{ ...inputStyle, width: "auto" }}>
             {Object.keys(SORT_LABELS).map((k) => <option key={k} value={k}>{SORT_LABELS[k]}</option>)}
@@ -474,10 +474,10 @@ function DealersContent() {
       {/* Active filter tags */}
       {activeTags.length > 0 && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#6B6B7D", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Active:</span>
+          <span style={{ fontSize: 11, color: "#6E6257", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Active:</span>
           {activeTags.map((t) => (
             <button key={t.key} onClick={() => clearTag(t.key)}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, border: "1px solid #E8E4DE", background: "#F8F6F2", color: "#1A1A2E", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, border: "1px solid #E8E4DE", background: "#F8F6F2", color: "#1F1813", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               {t.label}<span aria-hidden style={{ color: "#DC2626", fontWeight: 800 }}>×</span>
             </button>
           ))}
@@ -487,7 +487,7 @@ function DealersContent() {
 
       {/* Table / states */}
       {loading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading dealers…</div>
+        <div style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading dealers…</div>
       ) : fetchError ? (
         <div style={{ padding: 32, textAlign: "center" }}>
           <p style={{ color: "#DC2626", fontWeight: 600, marginBottom: 16 }}>{fetchError}</p>
@@ -500,7 +500,7 @@ function DealersContent() {
               <thead>
                 <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
                   {["Name", "Shop", "Mobile", "District", "City", "State", "Type", "Status", "Joined", "Actions"].map((h) => (
-                    <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
+                    <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -508,16 +508,16 @@ function DealersContent() {
                 {dealers.map((d) => (
                   <tr key={d.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
                     <td style={{ padding: "10px 14px", fontWeight: 600 }}>{d.ownerName}</td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{d.shopName}</td>
+                    <td style={{ padding: "10px 14px", color: "#6E6257" }}>{d.shopName}</td>
                     <td style={{ padding: "10px 14px", fontFamily: "monospace", fontSize: 12 }}>{d.mobile}</td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{d.district}</td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{d.city}</td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>{d.state}</td>
+                    <td style={{ padding: "10px 14px", color: "#6E6257" }}>{d.district}</td>
+                    <td style={{ padding: "10px 14px", color: "#6E6257" }}>{d.city}</td>
+                    <td style={{ padding: "10px 14px", color: "#6E6257" }}>{d.state}</td>
                     <td style={{ padding: "10px 14px" }}>
                       <span style={{ background: "#EEF0FE", color: "#6366F1", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, whiteSpace: "nowrap" }}>{btLabel(d.businessType)}</span>
                     </td>
                     <td style={{ padding: "10px 14px" }}><StatusBadge status={d.status} /></td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D", whiteSpace: "nowrap" }}>{fmtDate(d.createdAt)}</td>
+                    <td style={{ padding: "10px 14px", color: "#6E6257", whiteSpace: "nowrap" }}>{fmtDate(d.createdAt)}</td>
                     <td style={{ padding: "10px 14px" }}>
                       <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => setOpenMenu(openMenu === d.id ? null : d.id)}
@@ -528,12 +528,12 @@ function DealersContent() {
                         {openMenu === d.id && (
                           <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "#fff", border: "1px solid #E8E4DE", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 100, minWidth: 160, overflow: "hidden" }}>
                             <button onClick={() => { setViewDealer(d); setOpenMenu(null); }}
-                              style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", color: "#1A1A2E" }}>
+                              style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", color: "#1F1813" }}>
                               View Details
                             </button>
                             {STATUS_ACTIONS[d.status].map((action) => (
                               <button key={action} onClick={() => setConfirmAction({ dealerId: d.id, newStatus: action })}
-                                style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", fontWeight: 600, color: action === "BLOCKED" ? "#DC2626" : action === "REJECTED" ? "#6B6B7D" : action === "SUSPENDED" ? "#F59E0B" : "#2E7D32" }}>
+                                style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", fontWeight: 600, color: action === "BLOCKED" ? "#DC2626" : action === "REJECTED" ? "#6E6257" : action === "SUSPENDED" ? "#F59E0B" : "#2E7D32" }}>
                                 {ACTION_LABELS[action]}
                               </button>
                             ))}
@@ -544,7 +544,7 @@ function DealersContent() {
                   </tr>
                 ))}
                 {dealers.length === 0 && (
-                  <tr><td colSpan={10} style={{ padding: 32, textAlign: "center", color: "#6B6B7D" }}>No dealers match the current filters.</td></tr>
+                  <tr><td colSpan={10} style={{ padding: 32, textAlign: "center", color: "#6E6257" }}>No dealers match the current filters.</td></tr>
                 )}
               </tbody>
             </table>
@@ -552,7 +552,7 @@ function DealersContent() {
 
           {/* Pagination */}
           <div style={{ padding: "10px 16px", borderTop: "1px solid #E8E4DE", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-            <span style={{ fontSize: 12, color: "#6B6B7D" }}>
+            <span style={{ fontSize: 12, color: "#6E6257" }}>
               Page {pagination.page} of {Math.max(1, pagination.pages)} · {pagination.total} total
             </span>
             <div style={{ display: "flex", gap: 6 }}>
@@ -576,7 +576,7 @@ function DealersContent() {
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ background: "#fff", borderRadius: 12, padding: 28, maxWidth: 380, width: "90%", textAlign: "center" }}>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>{ACTION_LABELS[confirmAction.newStatus]} Dealer?</div>
-              <div style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>
+              <div style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>
                 Are you sure you want to <strong>{ACTION_LABELS[confirmAction.newStatus].toLowerCase()}</strong> dealer <strong>{dealer?.ownerName}</strong>?
               </div>
               <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
@@ -598,7 +598,7 @@ function DealersContent() {
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 460 }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>Dealer Details</div>
-              <button onClick={() => setViewDealer(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 18 }}>×</button>
+              <button onClick={() => setViewDealer(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 18 }}>×</button>
             </div>
             <div style={{ padding: "20px 24px" }}>
               {([
@@ -615,12 +615,12 @@ function DealersContent() {
                 ["Joined", fmtDate(viewDealer.createdAt)],
               ] as [string, string][]).map(([k, v]) => (
                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #F0EDEA", fontSize: 13, gap: 16 }}>
-                  <span style={{ color: "#6B6B7D", fontWeight: 500, flexShrink: 0 }}>{k}</span>
+                  <span style={{ color: "#6E6257", fontWeight: 500, flexShrink: 0 }}>{k}</span>
                   <span style={{ fontWeight: 600, textAlign: "right", wordBreak: "break-all" }}>{v}</span>
                 </div>
               ))}
               <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 13 }}>
-                <span style={{ color: "#6B6B7D", fontWeight: 500 }}>Status</span>
+                <span style={{ color: "#6E6257", fontWeight: 500 }}>Status</span>
                 <StatusBadge status={viewDealer.status} />
               </div>
             </div>

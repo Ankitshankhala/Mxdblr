@@ -189,7 +189,7 @@ permission (enforced at mount + inside each router).
 
 | Token | Value |
 |-------|-------|
-| Navy (primary bg) | #1A1A2E |
+| Navy (primary bg) | #1F1813 |
 | Orange (CTA/accent) | #F47920 |
 | Warm White (page bg) | #F8F6F2 |
 | WhatsApp Green | #25D366 |

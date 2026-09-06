@@ -65,7 +65,7 @@ export default function AdminGuard<P extends object>(
             alignItems: "center",
             justifyContent: "center",
             minHeight: "60vh",
-            color: "#6B6B7D",
+            color: "#6E6257",
             fontSize: 14,
           }}
         >

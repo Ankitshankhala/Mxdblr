@@ -109,14 +109,14 @@ export default function CatalogView({
 
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 20px' }}>
         {/* Breadcrumb */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B6B7D', marginBottom: 20 }}>
-          <Link href="/" style={{ color: '#6B6B7D', textDecoration: 'none' }}>Home</Link>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6E6257', marginBottom: 20 }}>
+          <Link href="/" style={{ color: '#6E6257', textDecoration: 'none' }}>Home</Link>
           <ChevronRight size={12} />
-          <Link href="/catalog" style={{ color: '#6B6B7D', textDecoration: 'none' }}>Catalog</Link>
+          <Link href="/catalog" style={{ color: '#6E6257', textDecoration: 'none' }}>Catalog</Link>
           {currentCategoryName && (
             <>
               <ChevronRight size={12} />
-              <span style={{ color: '#1A1A2E', fontWeight: 600 }}>{currentCategoryName}</span>
+              <span style={{ color: '#1F1813', fontWeight: 600 }}>{currentCategoryName}</span>
             </>
           )}
         </nav>
@@ -127,14 +127,14 @@ export default function CatalogView({
             <h1 style={{ fontWeight: 800, fontSize: 20 }}>
               {currentCategoryName || (search ? `Search: "${search}"` : 'All Products')}
             </h1>
-            <p style={{ fontSize: 13, color: '#6B6B7D', marginTop: 2 }}>
+            <p style={{ fontSize: 13, color: '#6E6257', marginTop: 2 }}>
               {`${total.toLocaleString()} products`}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             {/* Sort */}
             <div className="catalog-sort-bar">
-              <ArrowUpDown size={14} color="#6B6B7D" />
+              <ArrowUpDown size={14} color="#6E6257" />
               <select
                 value={sort}
                 onChange={(e) => router.push(buildUrl({ sort: e.target.value, page: 1 }))}
@@ -146,7 +146,7 @@ export default function CatalogView({
                   padding: '6px 10px',
                   background: '#fff',
                   cursor: 'pointer',
-                  color: '#1A1A2E',
+                  color: '#1F1813',
                 }}
               >
                 {SORT_OPTIONS.map((opt) => (
@@ -206,7 +206,7 @@ export default function CatalogView({
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: 13,
-                        color: '#6B6B7D',
+                        color: '#6E6257',
                         userSelect: 'none',
                       }}
                     >
@@ -223,7 +223,7 @@ export default function CatalogView({
                         borderRadius: 8,
                         border: 'none',
                         background: page === item ? '#F47920' : '#fff',
-                        color: page === item ? '#fff' : '#1A1A2E',
+                        color: page === item ? '#fff' : '#1F1813',
                         fontWeight: 700,
                         fontSize: 13,
                         cursor: 'pointer',

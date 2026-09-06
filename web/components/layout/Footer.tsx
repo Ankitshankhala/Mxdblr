@@ -5,6 +5,7 @@
  * details. Shown on the public storefront pages.
  */
 import Link from 'next/link';
+import { Logo } from '@/components/layout/Logo';
 import { MapPin, Clock, Package } from 'lucide-react';
 import { whatsappLink } from '@/lib/config';
 
@@ -19,7 +20,7 @@ const CATEGORIES = [
 
 export default function Footer() {
   return (
-    <footer style={{ background: '#1A1A2E', padding: '48px 20px 24px' }}>
+    <footer style={{ background: '#1F1813', padding: '48px 20px 24px' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         <div
           style={{
@@ -31,16 +32,8 @@ export default function Footer() {
         >
           {/* Brand */}
           <div>
-            <div
-              style={{
-                fontWeight: 900,
-                fontSize: 22,
-                color: '#fff',
-                letterSpacing: '-0.02em',
-                marginBottom: 12,
-              }}
-            >
-              MXD<span style={{ color: '#F47920' }}>®</span>
+            <div style={{ marginBottom: 14 }}>
+              <Logo height={30} variant="light" />
             </div>
             <p
               style={{
@@ -211,8 +204,16 @@ export default function Footer() {
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
             © {new Date().getFullYear()} MXD® Wholesale. All rights reserved.
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
-            For registered dealers only · B2B platform
+          {/* Legal links must stay reachable from every page — Meta's WhatsApp
+              Business verification requires a working Privacy Policy URL. */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
+            <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
+              Privacy Policy
+            </Link>
+            <Link href="/terms" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
+              Terms of Service
+            </Link>
+            <span>For registered dealers only · B2B platform</span>
           </div>
         </div>
       </div>

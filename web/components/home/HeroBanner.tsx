@@ -36,12 +36,14 @@ const FALLBACK_BANNERS: Banner[] = [
     id: "f1",
     bannerType: "SIMPLE",
     title: "Wholesale Mobile Accessories. No Minimum Bulk Orders.",
-    subtitle: "1,200+ genuine SKUs, MOQ as low as 5 units, same-day dispatch from Bengaluru — for registered dealers across Karnataka, Tamil Nadu & Andhra Pradesh.",
+    // No SKU count claim here — it must be verified against the live catalog
+    // before it goes back in (this read "1,200+ genuine SKUs" against 68).
+    subtitle: "Genuine stock, MOQ as low as 5 units, same-day dispatch from Bengaluru — for registered dealers across Karnataka, Tamil Nadu & Andhra Pradesh.",
     ctaText: "Browse Catalog",
     ctaLink: "/catalog",
     image: "",
     mobileImage: "",
-    bgColor: "#1A1A2E",
+    bgColor: "#1F1813",
     accentColor: "#F47920",
     logoImage: "",
     productImage1: "",
@@ -284,14 +286,17 @@ function BannerContent({
             display: "flex",
             flexDirection: isMobile ? "row" : "column",
             flexWrap: isMobile ? "wrap" : "nowrap",
-            gap: 12,
+            gap: isMobile ? 8 : 12,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
           {productImages.map((img, i) => {
             const desktopSize = productImages.length === 1 ? 260 : productImages.length === 2 ? 200 : 160;
-            const mobileSize = productImages.length === 1 ? 180 : productImages.length === 2 ? 132 : 104;
+            // 3-up must fit one row inside the 20px-padded column: 3*96 + 2*8 = 304,
+            // which still clears a 360px-wide phone (320 available). At 104/12 it
+            // needed 336 against 335 available and wrapped to a second row.
+            const mobileSize = productImages.length === 1 ? 180 : productImages.length === 2 ? 132 : 96;
             const size = isMobile ? mobileSize : desktopSize;
             return (
               /* eslint-disable-next-line @next/next/no-img-element */
@@ -457,7 +462,11 @@ export default function HeroBanner() {
                 position: "absolute", inset: 0,
                 background: (isMobile ? b.mobileImage || b.image : b.image)
                   ? isMobile
-                    ? `linear-gradient(180deg, ${b.bgColor}cc 0%, ${b.bgColor}dd 60%, ${b.bgColor}f5 100%)`
+                    // Mobile stacks text OVER the image, so the scrim has to carry
+                    // readability on its own — a busy catalog photo at 0.8 alpha let
+                    // product labels bleed through the subtitle. The image is texture
+                    // here, not subject matter (see HERO_BANNER_DESIGN_RULES.md §4).
+                    ? `linear-gradient(180deg, ${b.bgColor}e6 0%, ${b.bgColor}f0 55%, ${b.bgColor}fa 100%)`
                     : `linear-gradient(90deg, ${b.bgColor}f0 0%, ${b.bgColor}bb 45%, ${b.bgColor}44 75%, transparent 100%)`
                   : `linear-gradient(135deg, ${b.bgColor}ee 0%, ${b.bgColor}99 50%, transparent 100%)`,
               }}

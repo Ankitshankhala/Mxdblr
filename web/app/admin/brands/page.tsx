@@ -130,11 +130,11 @@ function BrandsContent() {
 
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE",
-    fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none",
+    fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none",
     boxSizing: "border-box",
   };
   const labelStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase",
+    fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase",
     letterSpacing: "0.05em", display: "block", marginBottom: 5,
   };
 
@@ -143,7 +143,7 @@ function BrandsContent() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <p style={{ fontSize: 13, color: "#6B6B7D", marginTop: 2 }}>
+          <p style={{ fontSize: 13, color: "#6E6257", marginTop: 2 }}>
             Manage compatible device brands (e.g. Samsung, Apple, OnePlus). These appear in the product catalog filter.
           </p>
         </div>
@@ -162,7 +162,7 @@ function BrandsContent() {
           <thead>
             <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
               {["Brand Name", "Slug", "Order", "Status", "Actions"].map((h) => (
-                <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>
+                <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>
                   {h}
                 </th>
               ))}
@@ -170,11 +170,11 @@ function BrandsContent() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading…</td></tr>
+              <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading…</td></tr>
             )}
             {!loading && brands.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>
+                <td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>
                   No brands yet. Add your first brand to get started.
                 </td>
               </tr>
@@ -183,7 +183,7 @@ function BrandsContent() {
               <tr key={b.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
                 <td style={{ padding: "12px 16px", fontWeight: 700 }}>{b.name}</td>
                 <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: 11, color: "#6366F1" }}>{b.slug}</td>
-                <td style={{ padding: "12px 16px", color: "#6B6B7D" }}>{b.displayOrder}</td>
+                <td style={{ padding: "12px 16px", color: "#6E6257" }}>{b.displayOrder}</td>
                 <td style={{ padding: "12px 16px" }}>
                   <button
                     onClick={() => toggleActive(b)}
@@ -200,7 +200,7 @@ function BrandsContent() {
                   <div style={{ display: "flex", gap: 6 }}>
                     <button
                       onClick={() => openEdit(b)}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1A1A2E" }}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#1F1813" }}
                     >
                       Edit
                     </button>
@@ -216,7 +216,7 @@ function BrandsContent() {
             ))}
           </tbody>
         </table>
-        <div style={{ padding: "10px 16px", borderTop: "1px solid #E8E4DE", fontSize: 12, color: "#6B6B7D" }}>
+        <div style={{ padding: "10px 16px", borderTop: "1px solid #E8E4DE", fontSize: 12, color: "#6E6257" }}>
           {brands.length} brand{brands.length !== 1 ? "s" : ""} total
         </div>
       </div>
@@ -227,7 +227,7 @@ function BrandsContent() {
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 440, overflow: "hidden" }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{editing ? "Edit Brand" : "Add Brand"}</div>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D" }}>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257" }}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -287,7 +287,7 @@ function BrandsContent() {
             <div style={{ padding: "16px 24px", borderTop: "1px solid #E8E4DE", display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button
                 onClick={() => setShowModal(false)}
-                style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#1A1A2E" }}
+                style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#1F1813" }}
               >
                 Cancel
               </button>
@@ -309,7 +309,7 @@ function BrandsContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 380, padding: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Delete Brand?</div>
-            <p style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>
+            <p style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>
               This removes the brand from the filter list. Existing products will keep their brand text.
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>

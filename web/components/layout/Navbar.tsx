@@ -7,6 +7,7 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { Logo } from '@/components/layout/Logo';
 import { useRouter } from 'next/navigation';
 import { Search, ShoppingBag, User, X } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
@@ -107,7 +108,7 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
   return (
     <header
       style={{
-        background: '#1A1A2E',
+        background: '#1F1813',
         position: 'sticky',
         top: 0,
         zIndex: 40,
@@ -128,14 +129,7 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
       >
         {/* Logo */}
         <Link href="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-            <span style={{ fontWeight: 900, fontSize: 22, color: '#F47920', letterSpacing: '-0.5px' }}>
-              MXD®
-            </span>
-            <span style={{ fontSize: 9, color: '#6B6B7D', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              Wholesale Portal
-            </span>
-          </div>
+          <Logo height={38} preload />
         </Link>
 
         {/* Search bar — hidden on mobile */}
@@ -165,7 +159,7 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
               paddingRight: searchValue ? 38 : 14,
               fontSize: 14,
               outline: 'none',
-              color: '#1A1A2E',
+              color: '#1F1813',
             }}
           />
           {searchValue && (
@@ -310,7 +304,7 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
           onClick={() => setMobileSearchOpen(false)}
         >
           <div
-            style={{ background: '#1A1A2E', padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center' }}
+            style={{ background: '#1F1813', padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center' }}
             onClick={(e) => e.stopPropagation()}
           >
             <form onSubmit={handleMobileSearch} style={{ flex: 1, position: 'relative' }}>
@@ -334,7 +328,7 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
                   paddingRight: mobileSearchValue ? 36 : 14,
                   fontSize: 15,
                   outline: 'none',
-                  color: '#1A1A2E',
+                  color: '#1F1813',
                 }}
               />
               {mobileSearchValue && (

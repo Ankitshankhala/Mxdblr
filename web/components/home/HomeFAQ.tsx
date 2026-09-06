@@ -56,14 +56,14 @@ export default function HomeFAQ() {
           style={{
             fontWeight: 900,
             fontSize: 24,
-            color: '#1A1A2E',
+            color: '#1F1813',
             letterSpacing: '-0.02em',
             marginBottom: 8,
           }}
         >
           Frequently Asked Questions
         </h2>
-        <p style={{ fontSize: 14, color: '#6B6B7D' }}>Everything you need to know about ordering from MXD.</p>
+        <p style={{ fontSize: 14, color: '#6E6257' }}>Everything you need to know about ordering from MXD.</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -85,7 +85,7 @@ export default function HomeFAQ() {
                 transition: 'background 0.15s',
               }}
             >
-              <span style={{ fontWeight: 700, fontSize: 14, color: '#1A1A2E', lineHeight: 1.4 }}>{f.q}</span>
+              <span style={{ fontWeight: 700, fontSize: 14, color: '#1F1813', lineHeight: 1.4 }}>{f.q}</span>
               <span style={{ flexShrink: 0, color: '#F47920' }}>
                 {open === i ? <Minus size={16} /> : <Plus size={16} />}
               </span>
@@ -95,7 +95,7 @@ export default function HomeFAQ() {
                 style={{
                   padding: '0 20px 18px',
                   fontSize: 13,
-                  color: '#6B6B7D',
+                  color: '#6E6257',
                   lineHeight: 1.75,
                   borderTop: '1px solid #E8E4DE',
                   paddingTop: 14,

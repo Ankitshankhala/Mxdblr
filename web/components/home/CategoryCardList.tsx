@@ -95,7 +95,7 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
               {/* Product count always shown, bold + brand color — the count
                   itself is the trust/depth signal, not just supplementary text. */}
               <div style={{ fontSize: 11, color: '#F47920', fontWeight: 700 }}>
-                {cat.productCount ?? 0} products
+                {cat.productCount ?? 0} product{(cat.productCount ?? 0) !== 1 ? 's' : ''}
               </div>
               {cat.description && (
                 <div style={{ fontSize: 10, color: '#A8A39A', marginTop: 2, lineHeight: 1.4 }}>

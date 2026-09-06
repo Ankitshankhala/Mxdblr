@@ -59,14 +59,14 @@ export default function Testimonials() {
           style={{
             fontWeight: 900,
             fontSize: 24,
-            color: '#1A1A2E',
+            color: '#1F1813',
             letterSpacing: '-0.02em',
             marginBottom: 8,
           }}
         >
           What Dealers Say
         </h2>
-        <p style={{ fontSize: 14, color: '#6B6B7D' }}>Real feedback from our registered dealer network.</p>
+        <p style={{ fontSize: 14, color: '#6E6257' }}>Real feedback from our registered dealer network.</p>
       </div>
 
       <div
@@ -125,7 +125,7 @@ export default function Testimonials() {
             </p>
 
             <div style={{ borderTop: '1px solid #E8E4DE', paddingTop: 14 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{t.name}</div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: '#1F1813' }}>{t.name}</div>
               <div style={{ fontSize: 11, color: '#A8A39A', marginTop: 2 }}>{t.shop}</div>
             </div>
           </div>

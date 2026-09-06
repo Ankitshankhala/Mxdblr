@@ -63,7 +63,7 @@ export default function SupportedTechnologies({ features }: { features: ProductF
         padding: '20px 22px',
       }}
     >
-      <h2 style={{ fontWeight: 800, fontSize: 18, color: '#1A1A2E', marginBottom: 4 }}>
+      <h2 style={{ fontWeight: 800, fontSize: 18, color: '#1F1813', marginBottom: 4 }}>
         Supported Technologies
       </h2>
       <p style={{ fontSize: 12, color: '#A8A39A', marginBottom: 18 }}>
@@ -156,9 +156,9 @@ export default function SupportedTechnologies({ features }: { features: ProductF
                     )}
 
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{f.name}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: '#1F1813' }}>{f.name}</div>
                       {f.description && (
-                        <div style={{ fontSize: 12, color: '#6B6B7D', lineHeight: 1.4, marginTop: 2 }}>
+                        <div style={{ fontSize: 12, color: '#6E6257', lineHeight: 1.4, marginTop: 2 }}>
                           {f.description}
                         </div>
                       )}

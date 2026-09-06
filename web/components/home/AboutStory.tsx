@@ -69,14 +69,14 @@ export default function AboutStory() {
             style={{
               fontWeight: 900,
               fontSize: 24,
-              color: '#1A1A2E',
+              color: '#1F1813',
               letterSpacing: '-0.02em',
               marginBottom: 16,
             }}
           >
             A Real Warehouse, Not a Reseller
           </h2>
-          <p style={{ fontSize: 14, color: '#6B6B7D', lineHeight: 1.75 }}>{STORY_TEXT}</p>
+          <p style={{ fontSize: 14, color: '#6E6257', lineHeight: 1.75 }}>{STORY_TEXT}</p>
         </div>
       </div>
     </section>

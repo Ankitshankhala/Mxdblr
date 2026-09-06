@@ -102,8 +102,8 @@ function SettingsContent() {
     }
   }
 
-  const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none" };
-  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 6 };
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none" };
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 6 };
   const sectionStyle: React.CSSProperties = { background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, marginBottom: 20 };
 
   function MaskedInput({ value, show, onToggle, onChange, name }: { value: string; show: boolean; onToggle: () => void; onChange: (v: string) => void; name: string }) {
@@ -120,7 +120,7 @@ function SettingsContent() {
         <button
           type="button"
           onClick={onToggle}
-          style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", padding: 0 }}
+          style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#6E6257", padding: 0 }}
         >
           {show ? (
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -140,7 +140,7 @@ function SettingsContent() {
 
   if (loadingSettings) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", color: "#6B6B7D", fontSize: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "40vh", color: "#6E6257", fontSize: 14 }}>
         Loading settings…
       </div>
     );
@@ -151,8 +151,8 @@ function SettingsContent() {
       {/* Integration Settings */}
       <div style={sectionStyle}>
         <div style={{ padding: "16px 24px", borderBottom: "1px solid #E8E4DE" }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>Integration Settings</div>
-          <div style={{ fontSize: 12, color: "#6B6B7D", marginTop: 2 }}>WhatsApp, SMS, and media storage configuration</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>Integration Settings</div>
+          <div style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>WhatsApp, SMS, and media storage configuration</div>
         </div>
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
@@ -163,7 +163,7 @@ function SettingsContent() {
               style={inputStyle}
               placeholder="+91 XXXXX XXXXX"
             />
-            <div style={{ fontSize: 11, color: "#6B6B7D", marginTop: 4 }}>Used for sending inquiry notifications to admin</div>
+            <div style={{ fontSize: 11, color: "#6E6257", marginTop: 4 }}>Used for sending inquiry notifications to admin</div>
           </div>
 
           <div>
@@ -175,12 +175,12 @@ function SettingsContent() {
               onChange={(v) => setSettings((s) => ({ ...s, msg91ApiKey: v }))}
               name="msg91"
             />
-            <div style={{ fontSize: 11, color: "#6B6B7D", marginTop: 4 }}>Used for SMS and WhatsApp API via MSG91</div>
+            <div style={{ fontSize: 11, color: "#6E6257", marginTop: 4 }}>Used for SMS and WhatsApp API via MSG91</div>
           </div>
 
           <div style={{ height: 1, background: "#E8E4DE" }} />
 
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase", letterSpacing: "0.05em" }}>Cloudinary (Media Storage)</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#6E6257", textTransform: "uppercase", letterSpacing: "0.05em" }}>Cloudinary (Media Storage)</div>
 
           <div>
             <label style={labelStyle}>Cloud Name</label>
@@ -228,8 +228,8 @@ function SettingsContent() {
       {/* Change Password */}
       <div style={sectionStyle}>
         <div style={{ padding: "16px 24px", borderBottom: "1px solid #E8E4DE" }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>Change Admin Password</div>
-          <div style={{ fontSize: 12, color: "#6B6B7D", marginTop: 2 }}>Update your admin login credentials</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>Change Admin Password</div>
+          <div style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>Update your admin login credentials</div>
         </div>
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
@@ -271,7 +271,7 @@ function SettingsContent() {
           <button
             onClick={handleChangePassword}
             disabled={savingPassword}
-            style={{ padding: "11px 24px", borderRadius: 10, border: "2px solid #1A1A2E", background: "#1A1A2E", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", alignSelf: "flex-start" }}
+            style={{ padding: "11px 24px", borderRadius: 10, border: "2px solid #1F1813", background: "#1F1813", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", alignSelf: "flex-start" }}
           >
             {savingPassword ? "Updating…" : "Change Password"}
           </button>
@@ -281,7 +281,7 @@ function SettingsContent() {
       {/* System Info */}
       <div style={{ ...sectionStyle, marginBottom: 0 }}>
         <div style={{ padding: "16px 24px", borderBottom: "1px solid #E8E4DE" }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>System Information</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>System Information</div>
         </div>
         <div style={{ padding: "16px 24px" }}>
           {([
@@ -292,8 +292,8 @@ function SettingsContent() {
             ["Deployment", "Hostinger VPS KVM 2"],
           ] as [string, string][]).map(([k, v]) => (
             <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #F0EDEA", fontSize: 13 }}>
-              <span style={{ color: "#6B6B7D" }}>{k}</span>
-              <span style={{ fontWeight: 600, color: "#1A1A2E" }}>{v}</span>
+              <span style={{ color: "#6E6257" }}>{k}</span>
+              <span style={{ fontWeight: 600, color: "#1F1813" }}>{v}</span>
             </div>
           ))}
         </div>

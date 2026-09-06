@@ -31,10 +31,10 @@ interface Role {
 
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE",
-  fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+  fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none", boxSizing: "border-box",
 };
 const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 5,
+  fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 5,
 };
 
 function RolesContent() {
@@ -140,7 +140,7 @@ function RolesContent() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, gap: 12 }}>
-        <p style={{ fontSize: 13, color: "#6B6B7D", maxWidth: 620 }}>
+        <p style={{ fontSize: 13, color: "#6E6257", maxWidth: 620 }}>
           Define what each role can do. Toggle permissions and click <strong>Save</strong> on a role to apply.
           Changes take effect immediately for all users with that role. The Super Admin role is protected and cannot be edited.
         </p>
@@ -151,7 +151,7 @@ function RolesContent() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#6B6B7D" }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading…</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {roles.map((role) => {
@@ -163,7 +163,7 @@ function RolesContent() {
                 <div style={{ padding: "14px 20px", borderBottom: "1px solid #F0EDEA", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontWeight: 800, fontSize: 15, color: "#1A1A2E" }}>{role.name}</span>
+                      <span style={{ fontWeight: 800, fontSize: 15, color: "#1F1813" }}>{role.name}</span>
                       {role.isSystem && (
                         <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6366F1", background: "#EEF2FF", padding: "2px 8px", borderRadius: 999 }}>System</span>
                       )}
@@ -171,7 +171,7 @@ function RolesContent() {
                         <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#92400E", background: "#FEF3C7", padding: "2px 8px", borderRadius: 999 }}>Protected</span>
                       )}
                     </div>
-                    <div style={{ fontSize: 12, color: "#6B6B7D", marginTop: 3 }}>
+                    <div style={{ fontSize: 12, color: "#6E6257", marginTop: 3 }}>
                       {role.description} · {role.userCount} user{role.userCount !== 1 ? "s" : ""}
                     </div>
                   </div>
@@ -206,7 +206,7 @@ function RolesContent() {
                             <input type="checkbox" checked={checked} disabled={disabled}
                               onChange={() => togglePerm(role.id, p.key)}
                               style={{ width: 15, height: 15, accentColor: "#F47920", cursor: disabled ? "not-allowed" : "pointer" }} />
-                            <span style={{ fontSize: 12.5, color: "#1A1A2E" }}>{p.label}</span>
+                            <span style={{ fontSize: 12.5, color: "#1F1813" }}>{p.label}</span>
                           </label>
                         );
                       })}
@@ -234,7 +234,7 @@ function RolesContent() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 380, padding: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Delete role &ldquo;{deleteConfirm.name}&rdquo;?</div>
-            <p style={{ fontSize: 13, color: "#6B6B7D", marginBottom: 20 }}>
+            <p style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>
               {deleteConfirm.userCount > 0
                 ? `This role has ${deleteConfirm.userCount} user(s). Reassign them first — the server will block the deletion otherwise.`
                 : "This permanently removes the role. This action cannot be undone."}
@@ -297,7 +297,7 @@ function CreateRoleModal({
       <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 560, maxHeight: "90vh", overflow: "auto" }}>
         <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#fff" }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>New Role</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D" }}>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257" }}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>

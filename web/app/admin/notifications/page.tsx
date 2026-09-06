@@ -154,8 +154,8 @@ function NotificationsContent() {
     }
   }
 
-  const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1A1A2E", fontFamily: "inherit", outline: "none" };
-  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#6B6B7D", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 6 };
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", borderRadius: 7, border: "1px solid #E8E4DE", fontSize: 13, background: "#fff", color: "#1F1813", fontFamily: "inherit", outline: "none" };
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: "#6E6257", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 6 };
   const cardStyle: React.CSSProperties = { background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden", marginBottom: 24 };
 
   return (
@@ -167,7 +167,7 @@ function NotificationsContent() {
             <svg width="14" height="14" fill="none" stroke="#F47920" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>Trigger Restock Notification</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>Trigger Restock Notification</span>
           </div>
           <div style={{ padding: 20 }}>
             <div style={{ marginBottom: 14 }}>
@@ -194,7 +194,7 @@ function NotificationsContent() {
                 <div style={{ fontSize: 12, color: "#F47920", fontWeight: 700 }}>
                   {selectedProductData.subscribers} dealer{selectedProductData.subscribers !== 1 ? "s" : ""} subscribed
                 </div>
-                <div style={{ fontSize: 11, color: "#6B6B7D", marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: "#6E6257", marginTop: 2 }}>
                   Notification will be sent via WhatsApp to all subscribers
                 </div>
               </div>
@@ -217,7 +217,7 @@ function NotificationsContent() {
             <svg width="14" height="14" fill="none" stroke="#6366F1" strokeWidth="2" viewBox="0 0 24 24">
               <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>Send Broadcast</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>Send Broadcast</span>
           </div>
           <div style={{ padding: 20 }}>
             <div style={{ marginBottom: 12 }}>
@@ -272,13 +272,13 @@ function NotificationsContent() {
       {/* Notification History */}
       <div style={cardStyle}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #E8E4DE" }}>
-          <span style={{ fontWeight: 700, fontSize: 14, color: "#1A1A2E" }}>Notification History</span>
+          <span style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>Notification History</span>
         </div>
         <div style={{ overflowX: "auto" }}>
           {loadingHistory ? (
-            <div style={{ padding: "32px 20px", textAlign: "center", color: "#6B6B7D", fontSize: 13 }}>Loading history…</div>
+            <div style={{ padding: "32px 20px", textAlign: "center", color: "#6E6257", fontSize: 13 }}>Loading history…</div>
           ) : history.length === 0 ? (
-            <div style={{ padding: "32px 20px", textAlign: "center", color: "#6B6B7D", fontSize: 13 }}>
+            <div style={{ padding: "32px 20px", textAlign: "center", color: "#6E6257", fontSize: 13 }}>
               No notifications sent yet. Trigger a restock notification above to see history here.
             </div>
           ) : (
@@ -286,7 +286,7 @@ function NotificationsContent() {
               <thead>
                 <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
                   {["Product / Topic", "Recipients", "Channel", "Message", "Status", "Sent At"].map((h) => (
-                    <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B6B7D", whiteSpace: "nowrap" }}>{h}</th>
+                    <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -296,7 +296,7 @@ function NotificationsContent() {
                     <td style={{ padding: "10px 14px", fontWeight: 600, maxWidth: 180 }}>
                       <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.productName}</div>
                     </td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D" }}>
+                    <td style={{ padding: "10px 14px", color: "#6E6257" }}>
                       {n.totalRecipients} dealer{n.totalRecipients !== 1 ? "s" : ""}
                       {n.failed > 0 && (
                         <span style={{ color: "#DC2626", fontSize: 11, marginLeft: 4 }}>({n.failed} failed)</span>
@@ -311,7 +311,7 @@ function NotificationsContent() {
                         {n.channel === "WHATSAPP" ? "WhatsApp" : n.channel}
                       </span>
                     </td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D", maxWidth: 220 }}>
+                    <td style={{ padding: "10px 14px", color: "#6E6257", maxWidth: 220 }}>
                       <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.message}</div>
                     </td>
                     <td style={{ padding: "10px 14px" }}>
@@ -321,7 +321,7 @@ function NotificationsContent() {
                         fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999
                       }}>{n.status}</span>
                     </td>
-                    <td style={{ padding: "10px 14px", color: "#6B6B7D", whiteSpace: "nowrap", fontSize: 12 }}>{formatDate(n.sentAt)}</td>
+                    <td style={{ padding: "10px 14px", color: "#6E6257", whiteSpace: "nowrap", fontSize: 12 }}>{formatDate(n.sentAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -336,11 +336,11 @@ function NotificationsContent() {
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 440 }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 700, fontSize: 15 }}>Message Preview</div>
-              <button onClick={() => setShowPreview(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6B6B7D", fontSize: 18 }}>×</button>
+              <button onClick={() => setShowPreview(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 18 }}>×</button>
             </div>
             <div style={{ padding: 24 }}>
-              <div style={{ fontSize: 12, color: "#6B6B7D", marginBottom: 6 }}>To: <strong>{recipient === "By State" ? `${state} dealers` : recipient}</strong> via <strong>{channel}</strong></div>
-              <div style={{ background: "#F8F6F2", borderRadius: 8, padding: 16, fontSize: 13, lineHeight: 1.6, color: "#1A1A2E", whiteSpace: "pre-wrap" }}>
+              <div style={{ fontSize: 12, color: "#6E6257", marginBottom: 6 }}>To: <strong>{recipient === "By State" ? `${state} dealers` : recipient}</strong> via <strong>{channel}</strong></div>
+              <div style={{ background: "#F8F6F2", borderRadius: 8, padding: 16, fontSize: 13, lineHeight: 1.6, color: "#1F1813", whiteSpace: "pre-wrap" }}>
                 {broadcastMsg || "(No message entered)"}
               </div>
               <div style={{ display: "flex", gap: 10, marginTop: 16 }}>

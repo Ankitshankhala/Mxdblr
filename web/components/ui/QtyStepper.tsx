@@ -39,7 +39,7 @@ export default function QtyStepper({ value, moq, onChange }: QtyStepperProps) {
             background: '#F8F6F2',
             border: 'none',
             cursor: value <= moq ? 'not-allowed' : 'pointer',
-            color: value <= moq ? '#A8A39A' : '#1A1A2E',
+            color: value <= moq ? '#A8A39A' : '#1F1813',
           }}
           aria-label="Decrease quantity"
         >
@@ -69,7 +69,7 @@ export default function QtyStepper({ value, moq, onChange }: QtyStepperProps) {
             background: '#F8F6F2',
             border: 'none',
             cursor: 'pointer',
-            color: '#1A1A2E',
+            color: '#1F1813',
           }}
           aria-label="Increase quantity"
         >
