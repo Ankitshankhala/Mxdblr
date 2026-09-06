@@ -34,6 +34,15 @@ for (const key of REQUIRED_ENV) {
 if (process.env.NODE_ENV === 'production') {
   const fatal: string[] = [];
 
+  // A var copied from the template and never filled in is present but useless --
+  // a bare presence check passes it and the failure resurfaces at runtime as a
+  // broken upload or an OTP that never arrives. Treat placeholders as unset.
+  const PLACEHOLDER_RE = /^(replace|your[_-]|xxx|todo|changeme|dummy|<)/i;
+  const missing = (key: string): boolean => {
+    const v = (process.env[key] || '').trim();
+    return v === '' || PLACEHOLDER_RE.test(v);
+  };
+
   const jwtSecret = process.env.JWT_SECRET || '';
   if (jwtSecret.length < 64) {
     fatal.push(`JWT_SECRET is ${jwtSecret.length} chars; needs >= 64 (256-bit). Generate with: openssl rand -hex 32`);
@@ -44,30 +53,30 @@ if (process.env.NODE_ENV === 'production') {
   if (process.env.ENABLE_OTP_BYPASS === 'true') {
     fatal.push('ENABLE_OTP_BYPASS=true in production would accept 000000 as a valid OTP for any number. Remove it.');
   }
-  if (!process.env.MSG91_AUTH_KEY) {
-    fatal.push('MSG91_AUTH_KEY is unset, so OTP delivery silently no-ops and no dealer can sign in.');
+  if (missing('MSG91_AUTH_KEY')) {
+    fatal.push('MSG91_AUTH_KEY is unset or a placeholder, so OTP delivery silently no-ops and no dealer can sign in.');
   }
-  if (!process.env.MSG91_TEMPLATE_ID) {
-    fatal.push('MSG91_TEMPLATE_ID is unset; the MSG91 v5 OTP endpoint requires it.');
+  if (missing('MSG91_TEMPLATE_ID')) {
+    fatal.push('MSG91_TEMPLATE_ID is unset or a placeholder; the MSG91 v5 OTP endpoint requires it.');
   }
-  if (!process.env.SETTINGS_ENCRYPTION_KEY) {
+  if (missing('SETTINGS_ENCRYPTION_KEY')) {
     fatal.push('SETTINGS_ENCRYPTION_KEY is unset; encrypted settings cannot be read or written.');
   }
   // Without these, lib/cloudinary.ts silently falls back to writing ./uploads and
   // handing out absolute http://localhost URLs — unreachable for real visitors, and
   // lost on the next container redeploy.
   const cloudinary = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'].filter(
-    (k) => !process.env[k]
+    (k) => missing(k)
   );
   if (cloudinary.length > 0) {
     fatal.push(
-      `${cloudinary.join(', ')} unset; image uploads would fall back to local disk and be lost on redeploy.`
+      `${cloudinary.join(', ')} unset or still a placeholder; image uploads would fall back to local disk and be lost on redeploy.`
     );
   }
   // Gate 4 requires error monitoring live before handover. initObservability()
   // above is a no-op without a DSN, so production would run blind.
-  if (!process.env.SENTRY_DSN) {
-    fatal.push('SENTRY_DSN is unset; the API would run with no error monitoring.');
+  if (missing('SENTRY_DSN')) {
+    fatal.push('SENTRY_DSN is unset or a placeholder; the API would run with no error monitoring.');
   }
 
   if (fatal.length > 0) {
