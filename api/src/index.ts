@@ -62,15 +62,20 @@ if (process.env.NODE_ENV === 'production') {
   if (missing('SETTINGS_ENCRYPTION_KEY')) {
     fatal.push('SETTINGS_ENCRYPTION_KEY is unset; encrypted settings cannot be read or written.');
   }
-  // Without these, lib/cloudinary.ts silently falls back to writing ./uploads and
-  // handing out absolute http://localhost URLs — unreachable for real visitors, and
-  // lost on the next container redeploy.
+  // Cloudinary is a WARNING, not a failure. saveLocally() returns a relative
+  // /uploads/... path that normalizeImageUrl() resolves against the public API
+  // origin, and nginx proxies /uploads through to this process — so images render
+  // correctly without it. What you lose is CDN edge delivery and automatic
+  // f_auto/q_auto optimisation, plus the images then live only on this box's disk
+  // and must be covered by your backups.
   const cloudinary = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'].filter(
     (k) => missing(k)
   );
   if (cloudinary.length > 0) {
-    fatal.push(
-      `${cloudinary.join(', ')} unset or still a placeholder; image uploads would fall back to local disk and be lost on redeploy.`
+    process.stderr.write(
+      `[WARN] ${cloudinary.join(', ')} unset — image uploads are served from local disk.\n` +
+        '       Images render fine, but there is no CDN or auto-optimisation, and\n' +
+        '       the api/uploads directory must be included in your backups.\n'
     );
   }
   // Gate 4 requires error monitoring live before handover. initObservability()
