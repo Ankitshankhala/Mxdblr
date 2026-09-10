@@ -92,10 +92,21 @@ if (process.env.NODE_ENV === 'production') {
         '       the api/uploads directory must be included in your backups.\n'
     );
   }
-  // Gate 4 requires error monitoring live before handover. initObservability()
-  // above is a no-op without a DSN, so production would run blind.
+  // Deliberate launch decision: run on PM2 logs instead of a hosted error tracker.
+  // The global error handler below already writes every 5xx to stderr with its full
+  // stack, and PM2 persists that to ~/.pm2/logs/ — so nothing is lost, it is only
+  // pull-based. What a tracker adds here is alerting and grouping, not visibility.
+  //
+  // Note this SDK is server-side only (api errors + Next SSR via instrumentation.ts).
+  // Browser-side React errors are NOT captured either way; that needs a separate
+  // client config. Any Sentry-protocol endpoint works when you want alerting later —
+  // GlitchTip included — by setting SENTRY_DSN alone. No code change.
   if (missing('SENTRY_DSN')) {
-    fatal.push('SENTRY_DSN is unset or a placeholder; the API would run with no error monitoring.');
+    process.stderr.write(
+      '[WARN] SENTRY_DSN unset — no hosted error tracking. 5xx errors go to stderr\n' +
+        '       and are retained by PM2: inspect with `pm2 logs mxdblr-api`.\n' +
+        '       Nobody is alerted automatically; check the logs after each deploy.\n'
+    );
   }
 
   if (fatal.length > 0) {

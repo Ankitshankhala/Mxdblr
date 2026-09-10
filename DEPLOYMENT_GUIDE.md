@@ -358,6 +358,45 @@ pm2 list
 # Both processes should show: online
 ```
 
+### 9.1 — Log rotation (REQUIRED, not optional)
+
+This deploy runs with **no hosted error tracker**. PM2 logs are the entire error
+record, which makes them load-bearing — and unrotated they grow until the disk is
+full and Postgres starts failing writes.
+
+```bash
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 20M
+pm2 set pm2-logrotate:retain 14          # ~2 weeks of history
+pm2 set pm2-logrotate:compress true
+pm2 set pm2-logrotate:rotateInterval '0 0 * * *'
+```
+
+Verify it took, and check disk headroom:
+
+```bash
+pm2 conf pm2-logrotate
+du -sh ~/.pm2/logs && df -h / | tail -1
+```
+
+### 9.2 — Reading errors (your monitoring, in full)
+
+Every 5xx is written to stderr with its full stack by the API's global error
+handler, so these commands are how you find problems:
+
+```bash
+pm2 logs mxdblr-api --lines 100 --nostream        # recent activity
+pm2 logs mxdblr-api --err --lines 200 --nostream  # errors only
+grep -c "\[ERROR\] 5" ~/.pm2/logs/mxdblr-api-error.log
+```
+
+Nothing alerts you automatically. **Check these after every deploy**, and make a
+habit of it in the first weeks. Two warnings printed at every boot are expected
+and describe deliberate choices — OTP delivery disabled, images on local disk.
+
+When you want alerting later, set `SENTRY_DSN` to any Sentry-protocol endpoint
+(hosted Sentry or self-hosted GlitchTip) and restart. No code change.
+
 ---
 
 ## 10. Nginx Configuration
