@@ -12,38 +12,78 @@
 production: nginx 1.24.0 on Ubuntu, with a live Let's Encrypt certificate for
 `herotvmounting.com` and `www.herotvmounting.com`.
 
-MXDBLR is being deployed **alongside** a different client's live site. Every command
-below is scoped to MXDBLR on purpose. The isolation model:
+Running two sites on one VPS is normal and safe — nginx virtual hosts exist for it.
+It only goes wrong when the two deployments share something they shouldn't. This
+section makes each layer separate **by construction**, so isolation does not depend
+on anyone remembering to be careful.
 
-| Layer | Isolation |
+### The isolation model
+
+| Layer | How MXDBLR is separated |
 |---|---|
-| nginx | Own file `sites-available/mxdblr.conf`, routed by `server_name`. Never edit the herotvmounting file. |
-| nginx upstreams | Named `mxdblr_api` / `mxdblr_web`. Upstream names are **global** — a duplicate takes both sites down. |
-| PM2 | Apps named `mxdblr-api` / `mxdblr-web`. Capped at 1 API worker so MXDBLR cannot starve the other site. |
-| Postgres | Own role `mxdblr` and database `mxdblr`. Not a superuser. |
-| Files | Everything under `/var/www/mxdblr/`. |
+| **Linux user** | Own user `mxdblr`. This is the important one — see below. |
+| **PM2** | Runs as `mxdblr`, so it is a *different daemon* from the other site's. |
+| **nginx** | Own file `sites-available/mxdblr.conf`, routed by `server_name`. The other vhost is never edited. |
+| **nginx upstreams** | Named `mxdblr_api` / `mxdblr_web`. Upstream names are **global** across all loaded files — duplicates take both sites down. |
+| **Postgres** | Own role `mxdblr` owning only database `mxdblr`. Not a superuser. |
+| **Files** | Everything under `/home/mxdblr/app/`, mode 750. |
+| **Ports** | 3000 / 4000 bound to `127.0.0.1` only — never exposed publicly. |
 
-### Commands that are BANNED on this box
+### Why the dedicated Linux user matters most
 
-These act on everything PM2 or nginx manages and will hit herotvmounting.com:
+**PM2 runs one daemon per user.** With MXDBLR under its own account, `pm2 delete all`
+run as `mxdblr` cannot see, stop or touch the other site's processes — they belong to
+a different daemon with a different process list. The single most likely way to cause
+an outage stops being possible rather than merely discouraged.
 
+It also means file permissions isolate the two apps: a compromised MXDBLR process
+cannot read the other site's `.env`, and vice versa.
+
+```bash
+# As root, once:
+sudo adduser --disabled-password --gecos "" mxdblr
+sudo mkdir -p /home/mxdblr/app && sudo chown -R mxdblr:mxdblr /home/mxdblr
+sudo chmod 750 /home/mxdblr
+
+# Everything else in this guide runs as that user:
+sudo -iu mxdblr
 ```
-pm2 restart all      pm2 stop all      pm2 delete all      pm2 kill
-sudo systemctl restart nginx          (use `reload`, after `nginx -t`)
-sudo certbot --nginx                  (without -d, it rewrites other vhosts)
+
+Give PM2 its own boot entry for this user — the command `pm2 startup` prints is
+user-specific, so both sites survive a reboot independently:
+
+```bash
+# as mxdblr
+pm2 startup            # run the printed sudo command exactly
+pm2 save
 ```
 
-Use the named forms instead — `pm2 restart mxdblr-api`, `certbot --nginx -d mxdblr.com`.
+### The two things that are still genuinely shared
 
-### Before every nginx reload, without exception
+Per-user isolation does not cover these, so they need care:
+
+**1. nginx.** One process serves both sites. A broken config file takes down
+everything, so validate before every reload — `nginx -t` checks the *whole* config:
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-`nginx -t` validates the **whole** config. If it fails, do not reload — a broken
-reload takes down the other client's site too. `reload` is graceful; `restart` drops
-live connections for every site on the box.
+Use `reload` (graceful), never `restart` (drops live connections for every site).
+And always pass `-d` to certbot — a bare `sudo certbot --nginx` will rewrite the
+other client's vhost:
+
+```bash
+sudo certbot --nginx -d mxdblr.com -d www.mxdblr.com
+sudo certbot --nginx -d api.mxdblr.com
+```
+
+**2. CPU, RAM and disk.** 2 vCPU / 8 GB / 100 GB is comfortable for both, but MXDBLR
+must stay a good neighbour: the API is capped at 1 cluster worker with a 512 MB
+`max_memory_restart`, and PM2 log rotation (§9.1) keeps logs from filling the disk
+Postgres shares. Watch with `pm2 monit` and `df -h /` after launch.
+
+> If either site later outgrows this, the clean fix is a second VPS — not tuning.
 
 ---
 
@@ -85,29 +125,38 @@ apt update && apt upgrade -y
 apt install -y curl wget git unzip ufw fail2ban
 ```
 
-### 1.3 — Create non-root deploy user
+### 1.3 — Create the dedicated `mxdblr` user
+
+Skip if you already created it in the shared-VPS section above. This user owns the
+app, its files, and — critically — its own PM2 daemon.
 
 ```bash
-adduser deploy
-usermod -aG sudo deploy
+adduser --disabled-password --gecos "" mxdblr
+usermod -aG sudo mxdblr          # needed for nginx/certbot steps only
+mkdir -p /home/mxdblr/app
+chown -R mxdblr:mxdblr /home/mxdblr
+chmod 750 /home/mxdblr           # the other site's user cannot read into it
 ```
 
-### 1.4 — Copy SSH public key to deploy user
+> Do **not** reuse whatever user runs herotvmounting.com. Sharing the account
+> merges the two PM2 daemons and undoes the isolation this whole section buys.
+
+### 1.4 — Copy SSH public key to the mxdblr user
 
 Run on your **local machine**:
 
 ```bash
-ssh-copy-id deploy@YOUR_VPS_IP
+ssh-copy-id mxdblr@YOUR_VPS_IP
 ```
 
 Or manually on the server:
 
 ```bash
-mkdir -p /home/deploy/.ssh
-chmod 700 /home/deploy/.ssh
-nano /home/deploy/.ssh/authorized_keys   # paste your local ~/.ssh/id_rsa.pub
-chmod 600 /home/deploy/.ssh/authorized_keys
-chown -R deploy:deploy /home/deploy/.ssh
+mkdir -p /home/mxdblr/.ssh
+chmod 700 /home/mxdblr/.ssh
+nano /home/mxdblr/.ssh/authorized_keys   # paste your local ~/.ssh/id_rsa.pub
+chmod 600 /home/mxdblr/.ssh/authorized_keys
+chown -R mxdblr:mxdblr /home/mxdblr/.ssh
 ```
 
 ### 1.5 — Harden SSH
@@ -131,7 +180,7 @@ MaxAuthTries 3
 systemctl restart sshd
 ```
 
-> **Important:** Open a new terminal and verify `ssh deploy@YOUR_VPS_IP` works before closing your root session.
+> **Important:** Open a new terminal and verify `ssh mxdblr@YOUR_VPS_IP` works before closing your root session.
 
 ### 1.6 — Set timezone
 
@@ -176,6 +225,10 @@ sudo -u postgres psql
 
 Inside the PostgreSQL shell:
 
+> **Install Postgres only if it isn't already there.** This box may already run it
+> for the other site. Check first with `psql --version` — a second cluster on the
+> same host is a configuration mess you don't want. One Postgres, two databases.
+
 ```sql
 CREATE DATABASE mxdblr;
 CREATE USER mxdblr_user WITH ENCRYPTED PASSWORD 'STRONG_DB_PASSWORD';
@@ -185,6 +238,28 @@ GRANT ALL ON SCHEMA public TO mxdblr_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO mxdblr_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO mxdblr_user;
 \q
+```
+
+**Then close the cross-database hole.** Postgres grants `CONNECT` on every database
+to `PUBLIC` by default, so as created above `mxdblr_user` can connect to the other
+client's database and read anything not separately restricted. Revoke it:
+
+```sql
+-- Lock the MXDBLR database to its own role
+REVOKE CONNECT ON DATABASE mxdblr FROM PUBLIC;
+GRANT  CONNECT ON DATABASE mxdblr TO mxdblr_user;
+
+-- And keep this role out of every other database on the cluster.
+-- Run once per existing database (list them with \l):
+-- REVOKE CONNECT ON DATABASE <other_db> FROM PUBLIC;
+\q
+```
+
+Verify the isolation actually holds — this should be **denied**:
+
+```bash
+psql "postgresql://mxdblr_user:STRONG_DB_PASSWORD@localhost:5432/postgres" -c '\l'
+# expected: FATAL: permission denied for database "postgres"
 ```
 
 ### 3.3 — Test connection
@@ -214,9 +289,8 @@ sudo systemctl start nginx
 ### 5.1 — Create web root
 
 ```bash
-sudo mkdir -p /var/www/mxdblr
-sudo chown -R deploy:deploy /var/www/mxdblr
-sudo chmod -R 755 /var/www/mxdblr
+sudo chown -R mxdblr:mxdblr /home/mxdblr/app
+sudo chmod 750 /home/mxdblr
 ```
 
 ### 5.2 — Clone from GitHub (on the VPS)
@@ -250,7 +324,7 @@ directly on the server in Step 6, and they survive every later `git pull`.
 ### 5.3 — Expected directory structure
 
 ```
-/var/www/mxdblr/
+/home/mxdblr/app/
 ├── api/
 │   ├── src/
 │   │   ├── prisma/schema.prisma
@@ -283,7 +357,7 @@ openssl rand -base64 32
 ### 6.2 — API environment file
 
 ```bash
-nano /var/www/mxdblr/api/.env
+nano /home/mxdblr/app/api/.env
 ```
 
 ```env
@@ -311,13 +385,13 @@ WHATSAPP_BUSINESS_NUMBER=919XXXXXXXXXX
 ```
 
 ```bash
-chmod 600 /var/www/mxdblr/api/.env
+chmod 600 /home/mxdblr/app/api/.env
 ```
 
 ### 6.3 — Frontend environment file
 
 ```bash
-nano /var/www/mxdblr/web/.env.local
+nano /home/mxdblr/app/web/.env.local
 ```
 
 ```env
@@ -325,7 +399,7 @@ NEXT_PUBLIC_API_URL=https://api.mxdblr.com
 ```
 
 ```bash
-chmod 600 /var/www/mxdblr/web/.env.local
+chmod 600 /home/mxdblr/app/web/.env.local
 ```
 
 ---
@@ -333,7 +407,7 @@ chmod 600 /var/www/mxdblr/web/.env.local
 ## 7. Build and Start the API
 
 ```bash
-cd /var/www/mxdblr/api
+cd /home/mxdblr/app/api
 
 # Install dependencies
 npm install
@@ -365,7 +439,7 @@ curl http://localhost:4000/health
 ## 8. Build and Start the Frontend
 
 ```bash
-cd /var/www/mxdblr/web
+cd /home/mxdblr/app/web
 
 # Install dependencies
 npm install
@@ -393,7 +467,7 @@ pm2 save
 # Generate startup command
 pm2 startup
 # PM2 prints a command — copy it exactly and run it, e.g.:
-# sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u deploy --hp /home/deploy
+# sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u mxdblr --hp /home/mxdblr
 
 # Save again
 pm2 save
@@ -661,7 +735,7 @@ Run entirely on the VPS. Deploy only commits that are green in CI.
 
 ```bash
 # 1. Pull the reviewed commit
-cd /var/www/mxdblr
+cd /home/mxdblr/app
 git pull --ff-only origin main
 git log --oneline -1                 # note this hash — it is your rollback point
 
@@ -689,7 +763,7 @@ curl -fsS -o /dev/null -w "web %{http_code}\n" http://localhost:3000
 **Rollback** — the reason step 1 records the hash:
 
 ```bash
-cd /var/www/mxdblr
+cd /home/mxdblr/app
 git checkout <previous-good-hash>
 cd api && npm ci && npm run build && pm2 restart mxdblr-api
 cd ../web && npm ci && npm run build && pm2 restart mxdblr-web
@@ -733,7 +807,7 @@ sudo tail -f /var/log/postgresql/postgresql-15-main.log
 ### Prisma migration errors
 
 ```bash
-cd /var/www/mxdblr/api
+cd /home/mxdblr/app/api
 npx prisma migrate status --schema=src/prisma/schema.prisma
 npx prisma generate --schema=src/prisma/schema.prisma
 pm2 restart mxdblr-api
@@ -750,7 +824,7 @@ sudo nginx -T | grep ssl_certificate
 ### Environment variable not loading
 
 ```bash
-cd /var/www/mxdblr/api
+cd /home/mxdblr/app/api
 node -e "require('dotenv').config(); console.log(process.env.DATABASE_URL ? 'DB URL OK' : 'MISSING')"
 ```
 
