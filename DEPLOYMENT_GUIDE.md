@@ -6,17 +6,67 @@
 
 ---
 
+## ⚠️ THIS VPS IS SHARED — READ FIRST
+
+`200.141.10.61` (`srv1872938.hstgr.cloud`) already serves **herotvmounting.com** in
+production: nginx 1.24.0 on Ubuntu, with a live Let's Encrypt certificate for
+`herotvmounting.com` and `www.herotvmounting.com`.
+
+MXDBLR is being deployed **alongside** a different client's live site. Every command
+below is scoped to MXDBLR on purpose. The isolation model:
+
+| Layer | Isolation |
+|---|---|
+| nginx | Own file `sites-available/mxdblr.conf`, routed by `server_name`. Never edit the herotvmounting file. |
+| nginx upstreams | Named `mxdblr_api` / `mxdblr_web`. Upstream names are **global** — a duplicate takes both sites down. |
+| PM2 | Apps named `mxdblr-api` / `mxdblr-web`. Capped at 1 API worker so MXDBLR cannot starve the other site. |
+| Postgres | Own role `mxdblr` and database `mxdblr`. Not a superuser. |
+| Files | Everything under `/var/www/mxdblr/`. |
+
+### Commands that are BANNED on this box
+
+These act on everything PM2 or nginx manages and will hit herotvmounting.com:
+
+```
+pm2 restart all      pm2 stop all      pm2 delete all      pm2 kill
+sudo systemctl restart nginx          (use `reload`, after `nginx -t`)
+sudo certbot --nginx                  (without -d, it rewrites other vhosts)
+```
+
+Use the named forms instead — `pm2 restart mxdblr-api`, `certbot --nginx -d mxdblr.com`.
+
+### Before every nginx reload, without exception
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+`nginx -t` validates the **whole** config. If it fails, do not reload — a broken
+reload takes down the other client's site too. `reload` is graceful; `restart` drops
+live connections for every site on the box.
+
+---
+
 ## Pre-Deployment Checklist
 
 Before touching the server:
 
-- [ ] `mxdblr.com` DNS A record → your VPS IP
-- [ ] `www.mxdblr.com` DNS A record → your VPS IP
-- [ ] `api.mxdblr.com` DNS A record → your VPS IP
+- [ ] GoDaddy **Forwarding removed** for `mxdblr.com` — it silently overrides A records
+- [ ] TTL lowered to 600s first, old TTL allowed to expire, *then* records changed
+- [ ] `mxdblr.com` DNS A record → `200.141.10.61` (currently GoDaddy parking)
+- [ ] `www.mxdblr.com` — existing CNAME → `mxdblr.com` is fine, it follows the apex
+- [ ] `api.mxdblr.com` DNS A record → `200.141.10.61` (**does not exist yet**)
 - [ ] DNS propagated — verify at [whatsmydns.net](https://whatsmydns.net)
+- [ ] Ports 3000 and 4000 confirmed FREE on the VPS (`sudo ss -tlnp | grep -E ':(3000|4000)'`)
+- [ ] Existing nginx upstream names checked for collisions
+      (`grep -rh "^upstream" /etc/nginx/sites-enabled/`)
+- [ ] Postgres present, and its major version noted (the app targets 15/16)
 - [ ] Project builds locally without errors (`npm run build` passes in both `api/` and `web/`)
 - [ ] All environment variable values documented and ready
-- [ ] SSH private key available on your local machine
+- [ ] SSH access to the VPS confirmed
+
+> DNS records are managed at **GoDaddy** (`ns47/ns48.domaincontrol.com`), not Hostinger.
+> Certbot cannot issue certificates until the records resolve to this VPS.
 
 ---
 
