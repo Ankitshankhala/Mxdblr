@@ -525,111 +525,80 @@ When you want alerting later, set `SENTRY_DSN` to any Sentry-protocol endpoint
 
 ## 10. Nginx Configuration
 
-### 10.1 — Remove default site
+> **SHARED BOX.** Do NOT run `sudo rm /etc/nginx/sites-enabled/default` here.
+> On a server with one site that is harmless boilerplate; on this one, removing or
+> reassigning the default server changes which vhost catches unmatched hostnames
+> and can break herotvmounting.com. Leave every existing file alone. MXDBLR only
+> ever ADDS a file.
+
+### Why mxdblr.com currently shows the other site
+
+DNS answers "which machine"; nginx answers "which site", by matching the browser's
+`Host` header against `server_name`. With no MXDBLR vhost installed, nothing matches
+`mxdblr.com`, so nginx falls back to the default server — which is
+herotvmounting.com. That is also why you see its certificate. Installing the vhost
+below fixes both symptoms at once.
+
+### 10.1 — Install the bootstrap config (HTTP only)
+
+The full `nginx/mxdblr.conf` in this repo references `/etc/letsencrypt/live/...`
+certificates that do not exist yet. Installing it before Certbot runs makes
+`nginx -t` fail, and you cannot reload — which on this box also blocks the other
+site from reloading. Start HTTP-only instead:
 
 ```bash
-sudo rm /etc/nginx/sites-enabled/default
+cd /home/mxdblr/app
+sudo cp nginx/mxdblr-bootstrap.conf /etc/nginx/sites-available/mxdblr.conf
+sudo ln -s /etc/nginx/sites-available/mxdblr.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-### 10.2 — Frontend site config
+If `nginx -t` reports a duplicate upstream, the other site already uses that name —
+rename ours in the file and retry. **Never reload on a failed test.**
+
+### 10.2 — Verify routing before adding TLS
+
+Both apps must already be running under PM2 for these to return content:
 
 ```bash
-sudo nano /etc/nginx/sites-available/mxdblr.com
+curl -s -o /dev/null -w "web %{http_code}\n" -H "Host: mxdblr.com" http://127.0.0.1
+curl -s -H "Host: api.mxdblr.com" http://127.0.0.1/health
+# expect: {"status":"ok","service":"mxdblr-api",...}
 ```
 
-```nginx
-server {
-    listen 80;
-    listen [::]:80;
-    server_name mxdblr.com www.mxdblr.com;
-
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-
-    location / {
-        proxy_pass         http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade $http_upgrade;
-        proxy_set_header   Connection 'upgrade';
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400;
-    }
-}
-```
-
-### 10.3 — API subdomain config
+And confirm the other site still works — this is the check that catches collateral
+damage early:
 
 ```bash
-sudo nano /etc/nginx/sites-available/api.mxdblr.com
+curl -sk -o /dev/null -w "herotv %{http_code}\n" -H "Host: herotvmounting.com" https://127.0.0.1
 ```
 
-```nginx
-server {
-    listen 80;
-    listen [::]:80;
-    server_name api.mxdblr.com;
+### 10.3 — Issue certificates
 
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-
-    location / {
-        proxy_pass         http://localhost:4000;
-        proxy_http_version 1.1;
-        proxy_set_header   Upgrade $http_upgrade;
-        proxy_set_header   Connection 'upgrade';
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400;
-        client_max_body_size 10M;
-    }
-}
-```
-
-### 10.4 — Enable sites and reload
+Certbot edits `mxdblr.conf` in place, adding the TLS server blocks and the
+HTTP→HTTPS redirect. Always pass `-d`; a bare `certbot --nginx` rewrites every vhost
+on the box, including the other client's.
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/mxdblr.com /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/api.mxdblr.com /etc/nginx/sites-enabled/
-
-# Create certbot webroot
-sudo mkdir -p /var/www/certbot
-
-# Test config — must show "syntax is ok"
-sudo nginx -t
-
-# Reload
-sudo systemctl reload nginx
+sudo certbot --nginx -d mxdblr.com -d www.mxdblr.com
+sudo certbot --nginx -d api.mxdblr.com
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-### 10.5 — Recommended global Nginx settings
+Verify from your own machine, not the server:
 
-Edit `/etc/nginx/nginx.conf` and ensure the `http {}` block contains:
-
-```nginx
-server_tokens off;
-client_max_body_size 10M;
-
-gzip on;
-gzip_vary on;
-gzip_proxied any;
-gzip_comp_level 6;
-gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;
-
-add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+```bash
+curl -sI https://mxdblr.com | head -1
+echo | openssl s_client -connect mxdblr.com:443 -servername mxdblr.com 2>/dev/null | openssl x509 -noout -subject -dates
 ```
 
----
+The subject must read `CN=mxdblr.com`. If it still says `herotvmounting.com`, the
+vhost is not matching — check the `server_name` spelling and that the symlink in
+`sites-enabled/` exists.
+
+`nginx/mxdblr.conf` in the repo documents the end state Certbot produces. You do not
+install it by hand; it is there for reference and review.
+
 
 ## 11. Firewall (UFW)
 
