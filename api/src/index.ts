@@ -53,11 +53,25 @@ if (process.env.NODE_ENV === 'production') {
   if (process.env.ENABLE_OTP_BYPASS === 'true') {
     fatal.push('ENABLE_OTP_BYPASS=true in production would accept 000000 as a valid OTP for any number. Remove it.');
   }
-  if (missing('MSG91_AUTH_KEY')) {
-    fatal.push('MSG91_AUTH_KEY is unset or a placeholder, so OTP delivery silently no-ops and no dealer can sign in.');
-  }
-  if (missing('MSG91_TEMPLATE_ID')) {
-    fatal.push('MSG91_TEMPLATE_ID is unset or a placeholder; the MSG91 v5 OTP endpoint requires it.');
+  // Messaging is a WARNING by design, not a failure. WhatsApp OTP delivery cannot
+  // be approved by Meta until the site is already live, so the first production
+  // deploy necessarily runs without it. Blocking boot here would make the launch
+  // that unlocks approval impossible.
+  //
+  // What this costs is real and must be visible in the logs: sendOtp() no-ops and
+  // returns success, so POST /auth/send-otp answers "OTP sent successfully" while
+  // nothing is delivered. Dealers CANNOT sign in or register on their own. The only
+  // route in is POST /api/admin/dealers/login-code -- an admin mints a code and
+  // relays it by hand. Remove this warning by setting both vars once DLT and Meta
+  // approval clear; the dealer-facing flow does not change.
+  const messaging = ['MSG91_AUTH_KEY', 'MSG91_TEMPLATE_ID'].filter((k) => missing(k));
+  if (messaging.length > 0) {
+    process.stderr.write(
+      `[WARN] ${messaging.join(', ')} unset — OTP delivery is DISABLED.\n` +
+        '       /auth/send-otp reports success but sends nothing. Dealers cannot\n' +
+        '       sign in or self-register. Issue codes from Admin > Dealers >\n' +
+        '       "Issue Login Code" until WhatsApp OTP is approved.\n'
+    );
   }
   if (missing('SETTINGS_ENCRYPTION_KEY')) {
     fatal.push('SETTINGS_ENCRYPTION_KEY is unset; encrypted settings cannot be read or written.');
