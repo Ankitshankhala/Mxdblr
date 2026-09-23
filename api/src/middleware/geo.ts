@@ -45,6 +45,18 @@ function setCachedState(ip: string, state: string | null): void {
 
 export async function geoCheckMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    // Admin/staff authentication is NEVER geo-restricted. This gate expresses the
+    // dealer-facing SERVICE AREA (Karnataka / Tamil Nadu / Andhra Pradesh) — it is
+    // not a statement about who may operate the system. Staff travel, and the
+    // business is run from Rajasthan; locking an administrator out of their own
+    // back office by IP is a support incident, not a security control. Admin
+    // access is protected by credentials, JWT and RBAC, none of which depend on
+    // the caller's state. Dealer OTP routes on this same router stay gated.
+    if (req.path.startsWith('/admin/')) {
+      next();
+      return;
+    }
+
     const ip = extractClientIp(req);
     const state = await getClientState(ip);
     // If state lookup fails (local IP, API timeout) — fail open so legitimate
