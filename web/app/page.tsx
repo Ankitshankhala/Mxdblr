@@ -102,12 +102,18 @@ async function getData() {
     }
     flatten(rawCategories);
 
+    // Only advertise categories a dealer can actually buy from: a "0 products"
+    // tile is a dead end, and taking the first 12 by display order pushed
+    // stocked categories (Speakers, Microphones) off the grid in favour of
+    // empty ones. Falls back to the full list if nothing is stocked yet.
+    const stockedCategories = flatCategories.filter((c) => (c.productCount ?? 0) > 0);
+
     return {
       // Show more categories on the homepage grid (was 8) — competitor
       // benchmarking (Gaffarwala, greatchoice.co.in) showed dense category
       // grids with visible product counts signal catalog depth better than
       // a thin row of a few tiles.
-      categories: flatCategories.slice(0, 12),
+      categories: (stockedCategories.length ? stockedCategories : flatCategories).slice(0, 12),
       bestSellers,
       newArrivals,
       announcements,

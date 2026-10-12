@@ -11,10 +11,11 @@
  * tile signals catalog depth immediately and lets a dealer self-navigate
  * without scrolling through a thin row first.
  */
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { normalizeImageUrl } from '@/lib/config';
-import { Zap, Headphones, Usb, Smartphone, Shield, PlugZap, MonitorSmartphone } from 'lucide-react';
+import { Package } from 'lucide-react';
 
 interface ApiCategory {
   id: string;
@@ -25,16 +26,22 @@ interface ApiCategory {
   productCount?: number;
 }
 
-// Icon palette cycles for categories that have no image
-const ICON_PALETTE = [
-  { Icon: Zap,               color: '#FFF3E8', iconColor: '#F47920' },
-  { Icon: Headphones,        color: '#FCE7E7', iconColor: '#DC2626' },
-  { Icon: Usb,               color: '#EEF0FE', iconColor: '#6366F1' },
-  { Icon: Smartphone,        color: '#E6F3E7', iconColor: '#2E7D32' },
-  { Icon: Shield,            color: '#FEF3D7', iconColor: '#F59E0B' },
-  { Icon: PlugZap,           color: '#F0FDF4', iconColor: '#16A34A' },
-  { Icon: MonitorSmartphone, color: '#EEF0FE', iconColor: '#6366F1' },
-];
+// Admin-uploaded category icons are monochrome line art. They and the fallback
+// for a category with no icon share one neutral tile so the grid reads as a set.
+// (The fallback used to cycle through unrelated icons by position, which put a
+// shield on Pen Drives and a phone on Earphones.)
+const ICON_TILE: CSSProperties = {
+  position: 'relative',
+  width: 48,
+  height: 48,
+  background: '#F5F3F0',
+  borderRadius: 12,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  overflow: 'hidden',
+  marginBottom: 10,
+};
 
 export default function CategoryCardList({ categories }: { categories: ApiCategory[] }) {
   if (categories.length === 0) {
@@ -49,7 +56,7 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
       >
         {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="card" style={{ padding: '16px 14px' }}>
-            <div style={{ width: 44, height: 44, background: '#F0EDEA', borderRadius: 10, marginBottom: 10 }} />
+            <div style={{ width: 48, height: 48, background: '#F0EDEA', borderRadius: 12, marginBottom: 10 }} />
             <div style={{ height: 12, background: '#F0EDEA', borderRadius: 4, marginBottom: 6, width: '80%' }} />
             <div style={{ height: 10, background: '#F5F3F0', borderRadius: 4, width: '60%' }} />
           </div>
@@ -66,9 +73,7 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
         gap: 12,
       }}
     >
-      {categories.map((cat, idx) => {
-        const palette = ICON_PALETTE[idx % ICON_PALETTE.length];
-        const { Icon, color, iconColor } = palette;
+      {categories.map((cat) => {
         return (
           <Link key={cat.id} href={`/catalog?category=${cat.slug}`} style={{ textDecoration: 'none' }}>
             <div
@@ -77,21 +82,21 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
               onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = '#F47920')}
               onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = '#E8E4DE')}
             >
-              {cat.image ? (
-                <div style={{ position: 'relative', width: 44, height: 44, marginBottom: 10 }}>
+              <div style={ICON_TILE}>
+                {cat.image ? (
                   <Image
                     src={normalizeImageUrl(cat.image)}
                     alt={cat.name}
                     fill
-                    style={{ objectFit: 'cover', borderRadius: 10 }}
-                    sizes="44px"
+                    // multiply blends icons uploaded on a white background into
+                    // the tile; transparent line art is unaffected.
+                    style={{ objectFit: 'contain', padding: 7, boxSizing: 'border-box', mixBlendMode: 'multiply' }}
+                    sizes="48px"
                   />
-                </div>
-              ) : (
-                <div style={{ width: 44, height: 44, background: color, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-                  <Icon size={20} color={iconColor} />
-                </div>
-              )}
+                ) : (
+                  <Package size={22} color="#A8A39A" aria-hidden />
+                )}
+              </div>
               <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{cat.name}</div>
               {/* Product count always shown, bold + brand color — the count
                   itself is the trust/depth signal, not just supplementary text. */}
@@ -99,7 +104,18 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
                 {cat.productCount ?? 0} product{(cat.productCount ?? 0) !== 1 ? 's' : ''}
               </div>
               {cat.description && (
-                <div style={{ fontSize: 10, color: '#A8A39A', marginTop: 2, lineHeight: 1.4 }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: '#A8A39A',
+                    marginTop: 2,
+                    lineHeight: 1.4,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
                   {cat.description}
                 </div>
               )}
