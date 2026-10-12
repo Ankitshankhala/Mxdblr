@@ -25,8 +25,8 @@ export const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:
  * the API origin. Cloudinary/remote URLs (no /uploads segment) pass through
  * untouched, so this is safe in production. Mirrors HeroBanner's inline normalizer.
  */
-export function normalizeImageUrl(url: string): string {
-  if (!url) return url;
+export function normalizeImageUrl(url: string | null | undefined): string {
+  if (!url) return "";
   if (/^https?:\/\/[^/]+\/uploads\//.test(url)) {
     return url.replace(/^https?:\/\/[^/]+(\/uploads\/)/, `${API_ORIGIN}$1`);
   }

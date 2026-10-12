@@ -13,6 +13,7 @@
  */
 import Link from 'next/link';
 import Image from 'next/image';
+import { normalizeImageUrl } from '@/lib/config';
 import { Zap, Headphones, Usb, Smartphone, Shield, PlugZap, MonitorSmartphone } from 'lucide-react';
 
 interface ApiCategory {
@@ -79,7 +80,7 @@ export default function CategoryCardList({ categories }: { categories: ApiCatego
               {cat.image ? (
                 <div style={{ position: 'relative', width: 44, height: 44, marginBottom: 10 }}>
                   <Image
-                    src={cat.image}
+                    src={normalizeImageUrl(cat.image)}
                     alt={cat.name}
                     fill
                     style={{ objectFit: 'cover', borderRadius: 10 }}

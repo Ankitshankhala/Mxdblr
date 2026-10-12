@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   // Dev-only setting; has no effect on production builds.
   allowedDevOrigins: ["192.168.1.6"],
   images: {
+    // Next 16 refuses to optimize images whose host resolves to a private/loopback
+    // IP, which silently breaks the localhost:4000 and LAN-IP patterns below (every
+    // product image falls back to the placeholder). Allowed in development only;
+    // production fetches api.mxdblr.com over its public IP and keeps the protection.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
     remotePatterns: [
       {
         protocol: "https",

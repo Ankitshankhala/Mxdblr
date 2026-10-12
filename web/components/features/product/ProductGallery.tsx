@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import Image from 'next/image';
+import { normalizeImageUrl } from '@/lib/config';
 
 interface Props {
   images: string[];
@@ -13,8 +14,11 @@ interface Props {
   brand: string;
 }
 
-export default function ProductGallery({ images, productName, brand }: Props) {
+export default function ProductGallery({ images: rawImages, productName, brand }: Props) {
   const [selected, setSelected] = useState(0);
+  // Stored paths are relative (/uploads/...) — resolve them against the API origin,
+  // as ProductCard does, or next/image asks the web server for a file it doesn't have.
+  const images = rawImages.map(normalizeImageUrl);
 
   const hasImages = images.length > 0;
   // Guard against an out-of-range index (e.g. if images change).

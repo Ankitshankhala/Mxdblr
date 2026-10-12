@@ -18,6 +18,7 @@ import StockBadge from '@/components/ui/StockBadge';
 import QtyStepper from '@/components/ui/QtyStepper';
 import { useCart } from '@/hooks/useCart';
 import { notificationsApi } from '@/lib/api';
+import { normalizeImageUrl } from '@/lib/config';
 import type { CartItem } from '@/types';
 import { whatsappLink } from '@/lib/config';
 
@@ -82,7 +83,7 @@ function CartItemRow({ item, onRemove, onUpdateQty }: CartItemRowProps) {
       >
         {item.product.images?.[0] ? (
           <Image
-            src={item.product.images[0]}
+            src={normalizeImageUrl(item.product.images[0])}
             alt={item.product.name}
             width={72}
             height={72}

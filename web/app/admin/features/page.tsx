@@ -17,6 +17,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";
+import { normalizeImageUrl } from "@/lib/config";
 
 type FeatureCategory = "CHARGING" | "WIRELESS" | "CABLE" | "DATA" | "PROTECTION" | "CERTIFICATION";
 type DisplayMode = "ICON" | "IMAGE" | "BOTH";
@@ -107,7 +108,7 @@ function AssetThumb({ url, size = 40, rounded = 7 }: { url: string; size?: numbe
     <span style={{ width: size, height: size, borderRadius: rounded, border: "1px solid #E8E4DE", background: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
       {url && !broken ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" style={{ objectFit: "contain", padding: 3, width: "100%", height: "100%" }} onError={() => setBroken(true)} />
+        <img src={normalizeImageUrl(url)} alt="" style={{ objectFit: "contain", padding: 3, width: "100%", height: "100%" }} onError={() => setBroken(true)} />
       ) : (
         <span style={{ fontSize: 10, color: "#A8A39A" }}>—</span>
       )}

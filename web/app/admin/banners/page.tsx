@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";
+import { normalizeImageUrl } from "@/lib/config";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -106,7 +107,7 @@ function ImageUploadSlot({
       {value ? (
         <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt={label} style={{ width: "100%", maxHeight: 100, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE", display: "block" }} />
+          <img src={normalizeImageUrl(value)} alt={label} style={{ width: "100%", maxHeight: 100, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE", display: "block" }} />
           <button onClick={() => onChange("")} style={{ position: "absolute", top: 5, right: 5, width: 22, height: 22, borderRadius: "50%", background: "#DC2626", border: "2px solid #fff", color: "#fff", cursor: "pointer", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
           <button onClick={() => ref.current?.click()} style={{ position: "absolute", bottom: 5, right: 5, padding: "3px 8px", borderRadius: 5, background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 10, fontWeight: 600, border: "none", cursor: "pointer" }}>Change</button>
         </div>
@@ -343,7 +344,7 @@ function BannersContent() {
               >
                 {b.image && (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={b.image} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={normalizeImageUrl(b.image)} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
                 )}
                 {b.image && (
                   <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, ${b.bgColor}cc 0%, transparent 100%)` }} />
@@ -353,7 +354,7 @@ function BannersContent() {
                   <div style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: 3 }}>
                     {[b.productImage1, b.productImage2, b.productImage3].filter(Boolean).map((img, i) => (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img key={i} src={img} alt="" style={{ width: 32, height: 32, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.1)" }} />
+                      <img key={i} src={normalizeImageUrl(img)} alt="" style={{ width: 32, height: 32, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.1)" }} />
                     ))}
                   </div>
                 )}
@@ -484,7 +485,7 @@ function BannersContent() {
               >
                 {form.image && (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={form.image} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={normalizeImageUrl(form.image)} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
                 )}
                 {/* Gradient so text stays readable over the background image */}
                 {form.image && (
@@ -502,14 +503,14 @@ function BannersContent() {
                   <div style={{ position: "relative", zIndex: 1, flexShrink: 0, display: "flex", flexDirection: "column", gap: 4, justifyContent: "center", padding: "12px 16px 12px 8px" }}>
                     {[form.productImage1, form.productImage2, form.productImage3].filter(Boolean).map((img, i) => (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img key={i} src={img} alt="" style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 6, background: "rgba(255,255,255,0.1)" }} />
+                      <img key={i} src={normalizeImageUrl(img)} alt="" style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 6, background: "rgba(255,255,255,0.1)" }} />
                     ))}
                   </div>
                 )}
                 {form.bannerType === "BRAND_PROMO" && form.logoImage && (
                   <div style={{ position: "relative", zIndex: 1, flexShrink: 0, display: "flex", alignItems: "center", padding: "12px 20px 12px 8px" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={form.logoImage} alt="Logo" style={{ width: 70, height: 70, objectFit: "contain" }} />
+                    <img src={normalizeImageUrl(form.logoImage)} alt="Logo" style={{ width: 70, height: 70, objectFit: "contain" }} />
                   </div>
                 )}
               </div>
@@ -563,7 +564,7 @@ function BannersContent() {
                   {form.image ? (
                     <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={form.image} alt="Banner" style={{ width: "100%", maxHeight: 100, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE", display: "block" }} />
+                      <img src={normalizeImageUrl(form.image)} alt="Banner" style={{ width: "100%", maxHeight: 100, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE", display: "block" }} />
                       <button onClick={() => setForm((f) => ({ ...f, image: "" }))} style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", background: "#DC2626", border: "2px solid #fff", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
                       <button onClick={() => fileInputRef.current?.click()} style={{ position: "absolute", bottom: 6, right: 6, padding: "4px 10px", borderRadius: 6, background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer" }}>Change</button>
                     </div>

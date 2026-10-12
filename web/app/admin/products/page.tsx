@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/admin/Toast";
+import { normalizeImageUrl } from "@/lib/config";
 
 type Attribute = { key: string; value: string };
 
@@ -737,7 +738,7 @@ function ProductsContent() {
                     <div style={{ width: 40, height: 40, borderRadius: 6, background: "#F8F6F2", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {p.images[0] ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.images[0]} alt={p.name} style={{ width: 40, height: 40, objectFit: "cover" }}
+                        <img src={normalizeImageUrl(p.images[0])} alt={p.name} style={{ width: 40, height: 40, objectFit: "cover" }}
                           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                       ) : (
                         <svg width="16" height="16" fill="none" stroke="#6E6257" strokeWidth="2" viewBox="0 0 24 24">
@@ -1161,7 +1162,7 @@ function ProductsContent() {
                       {form.images.map((src, idx) => (
                         <div key={idx} style={{ position: "relative", width: 80, height: 80 }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={src} alt={`Product image ${idx + 1}`} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE" }}
+                          <img src={normalizeImageUrl(src)} alt={`Product image ${idx + 1}`} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE" }}
                             onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0.3"; }} />
                           <button onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
                             aria-label={`Remove image ${idx + 1}`}
@@ -1237,7 +1238,7 @@ function ProductsContent() {
                                 >
                                   {f.logo && (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={f.logo} alt="" width={16} height={16} style={{ objectFit: "contain" }} />
+                                    <img src={normalizeImageUrl(f.logo)} alt="" width={16} height={16} style={{ objectFit: "contain" }} />
                                   )}
                                   {f.name}
                                 </button>
@@ -1339,7 +1340,7 @@ function ProductsContent() {
                               >
                                 {f.logo && (
                                   // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={f.logo} alt="" width={16} height={16} style={{ objectFit: "contain" }} />
+                                  <img src={normalizeImageUrl(f.logo)} alt="" width={16} height={16} style={{ objectFit: "contain" }} />
                                 )}
                                 {f.name}
                               </button>

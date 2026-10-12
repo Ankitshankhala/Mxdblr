@@ -15,6 +15,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Play, X, ChevronLeft, ChevronRight, Images } from 'lucide-react';
+import { normalizeImageUrl } from '@/lib/config';
 
 export type EventVideoSource = 'youtube' | 'vimeo' | 'upload' | 'url';
 
@@ -70,12 +71,13 @@ function vimeoId(url: string): string | null {
  * Only http(s) URLs are safe to hand to an <img>/<video> src. Rejects
  * javascript:, data:, and any other scheme so a malformed/hostile stored URL
  * can never become an active resource. Returns '' for anything not allowed.
+ * Relative /uploads paths are resolved against the API origin first.
  */
 function safeMediaUrl(url: string): string {
   if (!url) return '';
   try {
     const u = new URL(url, 'https://x.invalid');
-    return u.protocol === 'http:' || u.protocol === 'https:' ? url : '';
+    return u.protocol === 'http:' || u.protocol === 'https:' ? normalizeImageUrl(url) : '';
   } catch {
     return '';
   }

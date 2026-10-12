@@ -18,6 +18,7 @@ import BackButtonClient from '@/components/features/product/BackButton';
 import ProductGallery from '@/components/features/product/ProductGallery';
 import SupportedTechnologies from '@/components/products/SupportedTechnologies';
 import type { Product } from '@/types';
+import { normalizeImageUrl } from '@/lib/config';
 
 // Server-side fetch: prefer the internal Docker service URL when set (the
 // browser-facing NEXT_PUBLIC_API_URL may be unreachable from the container).
@@ -51,7 +52,9 @@ export async function generateMetadata({
     description: `Buy ${product.name} by ${product.brand} wholesale. SKU: ${sku}. MOQ: ${product.moq} units.`,
     openGraph: {
       title: product.name,
-      images: product.images?.[0] ? [{ url: product.images[0] }] : [],
+      // Absolute API URL: a relative /uploads path would resolve against the web
+      // host, which doesn't serve uploads, leaving WhatsApp/social previews blank.
+      images: product.images?.[0] ? [{ url: normalizeImageUrl(product.images[0]) }] : [],
     },
   };
 }

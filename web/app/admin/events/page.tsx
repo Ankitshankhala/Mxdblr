@@ -10,6 +10,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";
+import { normalizeImageUrl } from "@/lib/config";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -118,7 +119,7 @@ function VideoPlayer({ video }: { video: EventVideo }) {
   }
   if (video.url) {
     return (
-      <video src={video.url} poster={video.thumbnailUrl || undefined} controls playsInline style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 8, background: "#000", display: "block" }} />
+      <video src={normalizeImageUrl(video.url)} poster={normalizeImageUrl(video.thumbnailUrl) || undefined} controls playsInline style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 8, background: "#000", display: "block" }} />
     );
   }
   return null;
@@ -387,7 +388,7 @@ function EventsContent() {
                 <div style={{ width: 160, minHeight: 104, background: "linear-gradient(135deg,#1F1813,#352B22)", flexShrink: 0, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {thumb ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
+                    <img src={normalizeImageUrl(thumb)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
                   ) : (
                     <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{CATEGORY_LABELS[ev.category]}</span>
                   )}
@@ -481,7 +482,7 @@ function EventsContent() {
                     <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 10", background: "linear-gradient(135deg,#1F1813,#352B22)" }}>
                       {(form.coverImage || form.images[0]) ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={form.coverImage || form.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={normalizeImageUrl(form.coverImage || form.images[0])} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       ) : (
                         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.5)", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }}>{CATEGORY_LABELS[form.category]}</div>
                       )}
@@ -500,7 +501,7 @@ function EventsContent() {
                     <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
                       {form.images.map((img, i) => (
                         /* eslint-disable-next-line @next/next/no-img-element */
-                        <img key={i} src={img} alt="" style={{ width: 64, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid #E8E4DE" }} />
+                        <img key={i} src={normalizeImageUrl(img)} alt="" style={{ width: 64, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid #E8E4DE" }} />
                       ))}
                     </div>
                   )}
@@ -553,7 +554,7 @@ function EventsContent() {
                     {form.coverImage ? (
                       <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={form.coverImage} alt="Cover" style={{ width: "100%", maxHeight: 120, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE", display: "block" }} />
+                        <img src={normalizeImageUrl(form.coverImage)} alt="Cover" style={{ width: "100%", maxHeight: 120, objectFit: "cover", borderRadius: 8, border: "1px solid #E8E4DE", display: "block" }} />
                         <button onClick={() => setForm((f) => ({ ...f, coverImage: "" }))} style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", background: "#DC2626", border: "2px solid #fff", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>×</button>
                       </div>
                     ) : (
@@ -572,7 +573,7 @@ function EventsContent() {
                       {form.images.map((img, i) => (
                         <div key={i} style={{ position: "relative", width: 76, height: 56 }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 6, border: "1px solid #E8E4DE" }} />
+                          <img src={normalizeImageUrl(img)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 6, border: "1px solid #E8E4DE" }} />
                           <button onClick={() => removeImage(i)} style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", background: "#DC2626", border: "2px solid #fff", color: "#fff", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>×</button>
                         </div>
                       ))}
@@ -592,7 +593,7 @@ function EventsContent() {
                             <div style={{ width: 56, height: 36, borderRadius: 6, background: "#1F1813", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                               {thumb ? (
                                 /* eslint-disable-next-line @next/next/no-img-element */
-                                <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                <img src={normalizeImageUrl(thumb)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                               ) : (
                                 <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>▶</span>
                               )}

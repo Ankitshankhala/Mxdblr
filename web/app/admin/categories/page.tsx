@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useToast } from "@/components/admin/Toast";
+import { normalizeImageUrl } from "@/lib/config";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -98,7 +99,7 @@ function ImageUpload({ value, onChange, label, hint, maxH = 120 }: {
       {value ? (
         <div style={{ position: "relative" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="Preview" style={{ width: "100%", maxHeight: maxH, objectFit: "contain", objectPosition: "center", borderRadius: 8, border: "1px solid #E8E4DE", display: "block", background: "#F5F3F0" }} />
+          <img src={normalizeImageUrl(value)} alt="Preview" style={{ width: "100%", maxHeight: maxH, objectFit: "contain", objectPosition: "center", borderRadius: 8, border: "1px solid #E8E4DE", display: "block", background: "#F5F3F0" }} />
           <button onClick={() => onChange("")} style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: "50%", background: "#DC2626", border: "2px solid #fff", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
           <button onClick={() => ref.current?.click()} style={{ position: "absolute", bottom: 6, right: 6, padding: "3px 8px", borderRadius: 5, background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: 10, border: "none", cursor: "pointer" }}>Change</button>
         </div>
@@ -403,7 +404,7 @@ function CategoryDetail({ category, categories, onClose, onRefresh }: {
         <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
           {category.image && (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={category.image} alt={category.name} style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "1px solid #E8E4DE" }} />
+            <img src={normalizeImageUrl(category.image)} alt={category.name} style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "1px solid #E8E4DE" }} />
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 800, fontSize: 16, color: "#1F1813" }}>{category.name}</div>
@@ -497,7 +498,7 @@ function CategoryDetail({ category, categories, onClose, onRefresh }: {
                   <div key={p.id} style={{ display: "grid", gridTemplateColumns: "32px 44px 1fr 90px 90px 90px 80px", alignItems: "center", padding: "10px 12px", borderBottom: idx < filtered.length - 1 ? "1px solid #F0EDEA" : "none", background: selectedProducts.has(p.id) ? "#FFF8F0" : "#fff" }}>
                     <input type="checkbox" checked={selectedProducts.has(p.id)} onChange={() => toggleProduct(p.id)} style={{ cursor: "pointer" }} />
                     <div style={{ width: 36, height: 36, borderRadius: 6, background: "#F5F3F0", overflow: "hidden", border: "1px solid #E8E4DE" }}>
-                      {imgs[0] && /* eslint-disable-next-line @next/next/no-img-element */ <img src={imgs[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                      {imgs[0] && /* eslint-disable-next-line @next/next/no-img-element */ <img src={normalizeImageUrl(imgs[0])} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#1F1813", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
@@ -699,7 +700,7 @@ function CategoriesContent() {
                   {cat.image ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
-                      src={cat.image}
+                      src={normalizeImageUrl(cat.image)}
                       alt={cat.name}
                       style={{
                         width: "100%",

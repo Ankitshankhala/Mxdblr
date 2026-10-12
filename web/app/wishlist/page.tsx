@@ -14,6 +14,7 @@ import BrandChip from '@/components/ui/BrandChip';
 import StockBadge from '@/components/ui/StockBadge';
 import SkuLabel from '@/components/ui/SkuLabel';
 import { useWishlist } from '@/hooks/useWishlist';
+import { normalizeImageUrl } from '@/lib/config';
 import type { Product } from '@/types';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -145,7 +146,7 @@ export default function WishlistPage() {
                   >
                     {product.images?.[0] ? (
                       <Image
-                        src={product.images[0]}
+                        src={normalizeImageUrl(product.images[0])}
                         alt={product.name}
                         fill
                         style={{ objectFit: 'cover' }}
