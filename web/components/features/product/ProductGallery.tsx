@@ -45,7 +45,10 @@ export default function ProductGallery({ images: rawImages, productName, brand }
             src={mainSrc}
             alt={productName}
             fill
-            style={{ objectFit: 'cover' }}
+            // contain, not cover: product posters are portrait (about 1:1.6) and
+            // cover would crop away the model code at the top and the specs at
+            // the bottom. Square product photos render the same either way.
+            style={{ objectFit: 'contain' }}
             priority
             sizes="(max-width: 768px) 100vw, 50vw"
           />

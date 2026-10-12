@@ -105,8 +105,12 @@ async function getData() {
     // Only advertise categories a dealer can actually buy from: a "0 products"
     // tile is a dead end, and taking the first 12 by display order pushed
     // stocked categories (Speakers, Microphones) off the grid in favour of
-    // empty ones. Falls back to the full list if nothing is stocked yet.
-    const stockedCategories = flatCategories.filter((c) => (c.productCount ?? 0) > 0);
+    // empty ones. Deepest categories first, so a 1-product category never
+    // displaces a 19-product one; the sort is stable, so ties keep the admin's
+    // display order. Falls back to the full list if nothing is stocked yet.
+    const stockedCategories = flatCategories
+      .filter((c) => (c.productCount ?? 0) > 0)
+      .sort((a, b) => (b.productCount ?? 0) - (a.productCount ?? 0));
 
     return {
       // Show more categories on the homepage grid (was 8) — competitor
