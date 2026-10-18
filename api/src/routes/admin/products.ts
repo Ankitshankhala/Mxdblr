@@ -24,6 +24,7 @@ import { z } from 'zod';
 import { requireAdminAuth } from '../../middleware/auth';
 import { requireLoadedPermission } from '../../middleware/rbac';
 import { PRICE_FIELDS, priceInput } from '../../lib/pricing';
+import { getLowStockThreshold, resolveStock, stockStatusFor } from '../../lib/stock';
 import prisma from '../../lib/prisma';
 
 // ── CSV helpers (for /csv-import) ─────────────────────────────────────────────
@@ -101,20 +102,26 @@ const imageRef = z
     'Each image must be an http(s) URL or an /uploads/ path',
   );
 
-const createProductSchema = z.object({
+// Field rules shared by create and update. Defaults live on the create schema
+// only: zod applies .default() even inside .partial(), so an update that left a
+// field out used to reset it (images, attributes and features wiped, stock back
+// to IN_STOCK / 0). On update, a missing field now means "leave unchanged".
+const productFields = z.object({
   name: z.string().min(2).max(255),
   brand: z.string().min(1).max(100),
   sku: z.string().min(2).max(50),
   description: z.string().optional(),
-  moq: z.number().int().positive().default(1),
-  stockStatus: z.nativeEnum(StockStatus).default('IN_STOCK'),
-  stockQty: z.number().int().min(0).default(0),
+  moq: z.number().int().positive(),
+  // With a quantity the status is worked out from it (lib/stock.ts); null =
+  // not counted yet, and the status is then set by hand.
+  stockStatus: z.nativeEnum(StockStatus),
+  stockQty: z.number().int().min(0).max(10_000_000).nullable(),
   // Normalize: accept array OR comma-separated string, always store as array.
   // Each entry is validated to prevent injection of arbitrary strings.
   images: z.union([
     z.array(imageRef),
     z.string().transform((s) => s ? s.split(',').map((u) => u.trim()).filter(Boolean) : []),
-  ]).default([]),
+  ]),
   categoryId: z.string().optional(),
   active: z.boolean().optional(),
   isNewArrival: z.boolean().optional(),
@@ -129,15 +136,25 @@ const createProductSchema = z.object({
       z.object({ attributeTypeId: z.string(), value: z.string() }),
       z.object({ name: z.string().min(1), value: z.string() }),
     ])
-  ).default([]),
-  compatibilityTags: z.array(z.string()).default([]),
+  ),
+  compatibilityTags: z.array(z.string()),
   // Supported technologies, referenced by ProductFeature.slug. Unknown slugs are
   // ignored (not created) — features are managed via /api/admin/features.
-  featureSlugs: z.array(z.string()).default([]),
+  featureSlugs: z.array(z.string()),
   // Compatible handset brands (Brand ids from the Brands list). Omit to leave
   // them unchanged; unknown ids are ignored. fitsAllBrands = universal.
   fitsAllBrands: z.boolean().optional(),
   compatibleBrandIds: z.array(z.string().min(1)).max(200).optional(),
+});
+
+const createProductSchema = productFields.extend({
+  moq: productFields.shape.moq.default(1),
+  stockStatus: productFields.shape.stockStatus.default('IN_STOCK'),
+  stockQty: productFields.shape.stockQty.optional(), // omitted = not counted
+  images: productFields.shape.images.default([]),
+  attributes: productFields.shape.attributes.default([]),
+  compatibilityTags: productFields.shape.compatibilityTags.default([]),
+  featureSlugs: productFields.shape.featureSlugs.default([]),
 });
 
 // Compatible brands as returned to the admin UI, in Brands-list order.
@@ -159,7 +176,7 @@ function compatibleWithFilter(value: string): Prisma.ProductWhereInput {
   return { OR: [{ fitsAllBrands: true }, { compatibleBrands: { some: { slug: value } } }] };
 }
 
-const updateProductSchema = createProductSchema.partial();
+const updateProductSchema = productFields.partial();
 
 // Resolve feature slugs → ordered ProductFeatureLink create rows. Preserves the
 // admin-supplied order (drives which icons surface first on the max-4 card) and
@@ -230,6 +247,7 @@ router.post('/csv-import', requireLoadedPermission('MANAGE_PRODUCTS'), express.j
   }
 
   const catIdCache: Record<string, string> = {};
+  const lowStockAt = await getLowStockThreshold();
   const results = { imported: 0, updated: 0, skipped: 0, errors: [] as string[] };
 
   for (const row of rows) {
@@ -273,7 +291,7 @@ router.post('/csv-import', requireLoadedPermission('MANAGE_PRODUCTS'), express.j
             sku,
             description,
             moq: isNaN(moq) ? 10 : moq,
-            stockStatus: 'IN_STOCK',
+            stockStatus: stockStatusFor(100, lowStockAt),
             stockQty: 100,
             images,
             ...(catId && { categoryId: catId }),
@@ -410,11 +428,15 @@ const SORT_MAP: Record<string, Prisma.ProductOrderByWithRelationInput> = {
 // GET /api/admin/products/stock-summary
 router.get('/stock-summary', requireAdminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
-    const summary = await prisma.product.groupBy({
-      by: ['stockStatus'],
-      _count: { stockStatus: true },
-    });
-    res.json({ success: true, data: summary });
+    const [summary, notCounted] = await Promise.all([
+      prisma.product.groupBy({
+        by: ['stockStatus'],
+        _count: { stockStatus: true },
+      }),
+      // Products whose quantity was never entered: their status is hand-set.
+      prisma.product.count({ where: { stockQty: null } }),
+    ]);
+    res.json({ success: true, data: summary, notCounted });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch stock summary' });
   }
@@ -440,11 +462,13 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     // AND, because `search` already uses the top-level OR.
     if (compatibleWith) where.AND = [compatibleWithFilter(String(compatibleWith))];
     if (category) where.category = { slug: String(category) };
-    if (stockStatus) where.stockStatus = String(stockStatus) as StockStatus;
+    // NOT_COUNTED = no quantity entered yet (not a real status).
+    if (stockStatus === 'NOT_COUNTED') where.stockQty = null;
+    else if (stockStatus) where.stockStatus = String(stockStatus) as StockStatus;
 
     const orderBy = (SORT_MAP[String(sortBy)] ?? { createdAt: 'desc' }) as Prisma.ProductOrderByWithRelationInput;
 
-    const [products, total] = await Promise.all([
+    const [products, total, lowStockThreshold] = await Promise.all([
       prisma.product.findMany({
         where,
         skip,
@@ -462,6 +486,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         },
       }),
       prisma.product.count({ where }),
+      getLowStockThreshold(),
     ]);
 
     // Standard envelope: { success, data, pagination }. (Was previously a flat
@@ -475,6 +500,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         total,
         pages: Math.ceil(total / limitNum),
       },
+      // Lets the product form preview the status a quantity will give.
+      lowStockThreshold,
     });
   } catch (e) {
     res.status(500).json({ success: false, error: 'Failed to fetch products' });
@@ -491,6 +518,11 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
 
   const { attributes, compatibilityTags, featureSlugs, images, compatibleBrandIds, ...productData } = parse.data;
   if (rejectsPriceEdit(req, res, productData)) return;
+  const stock = resolveStock(productData, undefined, await getLowStockThreshold());
+  if (!stock.ok) {
+    res.status(400).json({ success: false, message: stock.message });
+    return;
+  }
 
   const existing = await prisma.product.findUnique({ where: { sku: productData.sku } });
   if (existing) {
@@ -511,6 +543,7 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
   const product = await prisma.product.create({
     data: {
       ...productData,
+      ...stock.data,
       images,
       attributes: { create: resolvedAttrs },
       compatibilityTags: { create: compatibilityTags.map((tag) => ({ tag })) },
@@ -540,6 +573,17 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
 
   const { attributes, compatibilityTags, featureSlugs, images, compatibleBrandIds, ...productData } = parse.data;
   if (rejectsPriceEdit(req, res, productData)) return;
+
+  const current = await prisma.product.findUnique({ where: { id }, select: { stockQty: true } });
+  if (!current) {
+    res.status(404).json({ success: false, message: 'Product not found' });
+    return;
+  }
+  const stock = resolveStock(productData, current.stockQty, await getLowStockThreshold());
+  if (!stock.ok) {
+    res.status(400).json({ success: false, message: stock.message });
+    return;
+  }
   const brandLinks = compatibleBrandIds !== undefined ? await existingBrandIds(compatibleBrandIds) : undefined;
 
   const resolvedAttrs = attributes !== undefined
@@ -558,6 +602,7 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
       where: { id },
       data: {
         ...productData,
+        ...stock.data,
         ...(images !== undefined && { images }),
         ...(resolvedAttrs !== undefined && {
           attributes: {
@@ -723,10 +768,14 @@ router.patch('/:id/active', requireLoadedPermission('MANAGE_PRODUCTS'), async (r
   }
 });
 
-const stockUpdateSchema = z.object({
-  stockStatus: z.nativeEnum(StockStatus),
-  stockQty: z.number().int().min(0).optional(),
-});
+// A quantity sets the status (lib/stock.ts); a status alone is only accepted
+// while the product's stock isn't counted; null clears the count.
+const stockUpdateSchema = z
+  .object({
+    stockStatus: z.nativeEnum(StockStatus).optional(),
+    stockQty: productFields.shape.stockQty.optional(),
+  })
+  .refine((d) => d.stockStatus !== undefined || d.stockQty !== undefined, 'Send stockQty and/or stockStatus');
 
 async function handleStockUpdate(req: Request, res: Response): Promise<void> {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -737,12 +786,21 @@ async function handleStockUpdate(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const { stockStatus, stockQty } = parse.data;
+  const current = await prisma.product.findUnique({ where: { id }, select: { stockQty: true } });
+  if (!current) {
+    res.status(404).json({ success: false, message: 'Product not found' });
+    return;
+  }
+  const stock = resolveStock(parse.data, current.stockQty, await getLowStockThreshold());
+  if (!stock.ok) {
+    res.status(400).json({ success: false, message: stock.message });
+    return;
+  }
 
   try {
     const product = await prisma.product.update({
       where: { id },
-      data: { stockStatus, ...(stockQty !== undefined && { stockQty }) },
+      data: stock.data,
     });
 
     res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>, req) });

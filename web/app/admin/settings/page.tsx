@@ -31,6 +31,10 @@ function SettingsContent() {
   const [showCloudKey, setShowCloudKey] = useState(false);
   const [showCloudSecret, setShowCloudSecret] = useState(false);
 
+  // Saved on its own (PUT /admin/settings/stock): it re-derives product statuses.
+  const [lowStockThreshold, setLowStockThreshold] = useState("10");
+  const [savingStock, setSavingStock] = useState(false);
+
   const [passwords, setPasswords] = useState({ current: "", newPass: "", confirm: "" });
   const [savingSettings, setSavingSettings] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -51,6 +55,7 @@ function SettingsContent() {
           cloudinaryApiKey: s.cloudinaryApiKey ?? "",
           cloudinaryApiSecret: s.cloudinaryApiSecret ?? "",
         });
+        if (typeof s.lowStockThreshold === "number") setLowStockThreshold(String(s.lowStockThreshold));
       } catch {
         showToast("Failed to load settings", "error");
       } finally {
@@ -76,6 +81,29 @@ function SettingsContent() {
       showToast(err instanceof Error ? err.message : "Failed to save settings", "error");
     } finally {
       setSavingSettings(false);
+    }
+  }
+
+  async function handleSaveStock() {
+    const value = Number(lowStockThreshold);
+    if (lowStockThreshold.trim() === "" || !Number.isInteger(value) || value < 0) {
+      showToast("Enter a whole number of pieces, 0 or more", "error");
+      return;
+    }
+    setSavingStock(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/settings/stock`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeader() },
+        body: JSON.stringify({ lowStockThreshold: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to save");
+      showToast(`Low stock is now ${value} or fewer pieces`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to save", "error");
+    } finally {
+      setSavingStock(false);
     }
   }
 
@@ -148,6 +176,37 @@ function SettingsContent() {
 
   return (
     <div style={{ maxWidth: 680 }}>
+      {/* Stock */}
+      <div style={sectionStyle}>
+        <div style={{ padding: "16px 24px", borderBottom: "1px solid #E8E4DE" }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>Stock</div>
+          <div style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>
+            A product&apos;s stock status is worked out from its quantity: 0 is Out of Stock.
+          </div>
+        </div>
+        <div style={{ padding: "20px 24px", display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 220px" }}>
+            <label style={labelStyle} htmlFor="low-stock">Low Stock at or below (pieces)</label>
+            <input
+              id="low-stock"
+              type="number"
+              min={0}
+              value={lowStockThreshold}
+              onChange={(e) => setLowStockThreshold(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+          <button
+            onClick={handleSaveStock}
+            disabled={savingStock}
+            className="btn-orange"
+            style={{ padding: "10px 22px", fontSize: 13, opacity: savingStock ? 0.6 : 1 }}
+          >
+            {savingStock ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+
       {/* Integration Settings */}
       <div style={sectionStyle}>
         <div style={{ padding: "16px 24px", borderBottom: "1px solid #E8E4DE" }}>

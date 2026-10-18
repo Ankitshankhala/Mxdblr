@@ -124,7 +124,9 @@ model Product {
   description   String?
   moq           Int         @default(1)
   stockStatus   StockStatus @default(IN_STOCK)
-  stockQty      Int         @default(0)
+  // Pieces in stock. null = not counted yet: stockStatus is then set by hand.
+  // Once counted, stockStatus is always worked out from it (lib/stock.ts).
+  stockQty      Int?
   images        String[]    @default([])
   // Legacy single price, never exposed. Superseded by the A/B/C price lists below.
   price          Float?
@@ -426,6 +428,8 @@ model SystemSettings {
   cloudinaryCloud     String   @default("")
   cloudinaryApiKey    String   @default("")
   cloudinaryApiSecret String   @default("")
+  // A counted product with this many pieces or fewer is LOW_STOCK.
+  lowStockThreshold   Int      @default(10)
   updatedAt           DateTime @updatedAt
 }
 

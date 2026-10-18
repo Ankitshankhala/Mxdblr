@@ -153,7 +153,7 @@ function sanitizeProduct(product: {
   description: string | null;
   moq: number;
   stockStatus: StockStatus;
-  stockQty: number;
+  stockQty: number | null; // null = not counted yet
   images: string[];
   price?: number | null;
   pricingActive?: boolean;

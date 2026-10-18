@@ -2,6 +2,8 @@
  * Admin system settings. Mounted at /api/admin/settings behind SYSTEM_SETTINGS.
  *
  * GET/PUT non-sensitive config plus PUT /change-password (admin password).
+ * PUT /stock sets the low-stock threshold and re-derives every counted
+ * product's status from it (lib/stock.ts).
  * Secret-bearing fields are masked on read via maskSecret and default empty.
  * NOTE: API keys must NOT live here long-term — real credentials belong in env
  * vars (TODO in source); these DB fields are slated for removal.
@@ -10,6 +12,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireAdminAuth } from '../../middleware/auth';
 import prisma from '../../lib/prisma';
+import { DEFAULT_LOW_STOCK_THRESHOLD, recomputeCountedStatuses } from '../../lib/stock';
 
 const router = Router();
 router.use(requireAdminAuth);
@@ -35,6 +38,7 @@ const emptySettings = {
   cloudinaryCloud: '',
   cloudinaryApiKey: '',
   cloudinaryApiSecret: '',
+  lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
 };
 
 // TODO: Move to env vars in next sprint — never store API secrets in DB
@@ -73,6 +77,7 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
         msg91ApiKey: maskSecret(settings.msg91ApiKey),
         cloudinaryApiKey: maskSecret(settings.cloudinaryApiKey),
         cloudinaryApiSecret: maskSecret(settings.cloudinaryApiSecret),
+        lowStockThreshold: settings.lowStockThreshold,
       },
     });
   } catch (err) {
@@ -111,10 +116,45 @@ router.put('/', async (req: Request, res: Response): Promise<void> => {
         msg91ApiKey: maskSecret(settings.msg91ApiKey),
         cloudinaryApiKey: maskSecret(settings.cloudinaryApiKey),
         cloudinaryApiSecret: maskSecret(settings.cloudinaryApiSecret),
+        lowStockThreshold: settings.lowStockThreshold,
       },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to save settings' });
+  }
+});
+
+const stockSettingsSchema = z.object({
+  lowStockThreshold: z.number().int().min(0, 'Use 0 or more').max(100_000),
+});
+
+// PUT /api/admin/settings/stock  { lowStockThreshold }
+// Separate from PUT / because that one resets every field it is not sent.
+// Changing the threshold re-derives the status of every counted product in the
+// same transaction, so the dashboard counts move with it straight away.
+router.put('/stock', async (req: Request, res: Response): Promise<void> => {
+  const parse = stockSettingsSchema.safeParse(req.body);
+  if (!parse.success) {
+    res.status(400).json({ success: false, message: parse.error.issues[0].message });
+    return;
+  }
+  const { lowStockThreshold } = parse.data;
+
+  try {
+    const [, ...updates] = await prisma.$transaction([
+      prisma.systemSettings.upsert({
+        where: { id: SETTINGS_ID },
+        update: { lowStockThreshold },
+        create: { id: SETTINGS_ID, lowStockThreshold },
+      }),
+      ...recomputeCountedStatuses(lowStockThreshold),
+    ]);
+    res.json({
+      success: true,
+      data: { lowStockThreshold, productsUpdated: updates.reduce((n, u) => n + u.count, 0) },
+    });
+  } catch {
+    res.status(500).json({ success: false, message: 'Failed to save the stock setting' });
   }
 });
 

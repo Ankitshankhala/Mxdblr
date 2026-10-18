@@ -65,7 +65,7 @@ export interface Product {
   description: string | null;
   moq: number;
   stockStatus: StockStatus;
-  stockQty: number;
+  stockQty: number | null; // null = not counted yet
   images: string[];
   categoryId: string | null;
   category: { id: string; name: string; slug: string } | null;

@@ -38,7 +38,7 @@ interface Product {
   sku: string;
   brand: string;
   stockStatus: StockStatus;
-  stockQty: number;
+  stockQty: number | null;
   moq: number;
   images: string | string[];
 }
@@ -239,7 +239,7 @@ function QuickProductModal({ category, onClose, onSaved }: {
   category: Category; onClose: () => void; onSaved: () => void;
 }) {
   const { showToast } = useToast();
-  const [form, setForm] = useState({ name: "", brand: "MXD", sku: "", description: "", moq: 10, stockStatus: "IN_STOCK", stockQty: 0, image: "" });
+  const [form, setForm] = useState({ name: "", brand: "MXD", sku: "", description: "", moq: 10, stockStatus: "IN_STOCK", stockQty: "", image: "" });
   const [saving, setSaving] = useState(false);
 
   async function save() {
@@ -257,7 +257,7 @@ function QuickProductModal({ category, onClose, onSaved }: {
           description: form.description,
           moq: form.moq,
           stockStatus: form.stockStatus,
-          stockQty: form.stockQty,
+          stockQty: form.stockQty === "" ? null : Math.max(0, Math.floor(Number(form.stockQty))),
           images: form.image ? [form.image] : [],
           categoryId: category.id,
         }),
@@ -304,13 +304,18 @@ function QuickProductModal({ category, onClose, onSaved }: {
             </div>
             <div>
               <label style={lbl}>Stock Qty</label>
-              <input type="number" value={form.stockQty} onChange={(e) => setForm((f) => ({ ...f, stockQty: Number(e.target.value) }))} style={inp} min={0} />
+              <input type="number" value={form.stockQty} onChange={(e) => setForm((f) => ({ ...f, stockQty: e.target.value }))} style={inp} min={0} placeholder="Not counted" />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <label style={lbl}>Stock Status</label>
-              <select value={form.stockStatus} onChange={(e) => setForm((f) => ({ ...f, stockStatus: e.target.value }))} style={inp}>
-                {STOCK_OPTS.map((s) => <option key={s} value={s}>{STOCK_COLORS[s as StockStatus]?.label || s}</option>)}
-              </select>
+              {/* A quantity decides the status on save; set it by hand only while not counted. */}
+              {form.stockQty === "" ? (
+                <select value={form.stockStatus} onChange={(e) => setForm((f) => ({ ...f, stockStatus: e.target.value }))} style={inp}>
+                  {STOCK_OPTS.map((s) => <option key={s} value={s}>{STOCK_COLORS[s as StockStatus]?.label || s}</option>)}
+                </select>
+              ) : (
+                <p style={{ fontSize: 12, color: "#6E6257", margin: "6px 0 0" }}>Worked out from the quantity when you save.</p>
+              )}
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <label style={lbl}>Description</label>

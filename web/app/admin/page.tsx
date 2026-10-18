@@ -6,6 +6,7 @@
  * Wrapped in AdminGuard.
  */
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatCard from "@/components/admin/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
@@ -56,7 +57,7 @@ interface StockAlertProduct {
 function DashboardContent() {
   const isMobile = useIsMobile();
   const { hasAny } = useAdminAuth();
-  const [stats, setStats] = useState({ dealers: 0, inquiriesToday: 0, lowStock: 0, outOfStock: 0 });
+  const [stats, setStats] = useState({ dealers: 0, inquiriesToday: 0, lowStock: 0, outOfStock: 0, notCounted: 0 });
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(true);
   const [stockAlerts, setStockAlerts] = useState<StockAlertProduct[]>([]);
@@ -112,7 +113,7 @@ function DashboardContent() {
           const summary: Array<{ stockStatus: string; _count: { stockStatus: number } }> = d.data || [];
           const low = summary.find((s) => s.stockStatus === "LOW_STOCK")?._count.stockStatus ?? 0;
           const out = summary.find((s) => s.stockStatus === "OUT_OF_STOCK")?._count.stockStatus ?? 0;
-          setStats((s) => ({ ...s, lowStock: low, outOfStock: out }));
+          setStats((s) => ({ ...s, lowStock: low, outOfStock: out, notCounted: d.notCounted ?? 0 }));
         })
         .catch(() => {});
 
@@ -204,6 +205,25 @@ function DashboardContent() {
         />
         </>)}
       </div>
+
+      {/* Products with no quantity keep a hand-set status; this is the to-do
+          list for making their stock status automatic. */}
+      {canStock && stats.notCounted > 0 && (
+        <Link
+          href="/admin/products?stockStatus=NOT_COUNTED"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+            background: "#FFF3E8", border: "1px solid #F9C89B", borderRadius: 10, padding: "12px 16px",
+            marginBottom: isMobile ? 16 : 24, textDecoration: "none", color: "#1F1813", fontSize: 13,
+          }}
+        >
+          <span>
+            <strong>{stats.notCounted} product{stats.notCounted === 1 ? " has" : "s have"}</strong> no stock quantity yet,
+            so their status is set by hand instead of worked out from a count.
+          </span>
+          <span style={{ color: "#B8560F", fontWeight: 700, whiteSpace: "nowrap" }}>Enter quantities →</span>
+        </Link>
+      )}
 
       {/* Main content — single column on mobile, two columns on desktop */}
       <div

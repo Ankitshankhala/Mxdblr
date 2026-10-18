@@ -87,7 +87,7 @@ type Product = {
   categoryId: string;
   moq: number;
   stockStatus: string;
-  stockQty: number;
+  stockQty: number | null; // null = not counted yet
   active: boolean;
   isNewArrival: boolean;
   isBestSeller: boolean;
@@ -166,6 +166,13 @@ function getCategoryName(cat: any): string {
 }
 
 const STOCK_OPTIONS = ["IN_STOCK", "LOW_STOCK", "OUT_OF_STOCK"];
+
+/** Mirrors stockStatusFor in api/src/lib/stock.ts: a counted quantity decides the status. */
+function stockStatusFor(qty: number, lowStockThreshold: number): string {
+  if (qty <= 0) return "OUT_OF_STOCK";
+  if (qty <= lowStockThreshold) return "LOW_STOCK";
+  return "IN_STOCK";
+}
 const PAGE_SIZES = [10, 25, 50, 100];
 
 const SORT_OPTIONS = [
@@ -182,7 +189,7 @@ interface ApiCategory { id: string; name: string; slug: string; }
 
 const EMPTY_PRODUCT: Omit<Product, "id"> = {
   name: "", brand: "MXD", sku: "", category: "", categoryId: "", moq: 10,
-  stockStatus: "IN_STOCK", stockQty: 0, active: true, isNewArrival: false, isBestSeller: false,
+  stockStatus: "IN_STOCK", stockQty: null, active: true, isNewArrival: false, isBestSeller: false,
   images: [], description: "", attributes: [{ key: "", value: "" }], featureSlugs: [],
   // Most MXD accessories fit any phone, so new products start as "All brands".
   fitsAllBrands: true, compatibleBrandIds: [],
@@ -213,6 +220,8 @@ function ProductsContent() {
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  // From the API: a counted product with this many pieces or fewer is Low Stock.
+  const [lowStockThreshold, setLowStockThreshold] = useState(10);
 
   // ── Filter + pagination state ───────────────────────────────────────────────
   const [currentPage, setCurrentPage] = useState(1);
@@ -400,6 +409,7 @@ function ProductsContent() {
       setProducts(data.data || []);
       setTotalCount(data.pagination?.total || 0);
       setTotalPages(data.pagination?.pages || 1);
+      if (typeof data.lowStockThreshold === "number") setLowStockThreshold(data.lowStockThreshold);
       setCurrentPage(page);
     } catch { showToast("Failed to load products", "error"); }
     finally { setLoading(false); }
@@ -463,7 +473,7 @@ function ProductsContent() {
       // so the select is pre-populated and edits preserve the assignment.
       categoryId: (p.category && typeof p.category === "object" ? p.category.id : "") || p.categoryId || "",
       moq: p.moq,
-      stockStatus: p.stockStatus, stockQty: p.stockQty ?? 0, active: p.active ?? true, isNewArrival: p.isNewArrival, isBestSeller: p.isBestSeller,
+      stockStatus: p.stockStatus, stockQty: p.stockQty ?? null, active: p.active ?? true, isNewArrival: p.isNewArrival, isBestSeller: p.isBestSeller,
       images: [...p.images], description: p.description, attributes: normAttrs, featureSlugs,
       fitsAllBrands: p.fitsAllBrands ?? false,
       compatibleBrandIds: (p.compatibleBrands ?? []).map((b) => b.id),
@@ -823,6 +833,7 @@ function ProductsContent() {
           <option value="IN_STOCK">In Stock</option>
           <option value="LOW_STOCK">Low Stock</option>
           <option value="OUT_OF_STOCK">Out of Stock</option>
+          <option value="NOT_COUNTED">Not counted yet</option>
         </select>
 
         {/* Sort */}
@@ -955,7 +966,12 @@ function ProductsContent() {
                       />
                     </td>
                   ))}
-                  <td style={{ padding: "10px 14px" }}><StatusBadge status={p.stockStatus} /></td>
+                  <td style={{ padding: "10px 14px" }}>
+                    <StatusBadge status={p.stockStatus} />
+                    <div style={{ fontSize: 11, color: p.stockQty == null ? "#F47920" : "#6E6257", marginTop: 3, whiteSpace: "nowrap" }}>
+                      {p.stockQty == null ? "Not counted" : `${p.stockQty} pcs`}
+                    </div>
+                  </td>
                   <td style={{ padding: "10px 14px" }}>
                     <button
                       onClick={() => handleToggleActive(p)}
@@ -1323,20 +1339,38 @@ function ProductsContent() {
                   <input type="number" value={form.moq} onChange={(e) => setForm((f) => ({ ...f, moq: Number(e.target.value) }))} style={inputStyle} min={1} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Stock Status</label>
-                  <select value={form.stockStatus} onChange={(e) => setForm((f) => ({ ...f, stockStatus: e.target.value }))} style={inputStyle}>
-                    {STOCK_OPTIONS.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Stock Quantity</label>
+                  <label style={labelStyle} htmlFor="stock-qty">Stock Quantity</label>
                   <input
+                    id="stock-qty"
                     type="number"
-                    value={form.stockQty}
-                    onChange={(e) => setForm((f) => ({ ...f, stockQty: Math.max(0, Number(e.target.value)) }))}
+                    value={form.stockQty ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setForm((f) => ({ ...f, stockQty: v === "" ? null : Math.max(0, Math.floor(Number(v))) }));
+                    }}
                     style={inputStyle}
                     min={0}
+                    placeholder="Not counted"
                   />
+                </div>
+                <div>
+                  <label style={labelStyle} htmlFor="stock-status">Stock Status</label>
+                  {/* A counted quantity decides the status (the API enforces it); the
+                      select is only for products whose stock isn't counted yet. */}
+                  <select
+                    id="stock-status"
+                    value={form.stockQty != null ? stockStatusFor(form.stockQty, lowStockThreshold) : form.stockStatus}
+                    onChange={(e) => setForm((f) => ({ ...f, stockStatus: e.target.value }))}
+                    disabled={form.stockQty != null}
+                    style={{ ...inputStyle, ...(form.stockQty != null && { background: "#F8F6F2", color: "#6E6257" }) }}
+                  >
+                    {STOCK_OPTIONS.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
+                  </select>
+                  <p style={{ fontSize: 11, color: "#6E6257", marginTop: 4 }}>
+                    {form.stockQty != null
+                      ? `Set by the quantity: 0 is Out of Stock, ${lowStockThreshold} or fewer is Low Stock.`
+                      : "Not counted: set by hand. Enter a quantity to make it automatic."}
+                  </p>
                 </div>
                 <div>
                   <label style={labelStyle}>Storefront Visibility</label>
