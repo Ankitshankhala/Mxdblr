@@ -209,6 +209,45 @@ textarea:focus-visible {
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 
+/* ── Admin layout helpers: responsive rules the admin's inline styles can't express ── */
+
+/* Sidebar / phone menu: a dark scrollbar instead of the global light one above.
+   (Chrome uses scrollbar-color; Safari the ::-webkit-scrollbar rules.) */
+.admin-dark-scroll { scrollbar-width: thin; scrollbar-color: #444 transparent; }
+.admin-dark-scroll::-webkit-scrollbar { width: 6px; }
+.admin-dark-scroll::-webkit-scrollbar-track { background: transparent; }
+.admin-dark-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+/* Full visible height: on phones 100vh runs under the browser toolbar. */
+.admin-sidebar { height: 100vh; height: 100dvh; }
+
+/* Menu items sit a little closer on short screens so more of the list shows. */
+.admin-nav-link { padding: 10px; }
+@media (max-height: 720px) { .admin-nav-link { padding: 7px 10px; } }
+
+/* Dashboard: below 1200px the Recent Inquiries table shares the row with Stock
+   Alerts, so the Shop column folds in under the dealer name. */
+.dash-shop-inline { display: none; }
+@media (max-width: 1199px) {
+  .dash-shop-col { display: none; }
+  .dash-shop-inline { display: block; }
+}
+
+/* Hero Banners list: preview beside the details, stacked on top on phones. */
+.banner-card { flex-direction: row; }
+.banner-card-preview { width: 200px; }
+@media (max-width: 639px) {
+  .banner-card { flex-direction: column; }
+  .banner-card-preview { width: 100%; }
+}
+
+/* Products: the table on tablet/desktop, cards on phones. */
+.admin-products-cards { display: none; }
+@media (max-width: 767px) {
+  .admin-products-table { display: none; }
+  .admin-products-cards { display: flex; flex-direction: column; }
+}
+
 /* Catalog: responsive visibility helpers — replaces Tailwind md: modifiers (v4 requires CLI) */
 .catalog-sort-bar { display: none; }
 @media (min-width: 768px) { .catalog-sort-bar { display: flex; align-items: center; gap: 6px; } }

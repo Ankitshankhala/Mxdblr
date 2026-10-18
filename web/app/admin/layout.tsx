@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/layout/Logo";
-import { ReactNode, useEffect, useState, useCallback } from "react";
+import { ReactNode, useEffect, useState, useCallback, useRef } from "react";
 import { ToastProvider } from "@/components/admin/Toast";
 import { AdminAuthProvider, useAdminAuth, Permission } from "@/lib/admin/auth";
 
@@ -285,17 +285,33 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
     return pathname.startsWith(item.href);
   }
 
+  // Only the menu list scrolls (logo and Logout stay put). When items are
+  // hidden below the fold, a fade at the bottom says there is more. Resize
+  // observers re-check when the window or the list (permissions load) changes.
+  const navRef = useRef<HTMLElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [moreBelow, setMoreBelow] = useState(false);
+  const checkMoreBelow = useCallback(() => {
+    const nav = navRef.current;
+    if (nav) setMoreBelow(nav.scrollTop + nav.clientHeight < nav.scrollHeight - 4);
+  }, []);
+  useEffect(() => {
+    const observer = new ResizeObserver(checkMoreBelow);
+    if (navRef.current) observer.observe(navRef.current);
+    if (listRef.current) observer.observe(listRef.current);
+    return () => observer.disconnect();
+  }, [checkMoreBelow]);
+
+  // Height comes from the admin-sidebar class (100dvh: the visible height on phones).
   const mobileStyle: React.CSSProperties = {
     position: "fixed",
     top: 0,
     left: 0,
     // CSS min() keeps it at most 280px but respects 85vw on very small screens
     width: "min(280px, 85vw)",
-    height: "100vh",
     zIndex: 50,
     transform: drawerOpen ? "translateX(0)" : "translateX(-100%)",
     transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-    overflowY: "auto",
   };
 
   const desktopStyle: React.CSSProperties = {
@@ -303,13 +319,13 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
     minWidth: 220,
     position: "sticky",
     top: 0,
-    height: "100vh",
     zIndex: 10,
     flexShrink: 0,
   };
 
   return (
     <aside
+      className="admin-sidebar"
       style={{
         ...(isMobile ? mobileStyle : desktopStyle),
         background: "#1F1813",
@@ -374,16 +390,14 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
       <div style={{ width: "calc(100% - 40px)", margin: "0 20px", height: 1, background: "#352B22", flexShrink: 0 }} />
 
       {/* Nav links */}
+      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
       <nav
-        style={{
-          flex: 1,
-          padding: "12px 12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          overflowY: "auto",
-        }}
+        ref={navRef}
+        onScroll={checkMoreBelow}
+        className="admin-dark-scroll"
+        style={{ height: "100%", padding: "12px 12px", overflowY: "auto" }}
       >
+        <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {loading && (
           <div style={{ padding: "10px 12px", fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Loading menu…</div>
         )}
@@ -394,11 +408,11 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
               key={item.href}
               href={item.href}
               onClick={() => isMobile && onClose()}
+              className="admin-nav-link"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
-                padding: "10px 10px",
                 borderRadius: 8,
                 textDecoration: "none",
                 fontSize: 13,
@@ -414,7 +428,23 @@ function AdminSidebar({ isMobile, drawerOpen, onClose }: SidebarProps) {
             </Link>
           );
         })}
+        </div>
       </nav>
+      {moreBelow && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 8,
+            bottom: 0,
+            height: 40,
+            pointerEvents: "none",
+            background: "linear-gradient(to bottom, rgba(31,24,19,0), #1F1813)",
+          }}
+        />
+      )}
+      </div>
 
       {/* Logout */}
       <div style={{ padding: "12px 12px 24px", flexShrink: 0 }}>
@@ -720,7 +750,11 @@ function ProtectedShell({ children }: { children: ReactNode }) {
           style={{
             flex: 1,
             padding: isMobile ? 12 : 24,
-            overflow: "auto",
+            // Never scroll the whole page sideways: a stray pixel of overflow
+            // made Orders/Announcements wobble on phones. Wide tables scroll
+            // inside their own overflowX:auto wrapper instead.
+            overflowX: "hidden",
+            overflowY: "auto",
             // Prevent any child with a fixed width from pushing the viewport
             maxWidth: "100%",
           }}

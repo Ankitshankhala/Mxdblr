@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";
+import ActionsMenu from "@/components/admin/ActionsMenu";
 import { useToast } from "@/components/admin/Toast";
 import { normalizeImageUrl } from "@/lib/config";
 import { useAdminAuth } from "@/lib/admin/auth";
@@ -125,6 +126,23 @@ function compatibleSummary(p: Product): string | null {
   const names = (p.compatibleBrands ?? []).map((b) => shortBrandName(b.name));
   if (names.length === 0) return null;
   return names.length > 3 ? `${names.slice(0, 3).join(", ")} +${names.length - 3}` : names.join(", ");
+}
+
+/** First product image (or a placeholder glyph), shared by the table and the phone cards. */
+function ProductThumb({ product, size }: { product: Product; size: number }) {
+  return (
+    <div style={{ width: size, height: size, borderRadius: 6, background: "#F8F6F2", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      {product.images[0] ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={normalizeImageUrl(product.images[0])} alt={product.name} style={{ width: size, height: size, objectFit: "cover" }}
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+      ) : (
+        <svg width="16" height="16" fill="none" stroke="#6E6257" strokeWidth="2" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+        </svg>
+      )}
+    </div>
+  );
 }
 
 function BrandChoice({ label, selected, disabled = false, onClick }: {
@@ -896,9 +914,9 @@ function ProductsContent() {
         </div>
       )}
 
-      {/* ── Table ────────────────────────────────────────────────────────────── */}
+      {/* ── Table (cards on phones: admin-products-table / -cards in globals.css) ── */}
       <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
+        <div className="admin-products-table" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
@@ -932,17 +950,7 @@ function ProductsContent() {
                     />
                   </td>
                   <td style={{ padding: "10px 14px" }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 6, background: "#F8F6F2", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {p.images[0] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={normalizeImageUrl(p.images[0])} alt={p.name} style={{ width: 40, height: 40, objectFit: "cover" }}
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                      ) : (
-                        <svg width="16" height="16" fill="none" stroke="#6E6257" strokeWidth="2" viewBox="0 0 24 24">
-                          <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                        </svg>
-                      )}
-                    </div>
+                    <ProductThumb product={p} size={40} />
                   </td>
                   <td style={{ padding: "10px 14px", fontWeight: 600, maxWidth: 180 }}>
                     <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
@@ -1056,6 +1064,45 @@ function ProductsContent() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* ── Phone cards: a 15-column table can't fit, so below 768px each product
+            is a card with the essentials and the rest under "⋯". ─────────── */}
+        <div className="admin-products-cards">
+          {loading && <div style={{ padding: 32, textAlign: "center", color: "#6E6257", fontSize: 13 }}>Loading products…</div>}
+          {!loading && products.length === 0 && (
+            <div style={{ padding: 32, textAlign: "center", color: "#6E6257", fontSize: 13 }}>No products found</div>
+          )}
+          {!loading && products.map((p) => (
+            <div key={p.id} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 14px", borderBottom: "1px solid #F0EDEA" }}>
+              <ProductThumb product={p} size={56} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3, overflowWrap: "anywhere" }}>{p.name}</div>
+                <div style={{ fontFamily: "monospace", fontSize: 11, color: "#6366F1", marginTop: 2 }}>{p.sku}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                  <StatusBadge status={p.stockStatus} />
+                  <span style={{ fontSize: 11, color: p.stockQty == null ? "#F47920" : "#6E6257", whiteSpace: "nowrap" }}>
+                    {p.stockQty == null ? "Not counted" : `${p.stockQty} pcs`}
+                  </span>
+                  {!p.active && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "#F3F4F6", color: "#6B7280" }}>Hidden</span>
+                  )}
+                </div>
+              </div>
+              <ActionsMenu
+                ariaLabel={`Actions for ${p.name}`}
+                trigger="⋯"
+                buttonStyle={{ width: 36, height: 36, flexShrink: 0, borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontSize: 18, lineHeight: 1, cursor: "pointer", color: "#1F1813" }}
+                items={[
+                  { label: "Edit", onSelect: () => openEdit(p) },
+                  { label: p.active ? "Hide from storefront" : "Show on storefront", onSelect: () => handleToggleActive(p) },
+                  { label: p.isBestSeller ? "Remove from Best Sellers" : "Mark as Best Seller", onSelect: () => handleToggleBestSeller(p) },
+                  { label: p.isNewArrival ? "Remove from New Arrivals" : "Mark as New Arrival", onSelect: () => handleToggleNewArrival(p) },
+                  { label: "Delete", onSelect: () => setShowDeleteConfirm(p.id), color: "#DC2626", bold: true },
+                ]}
+              />
+            </div>
+          ))}
         </div>
 
         {/* ── Table footer: count + rows-per-page + pagination ─────────────── */}

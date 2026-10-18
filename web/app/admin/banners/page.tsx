@@ -316,6 +316,7 @@ function BannersContent() {
           {[...banners].sort((a, b) => a.displayOrder - b.displayOrder).map((b, idx) => (
             <div
               key={b.id}
+              className="banner-card"
               style={{
                 background: "#fff",
                 border: "1px solid #E8E4DE",
@@ -326,10 +327,11 @@ function BannersContent() {
                 opacity: b.active ? 1 : 0.55,
               }}
             >
-              {/* Preview strip */}
+              {/* Preview strip — 200px beside the details, full width on top on
+                  phones (banner-card / banner-card-preview in globals.css) */}
               <div
+                className="banner-card-preview"
                 style={{
-                  width: 200,
                   minHeight: 110,
                   background: b.bgColor,
                   flexShrink: 0,
@@ -369,7 +371,7 @@ function BannersContent() {
                   subtitle's intrinsic width, so the actions never overflow the card. */}
               <div style={{ flex: 1, minWidth: 0, padding: "14px 18px", display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, rowGap: 4, flexWrap: "wrap", marginBottom: 4 }}>
                     <span style={{ fontWeight: 700, fontSize: 14, color: "#1F1813" }}>{b.title}</span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999,

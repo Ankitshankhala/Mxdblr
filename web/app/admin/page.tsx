@@ -246,7 +246,7 @@ function DashboardContent() {
               <thead>
                 <tr style={{ borderBottom: "1px solid #F0EDEA" }}>
                   {["Dealer Name", "Shop", "Items", "Time", "Status", "Action"].map((h) => (
-                    <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>
+                    <th key={h} className={h === "Shop" ? "dash-shop-col" : undefined} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>
                       {h}
                     </th>
                   ))}
@@ -268,8 +268,12 @@ function DashboardContent() {
                 ) : (
                   inquiries.map((row) => (
                     <tr key={row.id} style={{ borderBottom: "1px solid #F0EDEA" }}>
-                      <td style={{ padding: "10px 14px", fontWeight: 600 }}>{row.dealer.ownerName}</td>
-                      <td style={{ padding: "10px 14px", color: "#6E6257" }}>{row.dealer.shopName}</td>
+                      <td style={{ padding: "10px 14px", fontWeight: 600 }}>
+                        {row.dealer.ownerName}
+                        {/* Below 1200px the Shop column folds in here (globals.css). */}
+                        <div className="dash-shop-inline" style={{ fontSize: 12, fontWeight: 400, color: "#6E6257", marginTop: 2 }}>{row.dealer.shopName}</div>
+                      </td>
+                      <td className="dash-shop-col" style={{ padding: "10px 14px", color: "#6E6257" }}>{row.dealer.shopName}</td>
                       <td style={{ padding: "10px 14px", fontWeight: 600 }}>{Array.isArray(row.cartSnapshot) ? row.cartSnapshot.length : 0}</td>
                       <td style={{ padding: "10px 14px", color: "#6E6257", whiteSpace: "nowrap" }}>{timeAgo(row.createdAt)}</td>
                       <td style={{ padding: "10px 14px" }}>
