@@ -12,7 +12,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 type BannerType = "SIMPLE" | "PRODUCT_PROMO" | "BRAND_PROMO";
 
-interface Banner {
+export interface Banner {
   id: string;
   bannerType: BannerType;
   title: string;
@@ -30,65 +30,6 @@ interface Banner {
   overlayOpacity: number;
   textAlignment: string;
 }
-
-const FALLBACK_BANNERS: Banner[] = [
-  {
-    id: "f1",
-    bannerType: "SIMPLE",
-    title: "Wholesale Mobile Accessories. No Minimum Bulk Orders.",
-    // No SKU count claim here — it must be verified against the live catalog
-    // before it goes back in (this read "1,200+ genuine SKUs" against 68).
-    subtitle: "Genuine stock, MOQ as low as 5 units, same-day dispatch from Bengaluru — for registered dealers across Karnataka, Tamil Nadu & Andhra Pradesh.",
-    ctaText: "Browse Catalog",
-    ctaLink: "/catalog",
-    image: "",
-    mobileImage: "",
-    bgColor: "#1F1813",
-    accentColor: "#F47920",
-    logoImage: "",
-    productImage1: "",
-    productImage2: "",
-    productImage3: "",
-    overlayOpacity: 0.35,
-    textAlignment: "left",
-  },
-  {
-    id: "f2",
-    bannerType: "SIMPLE",
-    title: "New Arrivals: iPhone 16 Accessories",
-    subtitle: "Latest cases, chargers, and screen guards for iPhone 16 series. MOQ as low as 10 units.",
-    ctaText: "Shop Now",
-    ctaLink: "/catalog?category=cases-covers",
-    image: "",
-    mobileImage: "",
-    bgColor: "#0F1F0F",
-    accentColor: "#22c55e",
-    logoImage: "",
-    productImage1: "",
-    productImage2: "",
-    productImage3: "",
-    overlayOpacity: 0.35,
-    textAlignment: "left",
-  },
-  {
-    id: "f3",
-    bannerType: "SIMPLE",
-    title: "GaN Chargers in Stock",
-    subtitle: "Syska, Baseus & more. 33W to 65W. Wholesale pricing for registered dealers only.",
-    ctaText: "View Chargers",
-    ctaLink: "/catalog?category=chargers",
-    image: "",
-    mobileImage: "",
-    bgColor: "#1A0F00",
-    accentColor: "#F59E0B",
-    logoImage: "",
-    productImage1: "",
-    productImage2: "",
-    productImage3: "",
-    overlayOpacity: 0.35,
-    textAlignment: "left",
-  },
-];
 
 const AUTO_PLAY_INTERVAL = 4500;
 const MOBILE_BREAKPOINT = 768;
@@ -339,20 +280,19 @@ function BannerContent({
   );
 }
 
-export default function HeroBanner() {
-  const [banners, setBanners] = useState<Banner[]>(FALLBACK_BANNERS);
+/**
+ * Renders exactly the banners admins set under Hero Banners, fetched with the rest
+ * of the homepage on the server. There used to be built-in fallback slides (with
+ * claims like "No Minimum Bulk Orders") that every visitor saw first, until a
+ * client-side fetch swapped them out; with no banners the hero is now simply
+ * not shown.
+ */
+export default function HeroBanner({ banners }: { banners: Banner[] }) {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [paused, setPaused] = useState(false);
   const isMobile = useIsMobile();
   const minHeight = isMobile ? 340 : 420;
-
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/banners`)
-      .then((r) => r.json())
-      .then((d) => { if (d.data?.length) setBanners(d.data); })
-      .catch(() => {});
-  }, []);
 
   const goTo = useCallback((idx: number) => {
     setIsTransitioning((t) => {
@@ -394,6 +334,7 @@ export default function HeroBanner() {
   const resume = () => setPaused(false);
 
   const banner = banners[current];
+  if (!banner) return null; // no banners set in admin: no hero
 
   return (
     <section

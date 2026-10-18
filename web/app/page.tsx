@@ -11,7 +11,7 @@ import Navbar from '@/components/layout/Navbar';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import Footer from '@/components/layout/Footer';
 import ProductGrid from '@/components/products/ProductGrid';
-import HeroBanner from '@/components/home/HeroBanner';
+import HeroBanner, { type Banner } from '@/components/home/HeroBanner';
 import CategoryCardList from '@/components/home/CategoryCardList';
 // import BrandStrip from '@/components/home/BrandStrip'; // section removed 2026-08-12 — see section-order comment below
 import TrustStats from '@/components/home/TrustStats';
@@ -33,16 +33,6 @@ const API = process.env.INTERNAL_API_URL
   ? `${process.env.INTERNAL_API_URL.replace(/\/$/, '')}/api`
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api');
 
-// Fallback shown only if the announcements API returns nothing
-// (admin cleared all messages, or the API is unreachable).
-const MARQUEE_FALLBACK = [
-  'New Arrivals: iPhone 16 Accessories Now Available',
-  'Free Delivery on Orders above ₹5,000',
-  'Service Area: Karnataka | Tamil Nadu | Andhra Pradesh',
-  'Same-Day Dispatch on Orders Placed Before 3 PM',
-  'MOQ as Low as 5 Units on Select Products',
-];
-
 interface ApiCategory {
   id: string;
   name: string;
@@ -60,7 +50,7 @@ async function getData() {
     // previously this identical request was fired twice (audit #10).
     // The /products/brands fetch was dropped 2026-08-12 along with the
     // BrandStrip section that was its only consumer.
-    const [categoriesRes, bestSellerRes, newArrivalRes, fallbackRes, announcementsRes, eventsRes] =
+    const [categoriesRes, bestSellerRes, newArrivalRes, fallbackRes, announcementsRes, eventsRes, bannersRes] =
       await Promise.allSettled([
         fetch(`${API}/categories`, { next: { revalidate: 60 } }).then((r) => r.json()),
         fetch(`${API}/products?isBestSeller=true&limit=8&sort=newest`, { next: { revalidate: 60 } }).then((r) => r.json()),
@@ -68,7 +58,12 @@ async function getData() {
         fetch(`${API}/products?limit=8&sort=newest`, { next: { revalidate: 60 } }).then((r) => r.json()),
         fetch(`${API}/announcements`, { next: { revalidate: 30 } }).then((r) => r.json()),
         fetch(`${API}/events?limit=12`, { next: { revalidate: 60 } }).then((r) => r.json()),
+        fetch(`${API}/banners`, { next: { revalidate: 60 } }).then((r) => r.json()),
       ]);
+
+    // Hero slides are exactly what admins set; none (or an API error) = no hero.
+    const banners: Banner[] =
+      bannersRes.status === 'fulfilled' ? (bannersRes.value?.data ?? []) : [];
 
     const rawCategories =
       categoriesRes.status === 'fulfilled' ? (categoriesRes.value?.data ?? []) : [];
@@ -122,15 +117,19 @@ async function getData() {
       newArrivals,
       announcements,
       events,
+      banners,
     };
   } catch {
-    return { categories: [], bestSellers: [], newArrivals: [], announcements: [], events: [] };
+    return { categories: [], bestSellers: [], newArrivals: [], announcements: [], events: [], banners: [] as Banner[] };
   }
 }
 
 export default async function HomePage() {
-  const { categories, bestSellers, newArrivals, announcements, events } = await getData();
-  const marqueeMessages = announcements.length ? announcements : MARQUEE_FALLBACK;
+  const { categories, bestSellers, newArrivals, announcements, events, banners } = await getData();
+  // Only what admins add under Announcements. There used to be built-in
+  // fallback messages ("Free Delivery…", "Same-Day Dispatch…") that showed
+  // whenever the list was empty, promising things nobody had set; now the bar
+  // is simply hidden until an announcement is added.
 
   return (
     <div className="page-safe-bottom" style={{ minHeight: '100vh', background: '#F8F6F2' }}>
@@ -141,6 +140,7 @@ export default async function HomePage() {
           region; hover/focus pauses the scroll (see .marquee-bar in globals.css).
           The row is duplicated for a seamless loop — the second copy is
           aria-hidden so screen readers read each message exactly once. */}
+      {announcements.length > 0 && (
       <div
         className="marquee-bar"
         role="region"
@@ -155,10 +155,10 @@ export default async function HomePage() {
         }}
       >
         <div className="marquee-inner" style={{ display: 'flex', gap: 0, whiteSpace: 'nowrap' }}>
-          {[...marqueeMessages, ...marqueeMessages].map((text, i) => (
+          {[...announcements, ...announcements].map((text, i) => (
             <span
               key={i}
-              aria-hidden={i >= marqueeMessages.length ? true : undefined}
+              aria-hidden={i >= announcements.length ? true : undefined}
               style={{ fontSize: 12, fontWeight: 600, paddingRight: 60 }}
             >
               {text}
@@ -167,6 +167,7 @@ export default async function HomePage() {
           ))}
         </div>
       </div>
+      )}
 
       {/*
         SECTION ORDER — revised 2026-08-12. This supersedes the earlier CRO
@@ -213,7 +214,7 @@ export default async function HomePage() {
       {/* ── ACT 1 · QUALIFY ─────────────────────────────────────────────── */}
 
       {/* 1. Hero Slider */}
-      <HeroBanner />
+      <HeroBanner banners={banners} />
 
       {/* 2. Browse by Category — range proof; the first question a wholesale
              buyer asks is "do you stock what I sell?" */}
