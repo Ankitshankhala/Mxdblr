@@ -13,6 +13,8 @@ import QtyStepper from '@/components/ui/QtyStepper';
 import { cartApi, dealerApi, notificationsApi } from '@/lib/api';
 import { formatInr, roundPaise } from '@/lib/price';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useAuth } from '@/hooks/useAuth';
+import { loginPath } from '@/lib/auth';
 import type { Product } from '@/types';
 
 /** The dealer's per-piece price, or "price on request" when their list has none. */
@@ -129,9 +131,10 @@ export default function ProductActions({ product }: { product: Product }) {
   // Prices are per dealer, so they are fetched here rather than rendered into
   // this server-rendered (and cached) page. undefined = nothing to show: not
   // signed in, or prices are switched off for this dealer.
+  const { isLoggedIn, status: authStatus } = useAuth();
   const [unitPrice, setUnitPrice] = useState<number | null | undefined>(undefined);
   useEffect(() => {
-    if (!localStorage.getItem('mxd_token')) return;
+    if (!isLoggedIn) return;
     let cancelled = false;
     dealerApi
       .prices([product.id])
@@ -144,11 +147,11 @@ export default function ProductActions({ product }: { product: Product }) {
     return () => {
       cancelled = true;
     };
-  }, [product.id]);
+  }, [product.id, isLoggedIn]);
 
   async function handleAddToCart() {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('mxd_token') : null;
-    if (!token) { window.location.href = '/auth'; return; }
+    // While the session check is still out, try anyway: a 401 sends the dealer to log in.
+    if (authStatus === 'anonymous') { window.location.href = loginPath(); return; }
 
     setAddingToCart(true);
     try {

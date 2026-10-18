@@ -2,15 +2,17 @@
 
 /**
  * Navbar — top navigation for the public/dealer site: logo, catalog/search,
- * cart, and auth-aware account menu (reads the dealer token). Persistent across
- * storefront pages.
+ * cart, and the account area: Sign in when signed out; the masked mobile number
+ * and Logout when signed in (from useAuth). Persistent across storefront pages.
  */
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/layout/Logo';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingBag, User, X } from 'lucide-react';
+import { LogOut, Search, ShoppingBag, User, X } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
+import { maskPhone } from '@/lib/auth';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
@@ -26,7 +28,6 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
   const [searchValue, setSearchValue] = useState(initialSearch);
   const [activeCategory, setActiveCategory] = useState('');
   const [categories, setCategories] = useState<NavCategory[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileSearchValue, setMobileSearchValue] = useState('');
   const mobileInputRef = useRef<HTMLInputElement>(null);
@@ -44,11 +45,7 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
     }
   }, [mobileSearchOpen]);
 
-  // Check auth state on mount
-  useEffect(() => {
-    const token = localStorage.getItem('dealerToken') || localStorage.getItem('mxd_token');
-    setIsLoggedIn(!!token);
-  }, []);
+  const { user, status, logout } = useAuth();
 
   const { count } = useCart();
 
@@ -249,7 +246,7 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
               goal of this site is dealer registration, so it needs a named,
               visible action in the persistent nav rather than only the
               generic account icon (CRO review recommendation). */}
-          {!isLoggedIn && (
+          {status === 'anonymous' && (
             <Link
               href="/register"
               className="hidden md:inline-flex"
@@ -271,22 +268,75 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
             </Link>
           )}
 
-          {/* Account */}
-          <Link
-            href={isLoggedIn ? '/account' : '/auth'}
-            style={{
-              width: 38,
-              height: 38,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: isLoggedIn ? '#F47920' : '#E8E4DE',
-              borderRadius: 8,
-              textDecoration: 'none',
-            }}
-          >
-            <User size={20} />
-          </Link>
+          {/* Account: masked number + Logout when signed in (labels from md up) */}
+          {user ? (
+            <>
+              <Link
+                href="/account"
+                aria-label={`My account (${maskPhone(user.mobile)})`}
+                style={{
+                  minWidth: 38,
+                  height: 38,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '0 8px',
+                  color: '#F47920',
+                  borderRadius: 8,
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <User size={20} aria-hidden="true" />
+                <span className="hidden md:inline">{maskPhone(user.mobile)}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => void logout()}
+                aria-label="Log out"
+                title="Log out"
+                style={{
+                  minWidth: 38,
+                  height: 38,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  padding: '0 8px',
+                  color: '#E8E4DE',
+                  background: 'none',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                <LogOut size={18} aria-hidden="true" />
+                <span className="hidden md:inline">Logout</span>
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/auth"
+              aria-label="Sign in"
+              style={{
+                width: 38,
+                height: 38,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#E8E4DE',
+                borderRadius: 8,
+                textDecoration: 'none',
+              }}
+            >
+              <User size={20} />
+            </Link>
+          )}
         </div>
       </div>
 

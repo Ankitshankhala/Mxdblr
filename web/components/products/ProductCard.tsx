@@ -19,7 +19,9 @@ import StockBadge from '@/components/ui/StockBadge';
 import FeatureIcons from '@/components/products/FeatureIcons';
 import type { Product } from '@/types';
 import { cartApi } from '@/lib/api';
+import { loginPath } from '@/lib/auth';
 import { normalizeImageUrl } from '@/lib/config';
+import { useAuth } from '@/hooks/useAuth';
 
 const SLIDE_INTERVAL = 3000;
 // How long autoplay stays paused after a manual interaction (swipe / arrow / dot).
@@ -32,6 +34,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { status: authStatus } = useAuth();
   const [addingToCart, setAddingToCart] = useState(false);
   const [added, setAdded] = useState(false);
   const [cartError, setCartError] = useState<string | null>(null);
@@ -127,8 +130,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   async function handleAddToCart(e: React.MouseEvent) {
     e.stopPropagation();
-    const token = typeof window !== 'undefined' ? localStorage.getItem('mxd_token') : null;
-    if (!token) { window.location.href = '/auth'; return; }
+    // While the session check is still out, try anyway: a 401 sends the dealer to log in.
+    if (authStatus === 'anonymous') { window.location.href = loginPath(); return; }
     setAddingToCart(true);
     setCartError(null);
     try {

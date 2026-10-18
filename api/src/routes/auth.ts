@@ -3,34 +3,68 @@
  * Mounted at /api/auth (geo-gated in index.ts).
  *
  * Endpoints: POST /send-otp, POST /verify-otp (rate-limited brute-force guards),
- * POST /register (creates a dealer; state validated server-side), POST
- * /admin/login (username + bcrypt password → admin JWT). OTPs are hashed at rest
- * and sent via MSG91 (lib/msg91.ts); dealer/admin JWTs are issued by
- * middleware/auth.ts. Inputs validated with zod.
+ * POST /register (creates a dealer; state validated server-side), GET /me (the
+ * signed-in dealer), POST /logout, POST /admin/login (username + bcrypt password
+ * → admin JWT). Login codes are hashed at rest and sent on WhatsApp via MSG91
+ * (lib/msg91.ts). The dealer JWT goes into the httpOnly session cookie
+ * (lib/session.ts), never the response body. Inputs validated with zod.
+ *
+ * Dealer-facing failures carry a stable `error` code (invalid_phone,
+ * wait_before_resend, too_many_otps, delivery_failed, invalid_input, invalid_otp,
+ * otp_expired_or_missing, too_many_attempts) plus `retryAfter` / `attemptsLeft`
+ * where they apply, so the login screen can say exactly what happened.
  */
 import { Router, Request, Response } from 'express';
 import { BusinessType } from '@prisma/client';
 import { z } from 'zod';
 // npm install bcryptjs @types/bcryptjs
 import bcrypt from 'bcryptjs';
-import { generateDealerToken } from '../middleware/auth';
+import { randomInt } from 'crypto';
+import { generateDealerToken, requireDealerAuth } from '../middleware/auth';
 import { sendOtp } from '../lib/msg91';
+import { clearSessionCookie, setSessionCookie } from '../lib/session';
 import { otpRateLimit, otpVerifyRateLimit, adminLoginRateLimit } from '../middleware/rateLimit';
 import prisma from '../lib/prisma';
 
 const router = Router();
 
+/** How long a login code works. */
+const OTP_TTL_SECONDS = 10 * 60;
+/** Minimum gap between two codes for the same number. */
+const RESEND_AFTER_SECONDS = 30;
+/** Codes per number per hour, admin-issued codes included. */
+const MAX_CODES_PER_HOUR = 5;
+/** Wrong guesses before a code locks. */
+const MAX_ATTEMPTS = 5;
+/** A verified new number has this long to finish the registration form. */
+const REGISTER_WINDOW_MS = 30 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+
 function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();
+}
+
+function fail(
+  res: Response,
+  status: number,
+  error: string,
+  message: string,
+  extra: Record<string, number> = {}
+): void {
+  res.status(status).json({ success: false, error, message, ...extra });
+}
+
+function dealerSummary(dealer: { id: string; ownerName: string; shopName: string; mobile: string; status: string }) {
+  return { id: dealer.id, ownerName: dealer.ownerName, shopName: dealer.shopName, mobile: dealer.mobile, status: dealer.status };
 }
 
 const sendOtpSchema = z.object({
-  mobile: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number'),
+  mobile: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
 });
 
 const verifyOtpSchema = z.object({
   mobile: z.string().regex(/^[6-9]\d{9}$/),
-  otp: z.string().length(6),
+  otp: z.string().regex(/^\d{6}$/),
 });
 
 const registerSchema = z.object({
@@ -53,37 +87,62 @@ const registerSchema = z.object({
 router.post('/send-otp', otpRateLimit, async (req: Request, res: Response): Promise<void> => {
   const parse = sendOtpSchema.safeParse(req.body);
   if (!parse.success) {
-    res.status(400).json({ success: false, message: parse.error.issues[0].message });
+    fail(res, 400, 'invalid_phone', parse.error.issues[0].message);
     return;
   }
 
   const { mobile } = parse.data;
+  const now = Date.now();
 
-  await prisma.otpCode.updateMany({
-    where: { mobile, used: false },
-    data: { used: true },
+  // Per-number limits, on top of the per-IP otpRateLimit: one code every 30s,
+  // five an hour.
+  const recent = await prisma.otpCode.findMany({
+    where: { mobile, createdAt: { gt: new Date(now - HOUR_MS) } },
+    orderBy: { createdAt: 'asc' },
+    select: { createdAt: true },
   });
-
-  const otp = generateOtp();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
-  const codeHash = await bcrypt.hash(String(otp), 10);
-  await prisma.otpCode.create({ data: { mobile, code: codeHash, expiresAt } });
-
-  const sent = await sendOtp(mobile, otp);
-  if (!sent) {
-    res.status(500).json({ success: false, message: 'Failed to send OTP. Please try again.' });
+  const latest = recent[recent.length - 1];
+  if (latest) {
+    const wait = Math.ceil((latest.createdAt.getTime() + RESEND_AFTER_SECONDS * 1000 - now) / 1000);
+    if (wait > 0) {
+      fail(res, 429, 'wait_before_resend', `Please wait ${wait}s before asking for another code.`, { retryAfter: wait });
+      return;
+    }
+  }
+  if (recent.length >= MAX_CODES_PER_HOUR) {
+    const retryAfter = Math.max(1, Math.ceil((recent[0].createdAt.getTime() + HOUR_MS - now) / 1000));
+    fail(res, 429, 'too_many_otps', 'Too many codes requested for this number. Try again later.', { retryAfter });
     return;
   }
 
-  res.json({ success: true, message: 'OTP sent successfully' });
+  const otp = generateOtp();
+  const created = await prisma.otpCode.create({
+    data: { mobile, code: await bcrypt.hash(otp, 10), expiresAt: new Date(now + OTP_TTL_SECONDS * 1000) },
+    select: { id: true },
+  });
+
+  if (!(await sendOtp(mobile, otp))) {
+    // Nothing reached the dealer: drop the new code so it doesn't count against
+    // their limits, and leave any earlier code working.
+    await prisma.otpCode.delete({ where: { id: created.id } });
+    fail(res, 502, 'delivery_failed', "Couldn't send the code on WhatsApp. Please try again.");
+    return;
+  }
+
+  // The new code supersedes every earlier one for this number.
+  await prisma.otpCode.updateMany({
+    where: { mobile, used: false, id: { not: created.id } },
+    data: { used: true },
+  });
+
+  res.json({ success: true, expiresIn: OTP_TTL_SECONDS, resendIn: RESEND_AFTER_SECONDS });
 });
 
 // POST /api/auth/verify-otp
 router.post('/verify-otp', otpVerifyRateLimit, async (req: Request, res: Response): Promise<void> => {
   const parse = verifyOtpSchema.safeParse(req.body);
   if (!parse.success) {
-    res.status(400).json({ success: false, message: parse.error.issues[0].message });
+    fail(res, 400, 'invalid_input', 'Enter the 6-digit code.');
     return;
   }
 
@@ -95,25 +154,48 @@ router.post('/verify-otp', otpVerifyRateLimit, async (req: Request, res: Respons
     otp === '000000';
 
   if (!isDevBypass) {
-    // Fetch all unexpired, unused OTPs for this mobile — compare via bcrypt
+    // Normally exactly one live code (a new one supersedes the rest); compare via bcrypt.
     const candidates = await prisma.otpCode.findMany({
       where: { mobile, used: false, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
       take: 5,
     });
 
-    let matchedRecord: (typeof candidates)[number] | null = null;
-    for (const candidate of candidates) {
-      const isMatch = await bcrypt.compare(String(otp), candidate.code);
-      if (isMatch) { matchedRecord = candidate; break; }
-    }
-
-    if (!matchedRecord) {
-      res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    if (candidates.length === 0) {
+      fail(res, 400, 'otp_expired_or_missing', 'Code expired or locked. Please request a new one.');
       return;
     }
 
-    await prisma.otpCode.update({ where: { id: matchedRecord.id }, data: { used: true } });
+    let matchedId: string | null = null;
+    for (const candidate of candidates) {
+      if (await bcrypt.compare(otp, candidate.code)) { matchedId = candidate.id; break; }
+    }
+
+    if (!matchedId) {
+      const { attempts } = await prisma.otpCode.update({
+        where: { id: candidates[0].id },
+        data: { attempts: { increment: 1 } },
+        select: { attempts: true },
+      });
+      const attemptsLeft = MAX_ATTEMPTS - attempts;
+      if (attemptsLeft <= 0) {
+        await prisma.otpCode.updateMany({ where: { mobile, used: false }, data: { used: true } });
+        fail(res, 429, 'too_many_attempts', 'Too many wrong codes. Please request a new one.');
+        return;
+      }
+      fail(res, 400, 'invalid_otp', 'Wrong code.', { attemptsLeft });
+      return;
+    }
+
+    // Claim the code atomically so two requests can't both spend it.
+    const claimed = await prisma.otpCode.updateMany({
+      where: { id: matchedId, used: false },
+      data: { used: true, verifiedAt: new Date() },
+    });
+    if (claimed.count === 0) {
+      fail(res, 400, 'otp_expired_or_missing', 'Code expired or locked. Please request a new one.');
+      return;
+    }
   }
 
   const dealer = await prisma.dealer.findUnique({ where: { mobile } });
@@ -124,16 +206,16 @@ router.post('/verify-otp', otpVerifyRateLimit, async (req: Request, res: Respons
   }
 
   if (dealer.status === 'BLOCKED' || dealer.status === 'REJECTED') {
-    res.status(403).json({ success: false, message: 'Your account has been suspended. Contact support.' });
+    fail(res, 403, 'account_suspended', 'Your account has been suspended. Contact support.');
     return;
   }
 
-  const token = generateDealerToken(dealer.id, dealer.mobile);
+  setSessionCookie(req, res, generateDealerToken(dealer.id, dealer.mobile));
   res.json({
     success: true,
     newDealer: false,
-    token,
-    dealer: { id: dealer.id, ownerName: dealer.ownerName, shopName: dealer.shopName, mobile: dealer.mobile, status: dealer.status },
+    user: { id: dealer.id, phone: dealer.mobile },
+    dealer: dealerSummary(dealer),
   });
 });
 
@@ -159,12 +241,14 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
   }
 
   if (process.env.ENABLE_OTP_BYPASS !== 'true' || process.env.NODE_ENV === 'production') {
-    const recentOtp = await prisma.otpCode.findFirst({
-      where: { mobile: data.mobile, used: true, expiresAt: { gt: new Date(Date.now() - 10 * 60 * 1000) } },
-      orderBy: { createdAt: 'desc' },
+    // Only a code that was actually entered correctly counts; superseded or
+    // locked codes are also marked used and must not open registration.
+    const verified = await prisma.otpCode.findFirst({
+      where: { mobile: data.mobile, verifiedAt: { gt: new Date(Date.now() - REGISTER_WINDOW_MS) } },
+      select: { id: true },
     });
 
-    if (!recentOtp) {
+    if (!verified) {
       res.status(401).json({ success: false, message: 'Mobile verification required. Please verify your OTP first.' });
       return;
     }
@@ -195,12 +279,32 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     },
   });
 
-  const token = generateDealerToken(dealer.id, dealer.mobile);
+  setSessionCookie(req, res, generateDealerToken(dealer.id, dealer.mobile));
   res.status(201).json({
     success: true,
-    token,
-    dealer: { id: dealer.id, ownerName: dealer.ownerName, shopName: dealer.shopName, mobile: dealer.mobile, status: dealer.status },
+    user: { id: dealer.id, phone: dealer.mobile },
+    dealer: dealerSummary(dealer),
   });
+});
+
+// GET /api/auth/me — the signed-in dealer, or 401 (and a cleared cookie).
+router.get('/me', requireDealerAuth, async (req: Request, res: Response): Promise<void> => {
+  const dealer = await prisma.dealer.findUnique({
+    where: { id: req.dealer!.dealerId },
+    select: { id: true, ownerName: true, shopName: true, mobile: true, status: true },
+  });
+  if (!dealer || dealer.status === 'BLOCKED' || dealer.status === 'REJECTED') {
+    clearSessionCookie(req, res);
+    res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+    return;
+  }
+  res.json({ success: true, sub: dealer.id, phone: dealer.mobile, dealer: dealerSummary(dealer) });
+});
+
+// POST /api/auth/logout
+router.post('/logout', (req: Request, res: Response): void => {
+  clearSessionCookie(req, res);
+  res.json({ success: true });
 });
 
 // POST /api/auth/admin/login

@@ -13,7 +13,9 @@ import {
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
-import { dealerApi, clearToken } from '@/lib/api';
+import { dealerApi } from '@/lib/api';
+import { loginPath } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
 import type { Dealer, BusinessType } from '@/types';
 
 /* ── Constants ──────────────────────────────────────────────────────────────── */
@@ -97,6 +99,7 @@ function PhoneInput({ value, onChange, placeholder }: { value: string; onChange:
 /* ── Page ───────────────────────────────────────────────────────────────────── */
 export default function ProfileSettingsPage() {
   const router = useRouter();
+  const { refresh: refreshSession } = useAuth();
   const [dealer, setDealer]           = useState<Dealer | null>(null);
   const [loading, setLoading]         = useState(true);
   const [editing, setEditing]         = useState(false);
@@ -108,10 +111,9 @@ export default function ProfileSettingsPage() {
     city: '', tehsil: '', district: '', state: '', pincode: '', gstNumber: '',
   });
 
+  // Signed-out visitors never reach this page (proxy.ts); an expired session
+  // gets a 401 here, which sends them to log in.
   useEffect(() => {
-    const token = localStorage.getItem('dealerToken') || localStorage.getItem('mxd_token');
-    if (!token) { router.replace('/auth'); return; }
-
     dealerApi.me()
       .then(res => {
         const d: Dealer = res.data.data;
@@ -128,9 +130,8 @@ export default function ProfileSettingsPage() {
           pincode:        d.pincode,
           gstNumber:      d.gstNumber || '',
         });
-        localStorage.setItem('mxd_dealer', JSON.stringify(d));
       })
-      .catch(() => router.replace('/auth'))
+      .catch(() => router.replace(loginPath('/account/profile')))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -170,6 +171,7 @@ export default function ProfileSettingsPage() {
       } : prev);
       setSaveSuccess(true);
       setEditing(false);
+      void refreshSession(); // header / cart preview pick up a new name or shop name
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to save changes';

@@ -2,37 +2,43 @@
  * express-rate-limit configurations used across the API.
  *
  * - apiRateLimit: global throttle (120 req/min) mounted on /api in index.ts.
- * - otpRateLimit: caps OTP sends (5 per 10 min) to limit SMS cost/abuse.
- * - otpVerifyRateLimit / adminLoginRateLimit: brute-force guards (5 failed
- *   attempts per 15 min; successful attempts are not counted). The OTP expires
- *   in 5 min, well inside the verify window, so guessing is infeasible.
+ * - otpRateLimit: caps login-code sends per IP (5 per 10 min) to limit WhatsApp
+ *   cost/abuse. routes/auth.ts adds per-number limits on top.
+ * - otpVerifyRateLimit / adminLoginRateLimit: brute-force guards on failed
+ *   attempts (successful attempts are not counted). Each login code also locks
+ *   after 5 wrong guesses (routes/auth.ts), so guessing is infeasible.
+ * The two OTP limiters answer { error: 'too_many_requests', retryAfter } so the
+ * login screen can show the wait.
  * Relies on `app.set('trust proxy', 1)` (index.ts) for correct client IPs.
  */
+import { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
+
+function tooManyRequests(message: string) {
+  return (req: Request, res: Response): void => {
+    const resetTime = (req as Request & { rateLimit?: { resetTime?: Date } }).rateLimit?.resetTime;
+    const retryAfter = resetTime ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 1000)) : undefined;
+    res.status(429).json({ success: false, error: 'too_many_requests', message, ...(retryAfter && { retryAfter }) });
+  };
+}
 
 export const otpRateLimit = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: {
-    success: false,
-    message: 'Too many OTP requests. Please wait 10 minutes before trying again.',
-  },
+  handler: tooManyRequests('Too many code requests. Please wait before trying again.'),
 });
 
-// Tight limit on verify-otp: 5 wrong guesses per 15 min renders brute-force
-// impossible — the OTP expires in 5 min before a second window opens.
+// Per IP, failed guesses only. Above the 5-per-code lock so that after a code
+// locks the dealer can still request a new one and enter it from the same phone.
 export const otpVerifyRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // only counts failed/invalid attempts
-  message: {
-    success: false,
-    message: 'Too many verification attempts. Please wait 15 minutes before trying again.',
-  },
+  handler: tooManyRequests('Too many verification attempts. Please wait before trying again.'),
 });
 
 export const apiRateLimit = rateLimit({

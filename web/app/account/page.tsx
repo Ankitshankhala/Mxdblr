@@ -16,7 +16,9 @@ import {
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
-import { dealerApi, clearToken } from '@/lib/api';
+import { dealerApi } from '@/lib/api';
+import { loginPath } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { whatsappLink } from '@/lib/config';
 import type { Dealer, BusinessType } from '@/types';
 
@@ -138,25 +140,23 @@ function QuickLink({ href, icon, label, description, isExternal }: {
 /* ── Page ───────────────────────────────────────────────────────────────────── */
 export default function AccountDashboard() {
   const router = useRouter();
+  const { logout } = useAuth();
   const [dealer, setDealer]       = useState<Dealer | null>(null);
   const [inquiries, setInquiries] = useState<InquiryLog[]>([]);
   const [loading, setLoading]     = useState(true);
 
+  // Signed-out visitors never reach this page (proxy.ts); an expired session
+  // gets a 401 here, which sends them to log in.
   useEffect(() => {
-    const token = localStorage.getItem('dealerToken') || localStorage.getItem('mxd_token');
-    if (!token) { router.replace('/auth'); return; }
-
     Promise.all([
       dealerApi.me(),
       dealerApi.myInquiries(),
     ])
       .then(([meRes, inqRes]) => {
-        const d: Dealer = meRes.data.data;
-        setDealer(d);
-        localStorage.setItem('mxd_dealer', JSON.stringify(d));
+        setDealer(meRes.data.data as Dealer);
         setInquiries((inqRes.data.data as InquiryLog[]) || []);
       })
-      .catch(() => router.replace('/auth'))
+      .catch(() => router.replace(loginPath('/account')))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -197,8 +197,7 @@ export default function AccountDashboard() {
   }, [inquiries]);
 
   function handleLogout() {
-    clearToken();
-    router.push('/auth');
+    void logout();
   }
 
   /* Loading skeleton */

@@ -1,34 +1,27 @@
 /**
  * Frontend API client — the single axios layer the storefront uses to talk to
- * the backend. Centralizes the base URL (NEXT_PUBLIC_API_URL), dealer-token
- * storage/attachment (localStorage), and grouped endpoint helpers
- * (productsApi, categoriesApi, cartApi, …). Components should call these helpers
- * rather than hit fetch/axios directly.
+ * the backend. Centralizes the base URL (NEXT_PUBLIC_API_URL) and grouped
+ * endpoint helpers (productsApi, categoriesApi, cartApi, …). Components should
+ * call these helpers rather than hit fetch/axios directly.
+ *
+ * The dealer session is an httpOnly cookie the API sets at login (mxd_session);
+ * page scripts never see the token. Requests carry it via withCredentials, and
+ * the signed-in state lives in useAuth (components/auth/AuthProvider.tsx).
  */
 import axios, { AxiosError } from 'axios';
+import { loginPath } from '@/lib/auth';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
-function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('dealerToken') || localStorage.getItem('mxd_token');
-}
-
-export function setToken(token: string): void {
-  localStorage.setItem('dealerToken', token);
-  localStorage.setItem('mxd_token', token);
-  // Also persist as a cookie so Next.js middleware can verify auth server-side.
-  // Not HttpOnly — JS needs to clear it on logout.
-  // max-age=604800 = 7 days, matching typical dealer JWT expiry.
-  const secure = typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : '';
-  document.cookie = `mxd_token=${token}; path=/; SameSite=Lax; max-age=604800${secure}`;
-}
-
-export function clearToken(): void {
+/**
+ * Removes what the old script-readable login left behind: the token in
+ * localStorage, the cached dealer, and the mxd_token cookie. Those sessions end;
+ * the dealer signs in once more and gets the httpOnly cookie.
+ */
+export function clearLegacySession(): void {
   localStorage.removeItem('dealerToken');
   localStorage.removeItem('mxd_token');
   localStorage.removeItem('mxd_dealer');
-  // Expire the middleware cookie immediately.
   document.cookie = 'mxd_token=; path=/; SameSite=Lax; max-age=0';
 }
 
@@ -39,30 +32,53 @@ declare module 'axios' {
   }
 }
 
-const api = axios.create({ baseURL: BASE });
-
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+const api = axios.create({ baseURL: BASE, withCredentials: true });
 
 api.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
+    // The API has already cleared a session cookie that stopped working.
     if (error.response?.status === 401 && typeof window !== 'undefined' && !error.config?.quietAuth) {
-      clearToken();
-      window.location.href = '/auth';
+      window.location.href = loginPath();
     }
     return Promise.reject(error);
   }
 );
 
 // Auth
+export interface SessionDealer {
+  id: string;
+  ownerName: string;
+  shopName: string;
+  mobile: string;
+  status: string;
+}
+
+/** The body of a failed auth call: a stable error code, plus details where they apply. */
+export interface AuthApiError {
+  error?: string;
+  message?: string;
+  retryAfter?: number;
+  attemptsLeft?: number;
+}
+
+export type VerifyOtpResult =
+  | { success: true; newDealer: true; mobile: string }
+  | { success: true; newDealer: false; user: { id: string; phone: string }; dealer: SessionDealer };
+
 export const authApi = {
-  sendOtp: (mobile: string) => api.post('/auth/send-otp', { mobile }),
-  verifyOtp: (mobile: string, otp: string) => api.post('/auth/verify-otp', { mobile, otp }),
-  register: (data: Record<string, unknown>) => api.post('/auth/register', data),
+  sendOtp: (mobile: string) =>
+    api.post<{ success: true; expiresIn: number; resendIn: number }>('/auth/send-otp', { mobile }),
+  verifyOtp: (mobile: string, otp: string) => api.post<VerifyOtpResult>('/auth/verify-otp', { mobile, otp }),
+  // Quiet: an expired verification is shown on the form instead of leaving it.
+  register: (data: Record<string, unknown>) =>
+    api.post<{ success: true; user: { id: string; phone: string }; dealer: SessionDealer }>('/auth/register', data, {
+      quietAuth: true,
+    }),
+  // Quiet: being signed out is a normal answer here, not a reason to redirect.
+  me: () =>
+    api.get<{ success: true; sub: string; phone: string; dealer: SessionDealer }>('/auth/me', { quietAuth: true }),
+  logout: () => api.post('/auth/logout', null, { quietAuth: true }),
 };
 
 // Products

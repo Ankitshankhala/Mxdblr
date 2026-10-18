@@ -79,12 +79,17 @@ model Dealer {
 }
 
 model OtpCode {
-  id        String   @id @default(cuid())
-  mobile    String
-  code      String
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  mobile     String
+  code       String
+  expiresAt  DateTime
+  used       Boolean   @default(false)
+  // Wrong guesses against this code; it locks at 5 (see routes/auth.ts).
+  attempts   Int       @default(0)
+  // Set only when the code was entered correctly. Registration requires this,
+  // so a code that was superseded or locked can't stand in for a verified number.
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   @@index([mobile])
   @@index([expiresAt])

@@ -9,7 +9,7 @@
  */
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { requireDealerAuth } from '../middleware/auth';
+import { readDealerToken, requireDealerAuth } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import { PRICE_SELECT, TieredPrices, priceForTier } from '../lib/pricing';
 
@@ -49,11 +49,11 @@ router.post('/notify-me', async (req: Request, res: Response): Promise<void> => 
   }
 
   let dealerId: string | undefined;
-  const authHeader = req.headers.authorization;
-  if (authHeader?.startsWith('Bearer ')) {
+  const found = readDealerToken(req);
+  if (found) {
     try {
       const jwt = await import('jsonwebtoken');
-      const payload = jwt.verify(authHeader.slice(7), process.env.JWT_SECRET!) as { type?: string; dealerId?: string };
+      const payload = jwt.verify(found.token, process.env.JWT_SECRET!) as { type?: string; dealerId?: string };
       if (payload.type === 'dealer') dealerId = payload.dealerId;
     } catch {
       // anonymous — fine

@@ -1,12 +1,13 @@
 /**
  * Root layout — wraps every route. Loads the Inter font, imports global styles,
- * sets the site-wide <Metadata> defaults, and mounts the persistent
- * FloatingWhatsApp CTA. The single <html>/<body> shell for the whole app.
+ * sets the site-wide <Metadata> defaults, and mounts the dealer AuthProvider and
+ * the persistent FloatingWhatsApp CTA. The single <html>/<body> shell for the whole app.
  */
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import FloatingWhatsApp from "@/components/layout/FloatingWhatsApp";
+import AuthProvider from "@/components/auth/AuthProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -55,8 +56,10 @@ export default function RootLayout({
   return (
     <html lang="en-IN" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen" suppressHydrationWarning>
-        {children}
-        <FloatingWhatsApp />
+        <AuthProvider>
+          {children}
+          <FloatingWhatsApp />
+        </AuthProvider>
       </body>
     </html>
   );

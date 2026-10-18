@@ -4,15 +4,28 @@ import { jwtVerify } from 'jose';
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Dealer-only routes — just check cookie presence (real auth on API)
+  // Dealer-only routes — need a valid dealer session cookie (httpOnly, set by the
+  // API at login). Revocation and blocking are still checked by the API itself.
   if (
     pathname.startsWith('/account') ||
     pathname.startsWith('/cart') ||
     pathname === '/wishlist'
   ) {
-    const token = request.cookies.get('mxd_token')?.value;
-    if (!token) {
-      return NextResponse.redirect(new URL('/auth', request.url));
+    const token = request.cookies.get('mxd_session')?.value;
+    let valid = false;
+    if (token) {
+      try {
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+        const { payload } = await jwtVerify(token, secret);
+        valid = payload.type === 'dealer';
+      } catch {
+        valid = false;
+      }
+    }
+    if (!valid) {
+      const login = new URL('/auth', request.url);
+      login.searchParams.set('redirect', pathname + request.nextUrl.search);
+      return NextResponse.redirect(login);
     }
     return NextResponse.next();
   }

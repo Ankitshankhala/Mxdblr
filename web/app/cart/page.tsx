@@ -17,11 +17,13 @@ import SkuLabel from '@/components/ui/SkuLabel';
 import StockBadge from '@/components/ui/StockBadge';
 import QtyStepper from '@/components/ui/QtyStepper';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
 import { dealerApi, notificationsApi } from '@/lib/api';
 import { normalizeImageUrl } from '@/lib/config';
 import { formatInr, roundPaise } from '@/lib/price';
 import type { CartItem } from '@/types';
 import { whatsappLink } from '@/lib/config';
+import { loginPath } from '@/lib/auth';
 
 /**
  * Preview of the inquiry message. `prices` (the dealer's own, when an admin has
@@ -227,20 +229,13 @@ export default function CartPage() {
   const { items, loading, removeFromCart, updateQuantity, count } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [dealer, setDealer] = useState<{ ownerName?: string; shopName?: string } | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const raw = localStorage.getItem('mxd_dealer');
-    if (raw) setDealer(JSON.parse(raw));
-    setIsAuthenticated(!!localStorage.getItem('mxd_token'));
-  }, []);
+  const { user: dealer, isLoggedIn: isAuthenticated } = useAuth();
 
   // The dealer's own prices for the preview; undefined while prices are off.
   const [prices, setPrices] = useState<Record<string, number | null> | undefined>(undefined);
   const productIdsKey = items.map((i) => i.productId).slice(0, 100).join(',');
   useEffect(() => {
-    if (!productIdsKey || !localStorage.getItem('mxd_token')) return;
+    if (!productIdsKey || !isAuthenticated) return;
     let cancelled = false;
     dealerApi
       .prices(productIdsKey.split(','))
@@ -253,7 +248,7 @@ export default function CartPage() {
     return () => {
       cancelled = true;
     };
-  }, [productIdsKey]);
+  }, [productIdsKey, isAuthenticated]);
 
   const whatsappMessage = buildWhatsAppMessage(
     items,
@@ -270,7 +265,7 @@ export default function CartPage() {
   const fallbackWhatsappUrl = whatsappLink(whatsappMessage);
 
   async function handleWhatsAppInquiry() {
-    if (!isAuthenticated) { window.location.href = '/auth'; return; }
+    if (!isAuthenticated) { window.location.href = loginPath('/cart'); return; }
 
     setSubmitting(true);
     let finalUrl = fallbackWhatsappUrl;

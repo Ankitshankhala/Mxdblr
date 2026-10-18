@@ -5,13 +5,17 @@
  * submits POST /api/auth/register. State is chosen from a fixed dropdown (the
  * server still independently enforces geo rules — the dropdown is convenience,
  * not the control). Uses AnimatePresence initial={false} for reliable first paint.
+ * On success the API sets the httpOnly session cookie; the dealer is signed in
+ * and returns to the page they were trying to reach before logging in.
  */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/layout/Logo';
-import { authApi, setToken } from '@/lib/api';
+import { authApi } from '@/lib/api';
+import { safeRedirect } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
 import type { BusinessType } from '@/types';
 
 const BUSINESS_TYPES: { value: BusinessType; label: string }[] = [
@@ -97,6 +101,7 @@ const inputStyle: React.CSSProperties = {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<Partial<FormData>>({});
@@ -156,10 +161,11 @@ export default function RegisterPage() {
         altMobile: form.altMobile || undefined,
         gstNumber: form.gstNumber || undefined,
       });
-      setToken(res.data.token);
-      localStorage.setItem('mxd_dealer', JSON.stringify(res.data.dealer));
+      signIn(res.data.dealer);
+      const next = safeRedirect(sessionStorage.getItem('mxd_login_redirect'));
       sessionStorage.removeItem('mxd_reg_mobile');
-      router.push('/catalog');
+      sessionStorage.removeItem('mxd_login_redirect');
+      router.push(next);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Registration failed. Please try again.';
       setApiError(msg);

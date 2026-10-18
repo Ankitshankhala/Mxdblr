@@ -1,24 +1,42 @@
 /**
- * MSG91 messaging client — OTP SMS + WhatsApp Business outbound.
+ * MSG91 messaging client — WhatsApp login codes + WhatsApp Business outbound.
  *
- * Three helpers: sendOtp (login/registration OTP), sendWhatsAppMessage
- * (restock/notification template), and buildInquiryWhatsAppMessage (formats a
- * dealer cart into the wa.me inquiry text). When MSG91_AUTH_KEY is unset the
- * send helpers no-op and return success (dev mock — OTP is logged to the console
- * in development only), so the full auth flow is testable without a live key.
- * Credentials come from env vars exclusively.
+ * Three helpers: sendOtp (login/registration code, WhatsApp only),
+ * sendWhatsAppMessage (restock/notification template), and
+ * buildInquiryWhatsAppMessage (formats a dealer cart into the wa.me inquiry
+ * text). Until WhatsApp login codes are set up (MSG91_AUTH_KEY,
+ * MSG91_WHATSAPP_NUMBER, MSG91_WHATSAPP_OTP_TEMPLATE) sendOtp sends nothing and
+ * returns success: the code is logged to the console in development, and in
+ * production admins issue login codes by hand (Admin > Dealers). Credentials
+ * come from env vars exclusively.
  */
 import axios from 'axios';
 import { formatInr, roundPaise } from './pricing';
 
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY || '';
-const MSG91_TEMPLATE_ID = process.env.MSG91_TEMPLATE_ID || '';
-const MSG91_SENDER_ID = process.env.MSG91_SENDER_ID || 'MXDBLR';
 const WHATSAPP_BUSINESS_NUMBER = process.env.WHATSAPP_BUSINESS_NUMBER || '';
 
+// Login codes go out from their own MSG91 integrated number, NOT
+// WHATSAPP_BUSINESS_NUMBER (that one stays on the WhatsApp Business app for the
+// inquiry inbox). The template is a Meta-approved "Authentication" template whose
+// body {{1}} is the code, with a copy-code button that also carries the code.
+const WHATSAPP_OTP_NUMBER = process.env.MSG91_WHATSAPP_NUMBER || '';
+const WHATSAPP_OTP_TEMPLATE = process.env.MSG91_WHATSAPP_OTP_TEMPLATE || '';
+const WHATSAPP_OTP_LANGUAGE = process.env.MSG91_WHATSAPP_OTP_LANGUAGE || 'en';
+const WHATSAPP_OTP_NAMESPACE = process.env.MSG91_WHATSAPP_OTP_NAMESPACE || '';
+
+const WHATSAPP_BULK_URL = 'https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/';
+
+/** True once everything needed to send login codes on WhatsApp is set. */
+export function whatsappOtpConfigured(): boolean {
+  return Boolean(MSG91_AUTH_KEY && WHATSAPP_OTP_NUMBER && WHATSAPP_OTP_TEMPLATE);
+}
+
+/** Sends a login code on WhatsApp. There is no SMS fallback. */
 export async function sendOtp(mobile: string, otp: string): Promise<boolean> {
-  if (!MSG91_AUTH_KEY) {
-    // Dev mock: log OTP to console only in development
+  if (!whatsappOtpConfigured()) {
+    // Not set up yet: nothing is sent. Dev logs the code; production relies on
+    // admin-issued login codes (POST /api/admin/dealers/login-code).
     if (process.env.NODE_ENV === 'development') {
       console.info(`[DEV] OTP for ${mobile}: ${otp}`);
     }
@@ -27,11 +45,28 @@ export async function sendOtp(mobile: string, otp: string): Promise<boolean> {
 
   try {
     const response = await axios.post(
-      'https://control.msg91.com/api/v5/otp',
+      WHATSAPP_BULK_URL,
       {
-        template_id: MSG91_TEMPLATE_ID,
-        mobile: `91${mobile}`,
-        otp,
+        integrated_number: WHATSAPP_OTP_NUMBER,
+        content_type: 'template',
+        payload: {
+          messaging_product: 'whatsapp',
+          type: 'template',
+          template: {
+            name: WHATSAPP_OTP_TEMPLATE,
+            language: { code: WHATSAPP_OTP_LANGUAGE, policy: 'deterministic' },
+            ...(WHATSAPP_OTP_NAMESPACE && { namespace: WHATSAPP_OTP_NAMESPACE }),
+            to_and_components: [
+              {
+                to: [`91${mobile}`],
+                components: {
+                  body_1: { type: 'text', value: otp },
+                  button_1: { subtype: 'url', type: 'text', value: otp },
+                },
+              },
+            ],
+          },
+        },
       },
       {
         headers: {
@@ -41,7 +76,7 @@ export async function sendOtp(mobile: string, otp: string): Promise<boolean> {
         timeout: 10000,
       }
     );
-    return response.data?.type === 'success';
+    return response.data?.hasError !== true && response.data?.status !== 'fail';
   } catch {
     return false;
   }

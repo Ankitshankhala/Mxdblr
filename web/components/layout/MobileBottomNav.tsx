@@ -4,11 +4,11 @@
  * MobileBottomNav — fixed bottom tab bar on small screens (home, catalog, cart,
  * account) with the active route highlighted. Hidden on desktop.
  */
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Grid3X3, ShoppingBag, Heart, User } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
 
 const BASE_NAV = [
   { href: '/', label: 'Home', Icon: Home },
@@ -20,12 +20,8 @@ const BASE_NAV = [
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const { count } = useCart();
-  const [accountHref, setAccountHref] = useState('/auth');
-
-  useEffect(() => {
-    const token = localStorage.getItem('dealerToken') || localStorage.getItem('mxd_token');
-    setAccountHref(token ? '/account' : '/auth');
-  }, []);
+  const { isLoggedIn } = useAuth();
+  const accountHref = isLoggedIn ? '/account' : '/auth';
 
   const NAV_ITEMS = [...BASE_NAV, { href: accountHref, label: 'Account', Icon: User }];
 

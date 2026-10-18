@@ -8,16 +8,20 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { cartApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import type { CartItem } from '@/types';
 
 export function useCart() {
+  const { isLoggedIn, loading: authLoading } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchCart = useCallback(async () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('mxd_token') : null;
-    if (!token) return;
+    if (!isLoggedIn) {
+      setItems([]);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -29,8 +33,9 @@ export function useCart() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isLoggedIn]);
 
+  // Runs again once the session check answers, and on sign-in / sign-out.
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
@@ -86,5 +91,6 @@ export function useCart() {
 
   const count = items.reduce((sum, i) => sum + i.quantity, 0);
 
-  return { items, loading, error, count, addToCart, removeFromCart, updateQuantity, clearCart, refetch: fetchCart };
+  // Still loading while the session check is out, so an empty cart isn't shown too early.
+  return { items, loading: loading || authLoading, error, count, addToCart, removeFromCart, updateQuantity, clearCart, refetch: fetchCart };
 }

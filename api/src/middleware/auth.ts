@@ -5,6 +5,9 @@
  * use, so a dealer token can never reach an admin route and vice versa.
  * - requireDealerAuth also enforces token revocation (dealer.lastRevokedAt) so a
  *   blocked/suspended dealer's existing session stops working immediately.
+ * - Dealer tokens arrive in the httpOnly session cookie (lib/session.ts) from the
+ *   storefront, or as a Bearer header (tests, tools). A cookie whose token no
+ *   longer works is cleared along with the 401, so the storefront sees signed-out.
  * - Admin tokens deliberately carry NO role/permission data; authorization is
  *   looked up fresh from the DB on every request (see middleware/rbac.ts), so
  *   permission/active changes take effect at once rather than at token expiry.
@@ -13,6 +16,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
+import { clearSessionCookie, readSessionCookie } from '../lib/session';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -37,23 +41,35 @@ declare global {
   }
 }
 
-export function requireDealerAuth(req: Request, res: Response, next: NextFunction): void {
+/** The dealer token on this request: Bearer header first, then the session cookie. */
+export function readDealerToken(req: Request): { token: string; fromCookie: boolean } | null {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (authHeader?.startsWith('Bearer ')) return { token: authHeader.slice(7), fromCookie: false };
+  const cookie = readSessionCookie(req);
+  return cookie ? { token: cookie, fromCookie: true } : null;
+}
+
+export function requireDealerAuth(req: Request, res: Response, next: NextFunction): void {
+  const found = readDealerToken(req);
+  if (!found) {
     res.status(401).json({ success: false, message: 'Authentication required' });
     return;
   }
 
-  const token = authHeader.slice(7);
+  const reject = (message: string) => {
+    if (found.fromCookie) clearSessionCookie(req, res);
+    res.status(401).json({ success: false, message });
+  };
+
   let payload: DealerPayload & { iat?: number };
   try {
-    payload = jwt.verify(token, JWT_SECRET) as DealerPayload & { iat?: number };
+    payload = jwt.verify(found.token, JWT_SECRET) as DealerPayload & { iat?: number };
     if (payload.type !== 'dealer') {
-      res.status(401).json({ success: false, message: 'Invalid token type' });
+      reject('Invalid token type');
       return;
     }
   } catch {
-    res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    reject('Invalid or expired token');
     return;
   }
 
@@ -64,11 +80,11 @@ export function requireDealerAuth(req: Request, res: Response, next: NextFunctio
     .findUnique({ where: { id: payload.dealerId }, select: { lastRevokedAt: true } })
     .then((dealer) => {
       if (!dealer) {
-        res.status(401).json({ success: false, message: 'Account not found' });
+        reject('Account not found');
         return;
       }
       if (dealer.lastRevokedAt && tokenIssuedAt && dealer.lastRevokedAt > tokenIssuedAt) {
-        res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+        reject('Session expired. Please log in again.');
         return;
       }
       req.dealer = payload;

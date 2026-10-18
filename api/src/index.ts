@@ -59,15 +59,16 @@ if (process.env.NODE_ENV === 'production') {
   // that unlocks approval impossible.
   //
   // What this costs is real and must be visible in the logs: sendOtp() no-ops and
-  // returns success, so POST /auth/send-otp answers "OTP sent successfully" while
+  // returns success, so POST /auth/send-otp answers as if a code went out while
   // nothing is delivered. Dealers CANNOT sign in or register on their own. The only
   // route in is POST /api/admin/dealers/login-code -- an admin mints a code and
-  // relays it by hand. Remove this warning by setting both vars once DLT and Meta
-  // approval clear; the dealer-facing flow does not change.
-  const messaging = ['MSG91_AUTH_KEY', 'MSG91_TEMPLATE_ID'].filter((k) => missing(k));
+  // relays it by hand. Login codes go by WhatsApp only (no SMS); remove this
+  // warning by setting all three vars once the MSG91 authentication template is
+  // approved. The dealer-facing flow does not change.
+  const messaging = ['MSG91_AUTH_KEY', 'MSG91_WHATSAPP_NUMBER', 'MSG91_WHATSAPP_OTP_TEMPLATE'].filter((k) => missing(k));
   if (messaging.length > 0) {
     process.stderr.write(
-      `[WARN] ${messaging.join(', ')} unset — OTP delivery is DISABLED.\n` +
+      `[WARN] ${messaging.join(', ')} unset — WhatsApp login codes are DISABLED.\n` +
         '       /auth/send-otp reports success but sends nothing. Dealers cannot\n' +
         '       sign in or self-register. Issue codes from Admin > Dealers >\n' +
         '       "Issue Login Code" until WhatsApp OTP is approved.\n'
