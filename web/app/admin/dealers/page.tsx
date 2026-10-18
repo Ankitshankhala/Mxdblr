@@ -21,6 +21,7 @@
  * it needs ACCESS_FINANCIAL_DATA; everyone else sees the setting read-only.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";
@@ -85,6 +86,11 @@ const BUSINESS_TYPE_LABELS: Record<string, string> = {
 };
 const btLabel = (v: string) => BUSINESS_TYPE_LABELS[v] ?? v;
 const statusLabel = (v: string) => v.charAt(0) + v.slice(1).toLowerCase();
+// Fixed-position Actions menu: right edge aligned to its button, and either
+// `top` (opens down) or `bottom` (opens up). Up to five items ≈ 190px tall.
+interface MenuAnchor { dealerId: string; right: number; top?: number; bottom?: number }
+const MENU_MAX_HEIGHT = 200;
+
 const pricingLabel = (d: Pick<ApiDealer, "priceTier" | "showPrices">) =>
   d.showPrices ? `Price ${d.priceTier}` : "Off";
 
@@ -213,7 +219,41 @@ function DealersContent() {
   const [fetchError, setFetchError] = useState("");
   const [exporting, setExporting] = useState(false);
 
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  // Row "Actions" menu. Rendered into <body> at fixed coordinates: inside the
+  // table it was clipped by the scroll container (with one or two rows there
+  // is no room below the button), so it opens upward when space is short.
+  const [openMenu, setOpenMenu] = useState<MenuAnchor | null>(null);
+
+  function toggleMenu(dealerId: string, button: HTMLElement) {
+    if (openMenu?.dealerId === dealerId) { setOpenMenu(null); return; }
+    const r = button.getBoundingClientRect();
+    const right = window.innerWidth - r.right;
+    const spaceBelow = window.innerHeight - r.bottom;
+    setOpenMenu(spaceBelow < MENU_MAX_HEIGHT && r.top > spaceBelow
+      ? { dealerId, right, bottom: window.innerHeight - r.top + 4 }
+      : { dealerId, right, top: r.bottom + 4 });
+  }
+
+  // Close on a click elsewhere, Escape, scroll or resize (the menu would
+  // otherwise float away from its button).
+  useEffect(() => {
+    if (!openMenu) return;
+    const close = () => setOpenMenu(null);
+    const onPointer = (e: PointerEvent) => {
+      if (!(e.target instanceof Element) || !e.target.closest("[data-dealer-menu]")) close();
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [openMenu]);
   const [confirmAction, setConfirmAction] = useState<{ dealerId: string; newStatus: DealerStatus } | null>(null);
   const [viewDealer, setViewDealer] = useState<ApiDealer | null>(null);
   const [moderating, setModerating] = useState(false);
@@ -668,7 +708,7 @@ function DealersContent() {
           <button onClick={() => fetchDealers(filters)} className="btn-orange" style={{ padding: "9px 20px", fontSize: 13 }}>Retry</button>
         </div>
       ) : (
-        <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }} onClick={() => setOpenMenu(null)}>
+        <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
@@ -696,33 +736,34 @@ function DealersContent() {
                     </td>
                     <td style={{ padding: "10px 14px", color: "#6E6257", whiteSpace: "nowrap" }}>{fmtDate(d.createdAt)}</td>
                     <td style={{ padding: "10px 14px" }}>
-                      <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => setOpenMenu(openMenu === d.id ? null : d.id)}
-                          style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                          Actions
-                          <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
-                        </button>
-                        {openMenu === d.id && (
-                          <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "#fff", border: "1px solid #E8E4DE", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 100, minWidth: 160, overflow: "hidden" }}>
-                            <button onClick={() => { setViewDealer(d); setOpenMenu(null); }}
+                      <button data-dealer-menu onClick={(e) => toggleMenu(d.id, e.currentTarget)}
+                        aria-haspopup="menu" aria-expanded={openMenu?.dealerId === d.id}
+                        style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid #E8E4DE", background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                        Actions
+                        <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+                      </button>
+                      {openMenu?.dealerId === d.id && createPortal(
+                        <div data-dealer-menu role="menu"
+                          style={{ position: "fixed", right: openMenu.right, top: openMenu.top, bottom: openMenu.bottom, background: "#fff", border: "1px solid #E8E4DE", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 900, minWidth: 160, overflow: "hidden" }}>
+                          <button role="menuitem" onClick={() => { setViewDealer(d); setOpenMenu(null); }}
+                            style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", color: "#1F1813" }}>
+                            View Details
+                          </button>
+                          {canEditPrices && (
+                            <button role="menuitem" onClick={() => openPricing(d)}
                               style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", color: "#1F1813" }}>
-                              View Details
+                              Set Prices
                             </button>
-                            {canEditPrices && (
-                              <button onClick={() => openPricing(d)}
-                                style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", color: "#1F1813" }}>
-                                Set Prices
-                              </button>
-                            )}
-                            {STATUS_ACTIONS[d.status].map((action) => (
-                              <button key={action} onClick={() => setConfirmAction({ dealerId: d.id, newStatus: action })}
-                                style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", fontWeight: 600, color: action === "BLOCKED" ? "#DC2626" : action === "REJECTED" ? "#6E6257" : action === "SUSPENDED" ? "#F59E0B" : "#2E7D32" }}>
-                                {ACTION_LABELS[action]}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                          )}
+                          {STATUS_ACTIONS[d.status].map((action) => (
+                            <button role="menuitem" key={action} onClick={() => { setConfirmAction({ dealerId: d.id, newStatus: action }); setOpenMenu(null); }}
+                              style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", fontWeight: 600, color: action === "BLOCKED" ? "#DC2626" : action === "REJECTED" ? "#6E6257" : action === "SUSPENDED" ? "#F59E0B" : "#2E7D32" }}>
+                              {ACTION_LABELS[action]}
+                            </button>
+                          ))}
+                        </div>,
+                        document.body,
+                      )}
                     </td>
                   </tr>
                 ))}
