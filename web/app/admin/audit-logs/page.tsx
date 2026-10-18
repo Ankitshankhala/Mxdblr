@@ -32,21 +32,58 @@ const ACTION_STYLE: Record<string, { label: string; color: string; bg: string }>
   USER_DEACTIVATED: { label: "User deactivated", color: "#B45309", bg: "#FEF3C7" },
   USER_DELETED: { label: "User deleted", color: "#DC2626", bg: "#FCE7E7" },
   DEALER_PRICING_CHANGED: { label: "Dealer prices changed", color: "#B8560F", bg: "#FFF3E8" },
+  DEALER_LOGIN_CODE_ISSUED: { label: "Login code issued", color: "#6366F1", bg: "#EEF0FE" },
 };
 
-function summarizeDetails(details: Record<string, unknown>): string {
-  if (!details || Object.keys(details).length === 0) return "—";
-  if (typeof details.priceTier === "string") {
-    const now = `${details.priceTier} · ${details.showPrices ? "shown" : "hidden"}`;
-    return typeof details.previous === "string" ? `Price ${now} (was ${details.previous})` : `Price ${now}`;
+/** "9 Oct, 4:56 pm" in the viewer's time zone, like the When column. */
+function shortDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+
+/** One detail value as words: dates formatted, yes/no, list counts. Never raw JSON. */
+function detailValue(value: unknown): string {
+  if (typeof value === "string") return ISO_DATE.test(value) ? shortDateTime(value) : value;
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (typeof value === "number") return String(value);
+  if (Array.isArray(value)) return `${value.length} item${value.length === 1 ? "" : "s"}`;
+  return value == null ? "—" : "updated";
+}
+
+/** "expiresAt" -> "expires at", "newDealer" -> "new dealer". */
+function detailKey(key: string): string {
+  return key.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+}
+
+/** The Details column as readable text, e.g. "Login code · expires 9 Oct, 4:56 pm · new dealer". */
+function summarizeDetails(action: string, details: Record<string, unknown>): string {
+  const d = details ?? {};
+  if (Object.keys(d).length === 0) return "—";
+
+  if (action === "DEALER_LOGIN_CODE_ISSUED") {
+    const parts = ["Login code"];
+    if (typeof d.expiresAt === "string") parts.push(`expires ${shortDateTime(d.expiresAt)}`);
+    if (d.newDealer === true) parts.push("new dealer");
+    return parts.join(" · ");
   }
+  if (action === "DEALER_PRICING_CHANGED" && typeof d.priceTier === "string") {
+    const now = `Price ${d.priceTier} · ${d.showPrices ? "shown" : "hidden"}`;
+    return typeof d.previous === "string" ? `${now} (was ${d.previous})` : now;
+  }
+
   const parts: string[] = [];
-  if (Array.isArray(details.permissions)) parts.push(`${(details.permissions as unknown[]).length} permission(s)`);
-  if (typeof details.roleName === "string") parts.push(`role: ${details.roleName}`);
-  if (typeof details.name === "string") parts.push(`name: ${details.name}`);
-  if (typeof details.active === "boolean") parts.push(`active: ${details.active}`);
-  if (typeof details.description === "string" && !parts.length) parts.push("description updated");
-  return parts.length ? parts.join(" · ") : JSON.stringify(details);
+  const known = new Set(["permissions", "roleName", "roleId", "name", "active", "description", "rank"]);
+  if (Array.isArray(d.permissions)) parts.push(`${d.permissions.length} permission${d.permissions.length === 1 ? "" : "s"}`);
+  if (typeof d.roleName === "string") parts.push(`role: ${d.roleName}`);
+  if (typeof d.name === "string") parts.push(`name: ${d.name}`);
+  if (typeof d.active === "boolean") parts.push(d.active ? "activated" : "deactivated");
+  if (typeof d.description === "string") parts.push("description updated");
+  // Anything else (future actions) still reads as words rather than raw JSON.
+  for (const [key, value] of Object.entries(d)) {
+    if (!known.has(key)) parts.push(`${detailKey(key)}: ${detailValue(value)}`);
+  }
+  return parts.length ? parts.join(" · ") : "—";
 }
 
 function AuditLogsContent() {
@@ -73,7 +110,7 @@ function AuditLogsContent() {
   return (
     <div>
       <p style={{ fontSize: 13, color: "#6E6257", marginBottom: 20, maxWidth: 620 }}>
-        A record of every role, permission, and staff-account change — who did what, and when. Most recent first.
+        A record of every role, permission and staff-account change, plus dealer login codes and price-list changes: who did what, and when. Most recent first.
       </p>
 
       <div style={{ background: "#fff", border: "1px solid #E8E4DE", borderRadius: 12, overflow: "hidden" }}>
@@ -106,7 +143,7 @@ function AuditLogsContent() {
                       <span style={{ color: "#1F1813" }}>{log.targetName || "—"}</span>
                       <span style={{ color: "#A8A39A", fontSize: 11, marginLeft: 6 }}>{log.targetType}</span>
                     </td>
-                    <td style={{ padding: "12px 16px", color: "#6E6257", fontSize: 12 }}>{summarizeDetails(log.details)}</td>
+                    <td style={{ padding: "12px 16px", color: "#6E6257", fontSize: 12, minWidth: 220 }}>{summarizeDetails(log.action, log.details)}</td>
                   </tr>
                 );
               })}

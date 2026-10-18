@@ -492,6 +492,12 @@ interface TopBarProps {
 
 function AdminTopBar({ isMobile, onHamburgerClick }: TopBarProps) {
   const pathname = usePathname();
+  const { me } = useAdminAuth();
+  // The signed-in user's real role ("SUPER_ADMIN" -> "Super Admin"; the badge
+  // uppercases it), not a fixed "Admin".
+  const roleLabel = me
+    ? (me.role?.name ?? "No role").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+    : "";
   const [now, setNow] = useState("");
 
   useEffect(() => {
@@ -570,12 +576,14 @@ function AdminTopBar({ isMobile, onHamburgerClick }: TopBarProps) {
         </h1>
       </div>
 
-      {/* Right: datetime (hidden on mobile to prevent overflow) + Admin badge */}
+      {/* Right: datetime (hidden on mobile to prevent overflow) + role badge */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
         {!isMobile && (
           <span style={{ fontSize: 12, color: "#6E6257", whiteSpace: "nowrap" }}>{now}</span>
         )}
+        {roleLabel && (
         <span
+          title={me?.username ? `Signed in as ${me.username}` : undefined}
           style={{
             background: "#F47920",
             color: "#fff",
@@ -586,10 +594,14 @@ function AdminTopBar({ isMobile, onHamburgerClick }: TopBarProps) {
             padding: "3px 10px",
             borderRadius: 999,
             whiteSpace: "nowrap",
+            maxWidth: isMobile ? 120 : 200,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
-          Admin
+          {roleLabel}
         </span>
+        )}
       </div>
     </header>
   );
