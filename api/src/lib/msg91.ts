@@ -76,10 +76,22 @@ export async function sendOtp(mobile: string, otp: string): Promise<boolean> {
         timeout: 10000,
       }
     );
-    return response.data?.hasError !== true && response.data?.status !== 'fail';
-  } catch {
+    if (response.data?.hasError === true || response.data?.status === 'fail') {
+      logOtpFailure(mobile, otp, response.status, response.data);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    const res = (err as { response?: { status?: number; data?: unknown } }).response;
+    logOtpFailure(mobile, otp, res?.status, res?.data ?? (err as Error).message);
     return false;
   }
+}
+
+/** MSG91's reason for a failed send, for `pm2 logs mxdblr-api`. The code itself is masked. */
+function logOtpFailure(mobile: string, otp: string, status: number | undefined, detail: unknown): void {
+  const text = (typeof detail === 'string' ? detail : JSON.stringify(detail) ?? '').split(otp).join('******');
+  console.error(`[MSG91] WhatsApp login code to ...${mobile.slice(-3)} failed (${status ?? 'no response'}): ${text.slice(0, 500)}`);
 }
 
 export async function sendWhatsAppMessage(mobile: string, message: string): Promise<boolean> {
