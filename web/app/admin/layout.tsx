@@ -705,8 +705,10 @@ function ProtectedShell({ children }: { children: ReactNode }) {
   if (!authorized) return null;
 
   return (
-    // overflow: hidden on the shell prevents horizontal scroll from the sliding drawer
-    <div style={{ display: "flex", minHeight: "100vh", background: "#F8F6F2", overflow: "hidden" }}>
+    // overflow-x: clip stops the sliding drawer causing horizontal scroll. Not
+    // overflow: hidden — that makes the shell a scroll container, which breaks
+    // the desktop sidebar's position: sticky (it scrolled away with long pages).
+    <div style={{ display: "flex", minHeight: "100vh", background: "#F8F6F2", overflowX: "clip" }}>
 
       {/* Dark overlay — mobile only, appears behind the open drawer */}
       {isMobile && drawerOpen && (
