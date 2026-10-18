@@ -12,9 +12,10 @@ import { createFixtures, cleanupFixtures, SmokeFixtures, RUN_ID } from './fixtur
 
 let fx: SmokeFixtures;
 let superToken: string;     // SUPER_ADMIN (the smoke fixture admin)
-let workerToken: string;    // SHOP_WORKER
+let staffToken: string;     // STAFF
 let adminTierToken: string; // ADMIN
-let workerId = '';
+let staffId = '';
+let staffRoleId = '';
 let adminTierId = '';
 
 const CUSTOM_ROLE = `smoke_role_${RUN_ID}`;
@@ -32,16 +33,17 @@ async function createUserWithRole(username: string, roleName: string): Promise<s
 beforeAll(async () => {
   fx = await createFixtures(); // creates a SUPER_ADMIN smoke admin
   superToken = generateAdminToken(fx.adminId, 'smoke_super');
-  workerId = await createUserWithRole(`smoke_admin_worker_${RUN_ID}`, 'SHOP_WORKER');
-  workerToken = generateAdminToken(workerId, 'smoke_worker');
+  staffId = await createUserWithRole(`smoke_admin_staff_${RUN_ID}`, 'STAFF');
+  staffRoleId = (await prisma.role.findUniqueOrThrow({ where: { name: 'STAFF' } })).id;
+  staffToken = generateAdminToken(staffId, 'smoke_staff');
   adminTierId = await createUserWithRole(`smoke_admin_at_${RUN_ID}`, 'ADMIN');
   adminTierToken = generateAdminToken(adminTierId, 'smoke_admintier');
 });
 
 afterAll(async () => {
-  await prisma.auditLog.deleteMany({ where: { actorId: { in: [fx.adminId, workerId, adminTierId] } } });
+  await prisma.auditLog.deleteMany({ where: { actorId: { in: [fx.adminId, staffId, adminTierId] } } });
   await prisma.role.deleteMany({ where: { name: CUSTOM_ROLE } });
-  await cleanupFixtures(); // removes all smoke_admin_* users (incl. worker, admintier, esc user)
+  await cleanupFixtures(); // removes all smoke_admin_* users (incl. staff, admintier, esc user)
   await prisma.$disconnect();
 });
 
@@ -54,10 +56,10 @@ describe('GET /api/admin/me', () => {
     expect(res.body.data.permissions.length).toBe(12);
   });
 
-  it('returns a restricted set for a Shop Worker', async () => {
-    const res = await request(app).get('/api/admin/me').set('Authorization', `Bearer ${workerToken}`);
+  it('returns a restricted set for Staff', async () => {
+    const res = await request(app).get('/api/admin/me').set('Authorization', `Bearer ${staffToken}`);
     expect(res.status).toBe(200);
-    expect(res.body.data.role.name).toBe('SHOP_WORKER');
+    expect(res.body.data.role.name).toBe('STAFF');
     expect(res.body.data.permissions.sort()).toEqual(['CREATE_ORDERS', 'MANAGE_INVENTORY', 'VIEW_DASHBOARD']);
   });
 
@@ -67,26 +69,26 @@ describe('GET /api/admin/me', () => {
   });
 });
 
-describe('Permission enforcement (Shop Worker)', () => {
+describe('Permission enforcement (Staff)', () => {
   it('ALLOWS a route the role holds (MANAGE_INVENTORY → stock summary)', async () => {
-    const res = await request(app).get('/api/admin/products/stock-summary').set('Authorization', `Bearer ${workerToken}`);
+    const res = await request(app).get('/api/admin/products/stock-summary').set('Authorization', `Bearer ${staffToken}`);
     expect(res.status).toBe(200);
   });
 
   it('DENIES customers (lacks MANAGE_CUSTOMERS) with 403', async () => {
-    const res = await request(app).get('/api/admin/dealers').set('Authorization', `Bearer ${workerToken}`);
+    const res = await request(app).get('/api/admin/dealers').set('Authorization', `Bearer ${staffToken}`);
     expect(res.status).toBe(403);
   });
 
   it('DENIES role management (lacks MANAGE_ROLES) with 403', async () => {
-    const res = await request(app).get('/api/admin/roles').set('Authorization', `Bearer ${workerToken}`);
+    const res = await request(app).get('/api/admin/roles').set('Authorization', `Bearer ${staffToken}`);
     expect(res.status).toBe(403);
   });
 
   it('DENIES product creation (lacks MANAGE_PRODUCTS) with 403', async () => {
     const res = await request(app)
       .post('/api/admin/products')
-      .set('Authorization', `Bearer ${workerToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send({ name: 'x', brand: 'y', sku: `RBAC-DENY-${RUN_ID}` });
     expect(res.status).toBe(403);
   });
@@ -94,8 +96,8 @@ describe('Permission enforcement (Shop Worker)', () => {
   it('DENIES creating users (lacks MANAGE_STAFF) with 403', async () => {
     const res = await request(app)
       .post('/api/admin/users')
-      .set('Authorization', `Bearer ${workerToken}`)
-      .send({ username: `nope_${RUN_ID}`, password: 'password123', roleId: 'role_shop_worker' });
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ username: `nope_${RUN_ID}`, password: 'password123', roleId: staffRoleId });
     expect(res.status).toBe(403);
   });
 });
@@ -107,7 +109,7 @@ describe('Role management (Super Admin)', () => {
     const res = await request(app).get('/api/admin/roles').set('Authorization', `Bearer ${superToken}`);
     expect(res.status).toBe(200);
     const names = res.body.data.map((r: { name: string }) => r.name);
-    expect(names).toEqual(expect.arrayContaining(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'SHOP_WORKER']));
+    expect(names).toEqual(expect.arrayContaining(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'STAFF']));
   });
 
   it('creates a custom role', async () => {
@@ -148,11 +150,11 @@ describe('Role management (Super Admin)', () => {
 });
 
 describe('Anti-privilege-escalation guards', () => {
-  it('lets an Admin create a Shop Worker (lower rank)', async () => {
+  it('lets an Admin create a Staff user (lower rank)', async () => {
     const res = await request(app)
       .post('/api/admin/users')
       .set('Authorization', `Bearer ${adminTierToken}`)
-      .send({ username: ESC_USER, password: 'password123', roleId: 'role_shop_worker' });
+      .send({ username: ESC_USER, password: 'password123', roleId: staffRoleId });
     expect(res.status).toBe(201);
   });
 

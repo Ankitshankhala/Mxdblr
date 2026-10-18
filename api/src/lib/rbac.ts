@@ -3,7 +3,7 @@
  *
  * PERMISSION_CATALOG is the fixed set of permissions (with UI labels); new
  * permission TYPES are added here in code, never created by users at runtime.
- * DEFAULT_ROLES (SUPER_ADMIN → SHOP_WORKER) are seeded by prisma/seed.ts. The
+ * DEFAULT_ROLES (SUPER_ADMIN → STAFF) are seeded by prisma/seed.ts. The
  * numeric `rank` powers the anti-escalation guard enforced in middleware/rbac.ts
  * and routes/admin/rbac.ts: you may only manage roles/users of a strictly higher
  * rank (= less privileged) than your own. SUPER_ADMIN = rank 0.
@@ -28,7 +28,7 @@ export const PERMISSION_CATALOG: PermissionMeta[] = [
   { key: 'CREATE_ORDERS', label: 'Create Orders', description: 'Create new orders / inquiries', group: 'Orders' },
   { key: 'EDIT_ORDERS', label: 'Edit Orders', description: 'Update order / inquiry status', group: 'Orders' },
   { key: 'VIEW_REPORTS', label: 'View Reports', description: 'View reports and analytics', group: 'Orders' },
-  { key: 'MANAGE_STAFF', label: 'Manage Staff', description: 'Invite Managers and Shop Workers and assign them to roles', group: 'People' },
+  { key: 'MANAGE_STAFF', label: 'Manage Staff', description: 'Invite Managers and Staff and assign them to roles', group: 'People' },
   { key: 'MANAGE_CUSTOMERS', label: 'Manage Customers', description: 'Manage dealer accounts and customer notifications', group: 'People' },
   { key: 'ACCESS_FINANCIAL_DATA', label: 'Access Financial Data', description: 'View pricing and financial information', group: 'Finance' },
   { key: 'SYSTEM_SETTINGS', label: 'System Settings', description: 'Configure geo-restrictions and system-wide settings', group: 'System' },
@@ -78,7 +78,7 @@ export const DEFAULT_ROLES: DefaultRole[] = [
     ],
   },
   {
-    name: 'SHOP_WORKER',
+    name: 'STAFF',
     description: 'Basic day-to-day functions: dashboard, inventory updates, and creating orders.',
     rank: 30,
     permissions: ['VIEW_DASHBOARD', 'MANAGE_INVENTORY', 'CREATE_ORDERS'],
