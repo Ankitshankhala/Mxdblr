@@ -96,11 +96,60 @@ type Product = {
   attributes: any[];
   features?: any[];
   featureSlugs?: string[];
+  // Handset brands the product fits (from the Brands list). `brand` above is
+  // the manufacturer ("MXD"), a different thing. compatibleBrandIds is form state.
+  fitsAllBrands?: boolean;
+  compatibleBrands?: { id: string; name: string; slug: string }[];
+  compatibleBrandIds?: string[];
   // Only present for admins with ACCESS_FINANCIAL_DATA.
   priceA?: number | null;
   priceB?: number | null;
   priceC?: number | null;
 };
+
+interface AdminBrand {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+/** Brands-list names read "For Apple"; under a "Compatible" heading "Apple" is enough. */
+function shortBrandName(name: string): string {
+  return name.replace(/^for\s+/i, "");
+}
+
+/** Table summary of what a product fits: "All brands", "Apple, Samsung +2", or null if unset. */
+function compatibleSummary(p: Product): string | null {
+  if (p.fitsAllBrands) return "All brands";
+  const names = (p.compatibleBrands ?? []).map((b) => shortBrandName(b.name));
+  if (names.length === 0) return null;
+  return names.length > 3 ? `${names.slice(0, 3).join(", ")} +${names.length - 3}` : names.join(", ");
+}
+
+function BrandChoice({ label, selected, disabled = false, onClick }: {
+  label: string;
+  selected: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      disabled={disabled}
+      onClick={onClick}
+      style={{
+        padding: "5px 11px", borderRadius: 999, fontSize: 12, fontWeight: 600,
+        cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.45 : 1,
+        border: selected ? "1px solid #F47920" : "1px solid #E8E4DE",
+        background: selected ? "#FFF3E8" : "#fff",
+        color: selected ? "#B8560F" : "#1F1813",
+      }}
+    >
+      {selected ? "✓ " : ""}{label}
+    </button>
+  );
+}
 
 interface AdminFeature {
   id: string;
@@ -135,6 +184,8 @@ const EMPTY_PRODUCT: Omit<Product, "id"> = {
   name: "", brand: "MXD", sku: "", category: "", categoryId: "", moq: 10,
   stockStatus: "IN_STOCK", stockQty: 0, active: true, isNewArrival: false, isBestSeller: false,
   images: [], description: "", attributes: [{ key: "", value: "" }], featureSlugs: [],
+  // Most MXD accessories fit any phone, so new products start as "All brands".
+  fitsAllBrands: true, compatibleBrandIds: [],
 };
 
 const CSV_TEMPLATE =
@@ -169,7 +220,7 @@ function ProductsContent() {
   const [search, setSearch] = useState("");
   const [stockFilter, setStockFilter] = useState(() => searchParams.get("stockStatus") ?? "");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [brandFilter, setBrandFilter] = useState("");
+  const [compatFilter, setCompatFilter] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
   // ── Supporting state ────────────────────────────────────────────────────────
@@ -225,7 +276,7 @@ function ProductsContent() {
     { key: "name",        label: "Product Name",  required: true  },
     { key: "category",    label: "Category",       required: false },
     { key: "sku",         label: "SKU",            required: false },
-    { key: "brand",       label: "Brand",          required: false },
+    { key: "brand",       label: "Manufacturer",   required: false },
     { key: "description", label: "Description",    required: false },
     { key: "moq",         label: "MOQ",            required: false },
     { key: "image_urls",  label: "Image URLs",     required: false },
@@ -234,7 +285,7 @@ function ProductsContent() {
     name: "", category: "", sku: "", brand: "", description: "", moq: "", image_urls: "",
   });
 
-  const [apiBrands, setApiBrands] = useState<string[]>([]);
+  const [apiBrands, setApiBrands] = useState<AdminBrand[]>([]);
   const [apiFeatures, setApiFeatures] = useState<AdminFeature[]>([]);
 
   // ── Bulk feature assignment ────────────────────────────────────────────────
@@ -314,7 +365,7 @@ function ProductsContent() {
       .catch(() => {});
     fetch(`${API_BASE}/admin/brands`, { headers })
       .then((r) => r.json())
-      .then((d) => { if (d.data?.length) setApiBrands(d.data.map((b: { name: string }) => b.name)); })
+      .then((d) => { if (d.data?.length) setApiBrands(d.data.map(({ id, name, slug }: AdminBrand) => ({ id, name, slug }))); })
       .catch(() => {});
     fetch(`${API_BASE}/admin/features`, { headers })
       .then((r) => r.json())
@@ -329,7 +380,7 @@ function ProductsContent() {
     q = search,
     stock = stockFilter,
     cat = categoryFilter,
-    brand = brandFilter,
+    compat = compatFilter,
     sort = sortBy,
   ) {
     setLoading(true);
@@ -339,7 +390,7 @@ function ProductsContent() {
       if (q.trim())    params.set("search", q.trim());
       if (stock)       params.set("stockStatus", stock);
       if (cat)         params.set("category", cat);
-      if (brand.trim()) params.set("brand", brand.trim());
+      if (compat)      params.set("compatibleWith", compat);
       if (sort !== "newest") params.set("sortBy", sort);
       const res = await fetch(`${API_BASE}/admin/products?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -359,14 +410,14 @@ function ProductsContent() {
 
   // Re-fetch when filters/sort/pageSize change (reset to page 1)
   function applyFilter(overrides: {
-    stock?: string; cat?: string; brand?: string; sort?: string; size?: number;
+    stock?: string; cat?: string; compat?: string; sort?: string; size?: number;
   }) {
-    const stock = overrides.stock ?? stockFilter;
-    const cat   = overrides.cat   ?? categoryFilter;
-    const brand = overrides.brand ?? brandFilter;
-    const sort  = overrides.sort  ?? sortBy;
-    const size  = overrides.size  ?? pageSize;
-    loadProducts(1, size, search, stock, cat, brand, sort);
+    const stock  = overrides.stock  ?? stockFilter;
+    const cat    = overrides.cat    ?? categoryFilter;
+    const compat = overrides.compat ?? compatFilter;
+    const sort   = overrides.sort   ?? sortBy;
+    const size   = overrides.size   ?? pageSize;
+    loadProducts(1, size, search, stock, cat, compat, sort);
   }
 
   // Debounced search
@@ -374,7 +425,7 @@ function ProductsContent() {
     setSearch(val);
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
-      loadProducts(1, pageSize, val, stockFilter, categoryFilter, brandFilter, sortBy);
+      loadProducts(1, pageSize, val, stockFilter, categoryFilter, compatFilter, sortBy);
     }, 300);
   }
 
@@ -414,6 +465,8 @@ function ProductsContent() {
       moq: p.moq,
       stockStatus: p.stockStatus, stockQty: p.stockQty ?? 0, active: p.active ?? true, isNewArrival: p.isNewArrival, isBestSeller: p.isBestSeller,
       images: [...p.images], description: p.description, attributes: normAttrs, featureSlugs,
+      fitsAllBrands: p.fitsAllBrands ?? false,
+      compatibleBrandIds: (p.compatibleBrands ?? []).map((b) => b.id),
     });
     setPriceDraft({
       priceA: p.priceA == null ? "" : String(p.priceA),
@@ -421,6 +474,13 @@ function ProductsContent() {
       priceC: p.priceC == null ? "" : String(p.priceC),
     });
     setShowModal(true);
+  }
+
+  function toggleCompatibleBrand(id: string) {
+    setForm((f) => {
+      const cur = f.compatibleBrandIds ?? [];
+      return { ...f, compatibleBrandIds: cur.includes(id) ? cur.filter((b) => b !== id) : [...cur, id] };
+    });
   }
 
   function toggleFeature(slug: string) {
@@ -450,6 +510,8 @@ function ProductsContent() {
         attributes,
       };
       if (categoryId) payload.categoryId = categoryId;
+      // "All brands" makes specific picks redundant; clear them so the data stays tidy.
+      if (form.fitsAllBrands) payload.compatibleBrandIds = [];
       // Prices are sent only by admins allowed to edit them (the API rejects the rest).
       if (canEditPrices) {
         for (const { key, label } of PRICE_FIELDS) {
@@ -463,7 +525,8 @@ function ProductsContent() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error || e.message || "Failed"); }
+      // Validation failures come back as { errors: [{ message }] }; show the first.
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error || e.message || e.errors?.[0]?.message || "Failed"); }
       showToast(editingProduct ? "Product updated" : "Product added");
       setShowModal(false);
       loadProducts();
@@ -738,14 +801,16 @@ function ProductsContent() {
           {apiCategories.map((c) => <option key={c.id} value={c.slug}>{c.name}</option>)}
         </select>
 
-        {/* Brand */}
+        {/* Compatible brand: a brand shows its own products plus "All brands" ones */}
         <select
-          value={brandFilter}
-          onChange={(e) => { setBrandFilter(e.target.value); applyFilter({ brand: e.target.value }); }}
+          value={compatFilter}
+          onChange={(e) => { setCompatFilter(e.target.value); applyFilter({ compat: e.target.value }); }}
+          aria-label="Filter by compatible brand"
           style={selectStyle}
         >
           <option value="">All Brands</option>
-          {apiBrands.map((b) => <option key={b} value={b}>{b}</option>)}
+          {apiBrands.map((b) => <option key={b.id} value={b.slug}>{b.name}</option>)}
+          <option value="none">Compatibility not set</option>
         </select>
 
         {/* Stock status */}
@@ -770,10 +835,10 @@ function ProductsContent() {
         </select>
 
         {/* Active filter count badge */}
-        {(search || stockFilter || categoryFilter || brandFilter) && (
+        {(search || stockFilter || categoryFilter || compatFilter) && (
           <button
             onClick={() => {
-              setSearch(""); setStockFilter(""); setCategoryFilter(""); setBrandFilter("");
+              setSearch(""); setStockFilter(""); setCategoryFilter(""); setCompatFilter("");
               loadProducts(1, pageSize, "", "", "", "", sortBy);
             }}
             style={{ padding: "0 10px", height: 36, borderRadius: 7, border: "1px solid #F47920", background: "transparent", color: "#F47920", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
@@ -827,7 +892,7 @@ function ProductsContent() {
                     style={{ width: 15, height: 15, cursor: "pointer", accentColor: "#F47920" }}
                   />
                 </th>
-                {["Image", "Name", "Brand", "SKU", "Category", "MOQ", ...(canEditPrices ? PRICE_FIELDS.map((f) => f.label) : []), "Stock Status", "Visibility", "Best Seller", "New Arrival", "Actions"].map((h) => (
+                {["Image", "Name", "Compatible With", "SKU", "Category", "MOQ", ...(canEditPrices ? PRICE_FIELDS.map((f) => f.label) : []), "Stock Status", "Visibility", "Best Seller", "New Arrival", "Actions"].map((h) => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
@@ -863,7 +928,19 @@ function ProductsContent() {
                   <td style={{ padding: "10px 14px", fontWeight: 600, maxWidth: 180 }}>
                     <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
                   </td>
-                  <td style={{ padding: "10px 14px", color: "#6E6257" }}>{p.brand}</td>
+                  <td style={{ padding: "10px 14px", color: "#6E6257", maxWidth: 170 }}>
+                    {(() => {
+                      const summary = compatibleSummary(p);
+                      if (!summary) return <span style={{ color: "#F47920", fontWeight: 600, whiteSpace: "nowrap" }}>Not set</span>;
+                      const all = (p.compatibleBrands ?? []).map((b) => shortBrandName(b.name)).join(", ");
+                      return (
+                        <div title={p.fitsAllBrands ? "Fits every phone brand" : all}
+                          style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {summary}
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td style={{ padding: "10px 14px", fontFamily: "monospace", fontSize: 11, color: "#6366F1" }}>{p.sku}</td>
                   <td style={{ padding: "10px 14px", color: "#6E6257" }}>{getCategoryName(p.category)}</td>
                   <td style={{ padding: "10px 14px", fontWeight: 600 }}>{p.moq}</td>
@@ -1198,26 +1275,41 @@ function ProductsContent() {
                   <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} style={inputStyle} placeholder="e.g. MXD-395 Wireless Headphone" />
                 </div>
                 <div>
-                  <label style={labelStyle}>Compatible Brand</label>
-                  <input
-                    list="brands-datalist"
-                    value={form.brand}
-                    onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
-                    style={inputStyle}
-                    placeholder={apiBrands.length ? "Pick or type a brand…" : "e.g. Samsung, Apple, OnePlus"}
-                  />
-                  <datalist id="brands-datalist">
-                    {apiBrands.map((b) => <option key={b} value={b} />)}
-                  </datalist>
+                  <label style={labelStyle}>SKU</label>
+                  <input value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} style={inputStyle} placeholder="e.g. MXD-395" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Manufacturer</label>
+                  <input value={form.brand} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} style={inputStyle} placeholder="MXD" />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle} id="compat-brands-label">Compatible Brands</label>
+                  <div role="group" aria-labelledby="compat-brands-label" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    <BrandChoice
+                      label="All brands"
+                      selected={!!form.fitsAllBrands}
+                      onClick={() => setForm((f) => ({ ...f, fitsAllBrands: !f.fitsAllBrands }))}
+                    />
+                    {apiBrands.map((b) => (
+                      <BrandChoice
+                        key={b.id}
+                        label={shortBrandName(b.name)}
+                        selected={!form.fitsAllBrands && (form.compatibleBrandIds ?? []).includes(b.id)}
+                        disabled={!!form.fitsAllBrands}
+                        onClick={() => toggleCompatibleBrand(b.id)}
+                      />
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 11, color: "#6E6257", marginTop: 6 }}>
+                    {form.fitsAllBrands
+                      ? "Fits every phone brand, including brands added later. Turn off \"All brands\" to pick specific ones."
+                      : "Pick the phone brands this product fits. It shows up when the Products list is filtered by any of them."}
+                  </p>
                   {apiBrands.length === 0 && (
                     <p style={{ fontSize: 11, color: "#F47920", marginTop: 4 }}>
                       No brands added yet — <a href="/admin/brands" style={{ color: "#F47920" }}>add brands first</a>
                     </p>
                   )}
-                </div>
-                <div>
-                  <label style={labelStyle}>SKU</label>
-                  <input value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} style={inputStyle} placeholder="e.g. MXD-395" />
                 </div>
                 <div>
                   <label style={labelStyle}>Category</label>

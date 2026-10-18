@@ -139,6 +139,12 @@ model Product {
   active         Boolean     @default(true)
   isNewArrival   Boolean     @default(false)
   isBestSeller   Boolean     @default(false)
+  // Which handset brands this accessory fits, from the Brands list ("For
+  // Apple"...). Not the same as `brand`, the manufacturer ("MXD").
+  // fitsAllBrands = universal accessory: matches every brand, including
+  // brands added later, so it needs no per-brand links.
+  fitsAllBrands    Boolean     @default(false)
+  compatibleBrands Brand[]     @relation("ProductCompatibleBrands")
   categoryId     String?
   category      Category?   @relation(fields: [categoryId], references: [id])
   createdAt     DateTime    @default(now())
@@ -409,6 +415,8 @@ model Brand {
   displayOrder Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  compatibleProducts Product[] @relation("ProductCompatibleBrands")
 }
 
 model SystemSettings {

@@ -10,6 +10,10 @@
  * technologies to many products at once). All mutating routes map Prisma P2025 →
  * 404 rather than 500. Includes inline CSV parsing helpers.
  *
+ * Compatible handset brands (fitsAllBrands + compatibleBrandIds, from the Brands
+ * list) are separate from `brand`, the manufacturer. The list filters on them
+ * with ?compatibleWith=<brand slug> (or "none" for products with nothing set).
+ *
  * Dealer price lists (priceA/B/C) are financial data: they are only returned to,
  * and only accepted from, admins holding ACCESS_FINANCIAL_DATA. PATCH /:id/prices
  * is the quick inline price edit used by the products table.
@@ -86,6 +90,17 @@ const router = Router();
 
 router.use(requireAdminAuth);
 
+// A product image: an http(s) URL (Cloudinary uploads) or a relative
+// /uploads/<file> path, which is how the catalogue imports store images and the
+// API serves them. Requiring a full URL rejected every imported product, so the
+// edit form could not save any of them.
+const imageRef = z
+  .string()
+  .refine(
+    (s) => /^https?:\/\/\S+$/i.test(s) || (/^\/uploads\/\S+$/.test(s) && !s.includes('..')),
+    'Each image must be an http(s) URL or an /uploads/ path',
+  );
+
 const createProductSchema = z.object({
   name: z.string().min(2).max(255),
   brand: z.string().min(1).max(100),
@@ -95,9 +110,9 @@ const createProductSchema = z.object({
   stockStatus: z.nativeEnum(StockStatus).default('IN_STOCK'),
   stockQty: z.number().int().min(0).default(0),
   // Normalize: accept array OR comma-separated string, always store as array.
-  // Each URL is validated to prevent injection of arbitrary non-URL strings.
+  // Each entry is validated to prevent injection of arbitrary strings.
   images: z.union([
-    z.array(z.string().url('Each image must be a valid URL')),
+    z.array(imageRef),
     z.string().transform((s) => s ? s.split(',').map((u) => u.trim()).filter(Boolean) : []),
   ]).default([]),
   categoryId: z.string().optional(),
@@ -119,7 +134,30 @@ const createProductSchema = z.object({
   // Supported technologies, referenced by ProductFeature.slug. Unknown slugs are
   // ignored (not created) — features are managed via /api/admin/features.
   featureSlugs: z.array(z.string()).default([]),
+  // Compatible handset brands (Brand ids from the Brands list). Omit to leave
+  // them unchanged; unknown ids are ignored. fitsAllBrands = universal.
+  fitsAllBrands: z.boolean().optional(),
+  compatibleBrandIds: z.array(z.string().min(1)).max(200).optional(),
 });
+
+// Compatible brands as returned to the admin UI, in Brands-list order.
+const COMPATIBLE_BRANDS_INCLUDE = {
+  select: { id: true, name: true, slug: true },
+  orderBy: [{ displayOrder: 'asc' as const }, { name: 'asc' as const }],
+};
+
+// Keep only ids of brands that exist, so a stale form can't fail the save.
+async function existingBrandIds(ids: string[]): Promise<{ id: string }[]> {
+  if (ids.length === 0) return [];
+  return prisma.brand.findMany({ where: { id: { in: ids } }, select: { id: true } });
+}
+
+// ?compatibleWith=<brand slug> matches universal products and products linked
+// to that brand; ?compatibleWith=none finds products with no compatibility set.
+function compatibleWithFilter(value: string): Prisma.ProductWhereInput {
+  if (value === 'none') return { fitsAllBrands: false, compatibleBrands: { none: {} } };
+  return { OR: [{ fitsAllBrands: true }, { compatibleBrands: { some: { slug: value } } }] };
+}
 
 const updateProductSchema = createProductSchema.partial();
 
@@ -385,7 +423,7 @@ router.get('/stock-summary', requireAdminAuth, async (req: Request, res: Respons
 // GET /api/admin/products
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { search, category, stockStatus, brand, sortBy, page = '1', limit = '50' } = req.query;
+    const { search, category, stockStatus, brand, compatibleWith, sortBy, page = '1', limit = '50' } = req.query;
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
@@ -399,6 +437,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       ];
     }
     if (brand) where.brand = { contains: String(brand), mode: 'insensitive' };
+    // AND, because `search` already uses the top-level OR.
+    if (compatibleWith) where.AND = [compatibleWithFilter(String(compatibleWith))];
     if (category) where.category = { slug: String(category) };
     if (stockStatus) where.stockStatus = String(stockStatus) as StockStatus;
 
@@ -418,6 +458,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             orderBy: { displayOrder: 'asc' },
             include: { feature: { select: { name: true, slug: true, logo: true, category: true } } },
           },
+          compatibleBrands: COMPATIBLE_BRANDS_INCLUDE,
         },
       }),
       prisma.product.count({ where }),
@@ -448,7 +489,7 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
     return;
   }
 
-  const { attributes, compatibilityTags, featureSlugs, images, ...productData } = parse.data;
+  const { attributes, compatibilityTags, featureSlugs, images, compatibleBrandIds, ...productData } = parse.data;
   if (rejectsPriceEdit(req, res, productData)) return;
 
   const existing = await prisma.product.findUnique({ where: { sku: productData.sku } });
@@ -465,6 +506,7 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
   );
 
   const featureLinks = await resolveFeatureLinks(featureSlugs);
+  const brandLinks = await existingBrandIds(compatibleBrandIds ?? []);
 
   const product = await prisma.product.create({
     data: {
@@ -473,11 +515,13 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
       attributes: { create: resolvedAttrs },
       compatibilityTags: { create: compatibilityTags.map((tag) => ({ tag })) },
       features: { create: featureLinks },
+      compatibleBrands: { connect: brandLinks },
     },
     include: {
       attributes: { include: { attributeType: true } },
       compatibilityTags: true,
       features: { include: { feature: true } },
+      compatibleBrands: COMPATIBLE_BRANDS_INCLUDE,
       category: true,
     },
   });
@@ -494,8 +538,9 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
     return;
   }
 
-  const { attributes, compatibilityTags, featureSlugs, images, ...productData } = parse.data;
+  const { attributes, compatibilityTags, featureSlugs, images, compatibleBrandIds, ...productData } = parse.data;
   if (rejectsPriceEdit(req, res, productData)) return;
+  const brandLinks = compatibleBrandIds !== undefined ? await existingBrandIds(compatibleBrandIds) : undefined;
 
   const resolvedAttrs = attributes !== undefined
     ? await Promise.all(
@@ -532,11 +577,13 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
             create: featureLinks,
           },
         }),
+        ...(brandLinks !== undefined && { compatibleBrands: { set: brandLinks } }),
       },
       include: {
         attributes: { include: { attributeType: true } },
         compatibilityTags: true,
         features: { include: { feature: true } },
+        compatibleBrands: COMPATIBLE_BRANDS_INCLUDE,
         category: true,
       },
     });
