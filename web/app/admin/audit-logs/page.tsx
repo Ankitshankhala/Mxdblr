@@ -31,10 +31,15 @@ const ACTION_STYLE: Record<string, { label: string; color: string; bg: string }>
   USER_ACTIVATED: { label: "User activated", color: "#059669", bg: "#D1FAE5" },
   USER_DEACTIVATED: { label: "User deactivated", color: "#B45309", bg: "#FEF3C7" },
   USER_DELETED: { label: "User deleted", color: "#DC2626", bg: "#FCE7E7" },
+  DEALER_PRICING_CHANGED: { label: "Dealer prices changed", color: "#B8560F", bg: "#FFF3E8" },
 };
 
 function summarizeDetails(details: Record<string, unknown>): string {
   if (!details || Object.keys(details).length === 0) return "—";
+  if (typeof details.priceTier === "string") {
+    const now = `${details.priceTier} · ${details.showPrices ? "shown" : "hidden"}`;
+    return typeof details.previous === "string" ? `Price ${now} (was ${details.previous})` : `Price ${now}`;
+  }
   const parts: string[] = [];
   if (Array.isArray(details.permissions)) parts.push(`${(details.permissions as unknown[]).length} permission(s)`);
   if (typeof details.roleName === "string") parts.push(`role: ${details.roleName}`);

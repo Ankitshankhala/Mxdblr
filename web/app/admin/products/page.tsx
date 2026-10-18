@@ -4,6 +4,10 @@
  * Admin product management page (route: /admin/products). List with search/
  * filter, create/edit forms (image upload via POST /api/admin/upload), stock
  * updates, new-arrival/best-seller toggles, and CSV import. Wrapped in AdminGuard.
+ *
+ * Dealer price lists (Price A/B/C, per piece) are edited in the form and inline
+ * in the table (PATCH /api/admin/products/:id/prices). Both only appear for admins
+ * holding ACCESS_FINANCIAL_DATA; the API withholds prices from everyone else.
  */
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -11,6 +15,66 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/admin/Toast";
 import { normalizeImageUrl } from "@/lib/config";
+import { useAdminAuth } from "@/lib/admin/auth";
+
+type PriceField = "priceA" | "priceB" | "priceC";
+const PRICE_FIELDS: { key: PriceField; label: string }[] = [
+  { key: "priceA", label: "Price A" },
+  { key: "priceB", label: "Price B" },
+  { key: "priceC", label: "Price C" },
+];
+type PriceDraft = Record<PriceField, string>;
+const EMPTY_PRICES: PriceDraft = { priceA: "", priceB: "", priceC: "" };
+
+/** "" → null (no price on that list); otherwise a non-negative rupee amount, or undefined if invalid. */
+function parsePrice(text: string): number | null | undefined {
+  const t = text.trim();
+  if (t === "") return null;
+  const n = Number(t);
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
+}
+
+/**
+ * One inline price input in the products table. Saves on blur or Enter when the
+ * value changed; Escape reverts. Keyed on its value by the caller, so it resets
+ * whenever the saved price changes.
+ */
+function InlinePrice({ value, label, flash, onSave }: {
+  value: number | null | undefined;
+  label: string;
+  flash: boolean;
+  onSave: (v: number | null) => Promise<boolean>;
+}) {
+  const initial = value == null ? "" : String(value);
+  const [text, setText] = useState(initial);
+  const [state, setState] = useState<"idle" | "saving" | "error">("idle");
+
+  async function commit() {
+    const next = parsePrice(text);
+    if (next === undefined) { setState("error"); return; }
+    if (next === (value ?? null)) { setState("idle"); return; }
+    setState("saving");
+    setState((await onSave(next)) ? "idle" : "error");
+  }
+
+  const border = state === "error" ? "#DC2626" : flash ? "#059669" : "#E8E4DE";
+  return (
+    <input
+      aria-label={label}
+      inputMode="decimal"
+      value={text}
+      placeholder="—"
+      disabled={state === "saving"}
+      onChange={(e) => { setText(e.target.value); if (state === "error") setState("idle"); }}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") { setText(initial); setState("idle"); }
+      }}
+      style={{ width: 76, padding: "5px 8px", borderRadius: 6, border: `1px solid ${border}`, fontSize: 12, fontFamily: "inherit", textAlign: "right", background: state === "saving" ? "#F8F6F2" : "#fff", outline: "none" }}
+    />
+  );
+}
 
 type Attribute = { key: string; value: string };
 
@@ -32,6 +96,10 @@ type Product = {
   attributes: any[];
   features?: any[];
   featureSlugs?: string[];
+  // Only present for admins with ACCESS_FINANCIAL_DATA.
+  priceA?: number | null;
+  priceB?: number | null;
+  priceC?: number | null;
 };
 
 interface AdminFeature {
@@ -86,6 +154,8 @@ function buildPageRange(current: number, total: number): (number | "...")[] {
 function ProductsContent() {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
+  const { has } = useAdminAuth();
+  const canEditPrices = has("ACCESS_FINANCIAL_DATA");
 
   // ── Server-side data state ──────────────────────────────────────────────────
   const [products, setProducts] = useState<Product[]>([]);
@@ -110,7 +180,36 @@ function ProductsContent() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<Omit<Product, "id">>(EMPTY_PRODUCT);
+  // Price inputs are kept as text so "12." can be typed; parsed on save.
+  const [priceDraft, setPriceDraft] = useState<PriceDraft>(EMPTY_PRICES);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+  // Inline price edits: the cell that just saved flashes green briefly.
+  const [justSaved, setJustSaved] = useState<string | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  async function saveInlinePrice(p: Product, field: PriceField, value: number | null): Promise<boolean> {
+    try {
+      const token = localStorage.getItem("adminToken");
+      const res = await fetch(`${API_BASE}/admin/products/${p.id}/prices`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ [field]: value }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.message || "Failed");
+      const { priceA, priceB, priceC } = json.data as Pick<Product, PriceField>;
+      setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, priceA, priceB, priceC } : x)));
+      setJustSaved(`${p.id}:${field}`);
+      clearTimeout(flashTimer.current);
+      flashTimer.current = setTimeout(() => setJustSaved(null), 1500);
+      return true;
+    } catch (e) {
+      const label = PRICE_FIELDS.find((f) => f.key === field)?.label;
+      showToast(`Could not save ${label} for ${p.sku}: ${e instanceof Error ? e.message : "failed"}`, "error");
+      return false;
+    }
+  }
 
   // ── CSV import modal ────────────────────────────────────────────────────────
   const [showImportModal, setShowImportModal] = useState(false);
@@ -293,6 +392,7 @@ function ProductsContent() {
   function openAdd() {
     setEditingProduct(null);
     setForm({ ...EMPTY_PRODUCT, attributes: [{ key: "", value: "" }], featureSlugs: [] });
+    setPriceDraft(EMPTY_PRICES);
     setShowModal(true);
   }
   function openEdit(p: Product) {
@@ -314,6 +414,11 @@ function ProductsContent() {
       moq: p.moq,
       stockStatus: p.stockStatus, stockQty: p.stockQty ?? 0, active: p.active ?? true, isNewArrival: p.isNewArrival, isBestSeller: p.isBestSeller,
       images: [...p.images], description: p.description, attributes: normAttrs, featureSlugs,
+    });
+    setPriceDraft({
+      priceA: p.priceA == null ? "" : String(p.priceA),
+      priceB: p.priceB == null ? "" : String(p.priceB),
+      priceC: p.priceC == null ? "" : String(p.priceC),
     });
     setShowModal(true);
   }
@@ -345,6 +450,14 @@ function ProductsContent() {
         attributes,
       };
       if (categoryId) payload.categoryId = categoryId;
+      // Prices are sent only by admins allowed to edit them (the API rejects the rest).
+      if (canEditPrices) {
+        for (const { key, label } of PRICE_FIELDS) {
+          const price = parsePrice(priceDraft[key]);
+          if (price === undefined) throw new Error(`${label} must be a number of rupees, or empty`);
+          payload[key] = price;
+        }
+      }
       const res = await fetch(url, {
         method: editingProduct ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -714,14 +827,14 @@ function ProductsContent() {
                     style={{ width: 15, height: 15, cursor: "pointer", accentColor: "#F47920" }}
                   />
                 </th>
-                {["Image", "Name", "Brand", "SKU", "Category", "MOQ", "Stock Status", "Visibility", "Best Seller", "New Arrival", "Actions"].map((h) => (
+                {["Image", "Name", "Brand", "SKU", "Category", "MOQ", ...(canEditPrices ? PRICE_FIELDS.map((f) => f.label) : []), "Stock Status", "Visibility", "Best Seller", "New Arrival", "Actions"].map((h) => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={12} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading products…</td></tr>
+                <tr><td colSpan={canEditPrices ? 15 : 12} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>Loading products…</td></tr>
               )}
               {!loading && products.map((p) => (
                 <tr key={p.id} style={{ borderBottom: "1px solid #F0EDEA", background: selectedIds.includes(p.id) ? "#FFFaf5" : undefined }}>
@@ -754,6 +867,17 @@ function ProductsContent() {
                   <td style={{ padding: "10px 14px", fontFamily: "monospace", fontSize: 11, color: "#6366F1" }}>{p.sku}</td>
                   <td style={{ padding: "10px 14px", color: "#6E6257" }}>{getCategoryName(p.category)}</td>
                   <td style={{ padding: "10px 14px", fontWeight: 600 }}>{p.moq}</td>
+                  {canEditPrices && PRICE_FIELDS.map(({ key, label }) => (
+                    <td key={key} style={{ padding: "10px 8px" }}>
+                      <InlinePrice
+                        key={`${p.id}:${p[key] ?? ""}`}
+                        value={p[key]}
+                        label={`${label} for ${p.sku}`}
+                        flash={justSaved === `${p.id}:${key}`}
+                        onSave={(v) => saveInlinePrice(p, key, v)}
+                      />
+                    </td>
+                  ))}
                   <td style={{ padding: "10px 14px" }}><StatusBadge status={p.stockStatus} /></td>
                   <td style={{ padding: "10px 14px" }}>
                     <button
@@ -827,7 +951,7 @@ function ProductsContent() {
                 </tr>
               ))}
               {!loading && products.length === 0 && (
-                <tr><td colSpan={12} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>No products found</td></tr>
+                <tr><td colSpan={canEditPrices ? 15 : 12} style={{ padding: 40, textAlign: "center", color: "#6E6257" }}>No products found</td></tr>
               )}
             </tbody>
           </table>
@@ -1133,6 +1257,29 @@ function ProductsContent() {
                     <option value="hidden">Hidden (admin only)</option>
                   </select>
                 </div>
+                {canEditPrices && (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <label style={labelStyle}>Dealer Prices (₹ per piece)</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                      {PRICE_FIELDS.map(({ key, label }) => (
+                        <div key={key}>
+                          <div style={{ fontSize: 11, color: "#6E6257", marginBottom: 4 }}>{label}</div>
+                          <input
+                            inputMode="decimal"
+                            aria-label={label}
+                            value={priceDraft[key]}
+                            onChange={(e) => setPriceDraft((d) => ({ ...d, [key]: e.target.value }))}
+                            placeholder="—"
+                            style={inputStyle}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6E6257", marginTop: 6 }}>
+                      Each dealer sees one list, set on the Dealers page. Leave a list empty to show &quot;price on request&quot;.
+                    </div>
+                  </div>
+                )}
                 <div style={{ gridColumn: "1 / -1" }}>
                   <label style={labelStyle}>Description</label>
                   <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} style={{ ...inputStyle, height: 70, resize: "vertical" }} placeholder="Short product description…" />

@@ -3,15 +3,59 @@
 /**
  * ProductActions — client island on the (server-rendered) product detail page.
  * Quantity stepper + add-to-cart (enforcing MOQ) and the back-in-stock "notify
- * me" action for out-of-stock items.
+ * me" action for out-of-stock items. Also shows the signed-in dealer's own price
+ * when an admin has switched prices on for them.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Heart, Bell, ChevronDown } from 'lucide-react';
 import QtyStepper from '@/components/ui/QtyStepper';
-import { cartApi, notificationsApi } from '@/lib/api';
+import { cartApi, dealerApi, notificationsApi } from '@/lib/api';
+import { formatInr, roundPaise } from '@/lib/price';
 import { useWishlist } from '@/hooks/useWishlist';
 import type { Product } from '@/types';
+
+/** The dealer's per-piece price, or "price on request" when their list has none. */
+function DealerPrice({ unitPrice, qty, showTotal }: { unitPrice: number | null; qty: number; showTotal: boolean }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        gap: 12,
+        flexWrap: 'wrap',
+        background: '#fff',
+        border: '1px solid #E8E4DE',
+        borderRadius: 10,
+        padding: '12px 14px',
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#6E6257', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+          Your price
+        </div>
+        {unitPrice === null ? (
+          <>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#1F1813' }}>Price on request</div>
+            <div style={{ fontSize: 12, color: '#6E6257', marginTop: 2 }}>We&apos;ll quote it when you send your order.</div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 24, fontWeight: 800, color: '#1F1813' }}>{formatInr(unitPrice)}</span>
+            <span style={{ fontSize: 13, color: '#6E6257' }}>per piece</span>
+          </div>
+        )}
+      </div>
+      {unitPrice !== null && showTotal && (
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 12, color: '#6E6257' }}>{qty} pcs</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#1F1813' }}>{formatInr(roundPaise(unitPrice * qty))}</div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Accordion({
   title,
@@ -82,6 +126,26 @@ export default function ProductActions({ product }: { product: Product }) {
 
   const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK';
 
+  // Prices are per dealer, so they are fetched here rather than rendered into
+  // this server-rendered (and cached) page. undefined = nothing to show: not
+  // signed in, or prices are switched off for this dealer.
+  const [unitPrice, setUnitPrice] = useState<number | null | undefined>(undefined);
+  useEffect(() => {
+    if (!localStorage.getItem('mxd_token')) return;
+    let cancelled = false;
+    dealerApi
+      .prices([product.id])
+      .then(({ data }) => {
+        if (!cancelled && data.data.showPrices) setUnitPrice(data.data.prices[product.id] ?? null);
+      })
+      .catch(() => {
+        /* no price box; everything else on the page works as before */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [product.id]);
+
   async function handleAddToCart() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('mxd_token') : null;
     if (!token) { window.location.href = '/auth'; return; }
@@ -116,6 +180,10 @@ export default function ProductActions({ product }: { product: Product }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {unitPrice !== undefined && (
+        <DealerPrice unitPrice={unitPrice} qty={qty} showTotal={!isOutOfStock} />
+      )}
+
       {/* Cart actions */}
       {!isOutOfStock ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

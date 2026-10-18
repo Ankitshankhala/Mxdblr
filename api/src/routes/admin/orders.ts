@@ -5,16 +5,21 @@
  * GET /            — filterable, paginated inquiry list.
  * PUT /:id/status  — update inquiry status (requires EDIT_ORDERS specifically,
  *                    via requireLoadedPermission).
+ * Quoted dealer prices in cartSnapshot are only returned to admins holding
+ * ACCESS_FINANCIAL_DATA.
  */
 import { Router, Request, Response } from 'express';
 import { InquiryStatus, Prisma } from '@prisma/client';
 import { requireAdminAuth } from '../../middleware/auth';
 import { requireLoadedPermission } from '../../middleware/rbac';
 import prisma from '../../lib/prisma';
+import { snapshotForViewer } from '../../lib/pricing';
 
 const router = Router();
 
 router.use(requireAdminAuth);
+
+const canSeePrices = (req: Request) => Boolean(req.adminCtx?.permissions.has('ACCESS_FINANCIAL_DATA'));
 
 // GET /api/admin/inquiries
 router.get('/', async (req: Request, res: Response): Promise<void> => {
@@ -66,7 +71,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     success: true,
     data: inquiries.map((inq) => ({
       ...inq,
-      cartSnapshot: inq.cartSnapshot ?? [],
+      cartSnapshot: snapshotForViewer(inq.cartSnapshot, canSeePrices(req)),
     })),
     pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) },
   });
@@ -90,7 +95,10 @@ router.put('/:id/status', requireLoadedPermission('EDIT_ORDERS'), async (req: Re
       include: { dealer: { select: { ownerName: true, shopName: true, mobile: true } } },
     });
 
-    res.json({ success: true, data: inquiry });
+    res.json({
+      success: true,
+      data: { ...inquiry, cartSnapshot: snapshotForViewer(inquiry.cartSnapshot, canSeePrices(req)) },
+    });
   } catch (e: any) {
     if (e?.code === 'P2025') {
       res.status(404).json({ success: false, message: 'Inquiry not found' });

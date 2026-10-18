@@ -9,12 +9,17 @@
  * POST /csv-import (bulk import), and POST /bulk-features (assign supported
  * technologies to many products at once). All mutating routes map Prisma P2025 →
  * 404 rather than 500. Includes inline CSV parsing helpers.
+ *
+ * Dealer price lists (priceA/B/C) are financial data: they are only returned to,
+ * and only accepted from, admins holding ACCESS_FINANCIAL_DATA. PATCH /:id/prices
+ * is the quick inline price edit used by the products table.
  */
 import express, { Router, Request, Response } from 'express';
 import { StockStatus, Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { requireAdminAuth } from '../../middleware/auth';
 import { requireLoadedPermission } from '../../middleware/rbac';
+import { PRICE_FIELDS, priceInput } from '../../lib/pricing';
 import prisma from '../../lib/prisma';
 
 // ── CSV helpers (for /csv-import) ─────────────────────────────────────────────
@@ -99,6 +104,10 @@ const createProductSchema = z.object({
   active: z.boolean().optional(),
   isNewArrival: z.boolean().optional(),
   isBestSeller: z.boolean().optional(),
+  // Dealer price lists, per piece in rupees; null clears. ACCESS_FINANCIAL_DATA only.
+  priceA: priceInput.optional(),
+  priceB: priceInput.optional(),
+  priceC: priceInput.optional(),
   // Accept either attributeTypeId (existing type) or name (auto-create/find type)
   attributes: z.array(
     z.union([
@@ -132,12 +141,27 @@ async function resolveFeatureLinks(slugs: string[]): Promise<{ featureId: string
     .filter((x): x is { featureId: string; displayOrder: number } => x !== null);
 }
 
-function sanitizeAdminProduct(p: Record<string, unknown>) {
+const canSeePrices = (req: Request) => Boolean(req.adminCtx?.permissions.has('ACCESS_FINANCIAL_DATA'));
+
+// The legacy single price is never exposed; the A/B/C lists only with
+// ACCESS_FINANCIAL_DATA.
+function sanitizeAdminProduct(p: Record<string, unknown>, req: Request) {
+  const showPrices = canSeePrices(req);
   return {
     ...p,
     price: undefined,
     pricingActive: undefined,
+    priceA: showPrices ? p.priceA : undefined,
+    priceB: showPrices ? p.priceB : undefined,
+    priceC: showPrices ? p.priceC : undefined,
   };
+}
+
+// True (after sending a 403) when the body sets a price the caller may not touch.
+function rejectsPriceEdit(req: Request, res: Response, data: Record<string, unknown>): boolean {
+  if (canSeePrices(req) || !PRICE_FIELDS.some((f) => data[f] !== undefined)) return false;
+  res.status(403).json({ success: false, message: 'Editing prices needs the Access Financial Data permission' });
+  return true;
 }
 
 type RawAttr = { attributeTypeId: string; value: string } | { name: string; value: string };
@@ -403,7 +427,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     // { products, count, total, page, limit, pages } shape — envelope drift.)
     res.json({
       success: true,
-      data: products.map(sanitizeAdminProduct),
+      data: products.map((p) => sanitizeAdminProduct(p, req)),
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -425,6 +449,7 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
   }
 
   const { attributes, compatibilityTags, featureSlugs, images, ...productData } = parse.data;
+  if (rejectsPriceEdit(req, res, productData)) return;
 
   const existing = await prisma.product.findUnique({ where: { sku: productData.sku } });
   if (existing) {
@@ -457,7 +482,7 @@ router.post('/', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request
     },
   });
 
-  res.status(201).json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
+  res.status(201).json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>, req) });
 });
 
 // PUT /api/admin/products/:id
@@ -470,6 +495,7 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
   }
 
   const { attributes, compatibilityTags, featureSlugs, images, ...productData } = parse.data;
+  if (rejectsPriceEdit(req, res, productData)) return;
 
   const resolvedAttrs = attributes !== undefined
     ? await Promise.all(
@@ -515,7 +541,7 @@ router.put('/:id', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Reque
       },
     });
 
-    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
+    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>, req) });
   } catch (e: any) {
     if (e?.code === 'P2025') {
       res.status(404).json({ success: false, message: 'Product not found' });
@@ -560,7 +586,7 @@ router.patch('/:id/new-arrival', requireLoadedPermission('MANAGE_PRODUCTS'), asy
       where: { id },
       data: { isNewArrival },
     });
-    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
+    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>, req) });
   } catch (e: any) {
     if (e?.code === 'P2025') {
       res.status(404).json({ success: false, message: 'Product not found' });
@@ -583,7 +609,7 @@ router.patch('/:id/best-seller', requireLoadedPermission('MANAGE_PRODUCTS'), asy
       where: { id },
       data: { isBestSeller },
     });
-    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
+    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>, req) });
   } catch (e: any) {
     if (e?.code === 'P2025') {
       res.status(404).json({ success: false, message: 'Product not found' });
@@ -592,6 +618,40 @@ router.patch('/:id/best-seller', requireLoadedPermission('MANAGE_PRODUCTS'), asy
     throw e;
   }
 });
+
+const pricesUpdateSchema = z
+  .object({ priceA: priceInput.optional(), priceB: priceInput.optional(), priceC: priceInput.optional() })
+  .refine((d) => PRICE_FIELDS.some((f) => d[f] !== undefined), 'Send at least one of priceA, priceB, priceC');
+
+// PATCH /api/admin/products/:id/prices — inline price edit from the products table.
+// { priceA?, priceB?, priceC? }: rupees per piece; null clears a price.
+router.patch(
+  '/:id/prices',
+  requireLoadedPermission('MANAGE_PRODUCTS'),
+  requireLoadedPermission('ACCESS_FINANCIAL_DATA'),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const parse = pricesUpdateSchema.safeParse(req.body);
+    if (!parse.success) {
+      res.status(400).json({ success: false, message: parse.error.issues[0].message });
+      return;
+    }
+    try {
+      const product = await prisma.product.update({
+        where: { id },
+        data: parse.data,
+        select: { id: true, priceA: true, priceB: true, priceC: true },
+      });
+      res.json({ success: true, data: product });
+    } catch (e: any) {
+      if (e?.code === 'P2025') {
+        res.status(404).json({ success: false, message: 'Product not found' });
+        return;
+      }
+      throw e;
+    }
+  },
+);
 
 // PATCH /api/admin/products/:id/active — toggle storefront visibility
 router.patch('/:id/active', requireLoadedPermission('MANAGE_PRODUCTS'), async (req: Request, res: Response): Promise<void> => {
@@ -606,7 +666,7 @@ router.patch('/:id/active', requireLoadedPermission('MANAGE_PRODUCTS'), async (r
       where: { id },
       data: { active },
     });
-    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
+    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>, req) });
   } catch (e: any) {
     if (e?.code === 'P2025') {
       res.status(404).json({ success: false, message: 'Product not found' });
@@ -638,7 +698,7 @@ async function handleStockUpdate(req: Request, res: Response): Promise<void> {
       data: { stockStatus, ...(stockQty !== undefined && { stockQty }) },
     });
 
-    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>) });
+    res.json({ success: true, data: sanitizeAdminProduct(product as unknown as Record<string, unknown>, req) });
   } catch (e: any) {
     if (e?.code === 'P2025') {
       res.status(404).json({ success: false, message: 'Product not found' });

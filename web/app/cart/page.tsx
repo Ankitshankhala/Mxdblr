@@ -17,16 +17,46 @@ import SkuLabel from '@/components/ui/SkuLabel';
 import StockBadge from '@/components/ui/StockBadge';
 import QtyStepper from '@/components/ui/QtyStepper';
 import { useCart } from '@/hooks/useCart';
-import { notificationsApi } from '@/lib/api';
+import { dealerApi, notificationsApi } from '@/lib/api';
 import { normalizeImageUrl } from '@/lib/config';
+import { formatInr, roundPaise } from '@/lib/price';
 import type { CartItem } from '@/types';
 import { whatsappLink } from '@/lib/config';
 
-function buildWhatsAppMessage(items: CartItem[], dealerName = 'Dealer', shopName = 'Shop'): string {
-  const lines = items.map(
-    (item, i) =>
-      `${i + 1}. ${item.product.name} (SKU: ${item.product.sku}) — Qty: ${item.quantity} pcs`
-  );
+/**
+ * Preview of the inquiry message. `prices` (the dealer's own, when an admin has
+ * switched their prices on) adds unit prices and a total, matching the message
+ * the API builds and actually sends (buildInquiryWhatsAppMessage).
+ */
+function buildWhatsAppMessage(
+  items: CartItem[],
+  dealerName = 'Dealer',
+  shopName = 'Shop',
+  prices?: Record<string, number | null>
+): string {
+  let total = 0;
+  let onRequest = 0;
+  const lines = items.map((item, i) => {
+    const line = `${i + 1}. ${item.product.name} (SKU: ${item.product.sku}) — Qty: ${item.quantity} pcs`;
+    if (!prices) return line;
+    const unit = prices[item.productId];
+    if (unit == null) {
+      onRequest++;
+      return `${line} — price on request`;
+    }
+    const lineTotal = roundPaise(unit * item.quantity);
+    total += lineTotal;
+    return `${line} × ${formatInr(unit)} = ${formatInr(lineTotal)}`;
+  });
+  const priced = prices ? items.length - onRequest : 0;
+  const totalLines = priced > 0
+    ? [``, `*Total: ${formatInr(roundPaise(total))}*${onRequest ? ` (+ ${onRequest} item${onRequest === 1 ? '' : 's'} on request)` : ''}`]
+    : [];
+  const ask = !prices
+    ? `Please confirm availability and pricing.`
+    : onRequest
+      ? `Please confirm availability and share pricing for the items on request.`
+      : `Please confirm availability.`;
   return [
     `*MXD Wholesale Inquiry*`,
     ``,
@@ -35,8 +65,9 @@ function buildWhatsAppMessage(items: CartItem[], dealerName = 'Dealer', shopName
     ``,
     `*Products:*`,
     ...lines,
+    ...totalLines,
     ``,
-    `Please confirm availability and pricing.`,
+    ask,
     `_Sent via MXD Dealer Portal_`,
   ].join('\n');
 }
@@ -205,10 +236,30 @@ export default function CartPage() {
     setIsAuthenticated(!!localStorage.getItem('mxd_token'));
   }, []);
 
+  // The dealer's own prices for the preview; undefined while prices are off.
+  const [prices, setPrices] = useState<Record<string, number | null> | undefined>(undefined);
+  const productIdsKey = items.map((i) => i.productId).slice(0, 100).join(',');
+  useEffect(() => {
+    if (!productIdsKey || !localStorage.getItem('mxd_token')) return;
+    let cancelled = false;
+    dealerApi
+      .prices(productIdsKey.split(','))
+      .then(({ data }) => {
+        if (!cancelled) setPrices(data.data.showPrices ? data.data.prices : undefined);
+      })
+      .catch(() => {
+        /* preview without prices; the sent message still comes from the API */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productIdsKey]);
+
   const whatsappMessage = buildWhatsAppMessage(
     items,
     dealer?.ownerName || 'Dealer',
-    dealer?.shopName || 'Shop'
+    dealer?.shopName || 'Shop',
+    prices
   );
 
   // Fallback link used only if the API call fails (offline, network error) —

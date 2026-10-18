@@ -9,6 +9,7 @@
  * Credentials come from env vars exclusively.
  */
 import axios from 'axios';
+import { formatInr, roundPaise } from './pricing';
 
 const MSG91_AUTH_KEY = process.env.MSG91_AUTH_KEY || '';
 const MSG91_TEMPLATE_ID = process.env.MSG91_TEMPLATE_ID || '';
@@ -89,14 +90,49 @@ export async function sendWhatsAppMessage(mobile: string, message: string): Prom
   }
 }
 
+/**
+ * With `showPrices` (the dealer's prices are switched on), each line carries the
+ * dealer's quoted unit price and line total, followed by an order total. Lines
+ * with no price on the dealer's list say "price on request" and are left out of
+ * the total.
+ */
 export function buildInquiryWhatsAppMessage(
   dealerName: string,
   shopName: string,
-  items: Array<{ name: string; sku: string; quantity: number }>
+  items: Array<{ name: string; sku: string; quantity: number; unitPrice?: number | null }>,
+  showPrices = false
 ): string {
+  const header = `*MXD Wholesale Inquiry*\n\nDealer: ${dealerName}\nShop: ${shopName}\n\n*Products Requested:*\n`;
+  const footer = '\n\n_Sent via MXD Dealer Portal_';
+  const line = (item: { name: string; sku: string; quantity: number }, i: number) =>
+    `${i + 1}. ${item.name} (SKU: ${item.sku}) — Qty: ${item.quantity}`;
+
+  if (!showPrices) {
+    const itemLines = items.map(line).join('\n');
+    return `${header}${itemLines}\n\nPlease confirm availability and share pricing.${footer}`;
+  }
+
+  let total = 0;
+  let onRequest = 0;
   const itemLines = items
-    .map((item, i) => `${i + 1}. ${item.name} (SKU: ${item.sku}) — Qty: ${item.quantity}`)
+    .map((item, i) => {
+      if (item.unitPrice == null) {
+        onRequest++;
+        return `${line(item, i)} — price on request`;
+      }
+      const lineTotal = roundPaise(item.unitPrice * item.quantity);
+      total += lineTotal;
+      return `${line(item, i)} × ${formatInr(item.unitPrice)} = ${formatInr(lineTotal)}`;
+    })
     .join('\n');
 
-  return `*MXD Wholesale Inquiry*\n\nDealer: ${dealerName}\nShop: ${shopName}\n\n*Products Requested:*\n${itemLines}\n\nPlease confirm availability and share pricing.\n\n_Sent via MXD Dealer Portal_`;
+  const priced = items.length - onRequest;
+  const totalLine = priced > 0
+    ? `\n\n*Total: ${formatInr(roundPaise(total))}*${onRequest ? ` (+ ${onRequest} item${onRequest === 1 ? '' : 's'} on request)` : ''}`
+    : '';
+  const ask = onRequest
+    ? 'Please confirm availability and share pricing for the items on request.'
+    : 'Please confirm availability.';
+
+  return `${header}${itemLines}${totalLine}\n\n${ask}${footer}`;
 }

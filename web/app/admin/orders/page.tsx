@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/admin/Toast";
+import { formatInr, roundPaise } from "@/lib/price";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -34,6 +35,22 @@ interface CartSnapshotItem {
   productId: string;
   quantity: number;
   product: { id: string; name: string; brand: string; sku: string; moq: number } | null;
+  // The dealer's price at order time. Only on orders placed while the dealer's
+  // prices were on, and only returned to admins with ACCESS_FINANCIAL_DATA.
+  unitPrice?: number | null;
+  priceTier?: "A" | "B" | "C";
+}
+
+/** Quoted total for an order, or null when no prices were quoted on it. */
+function quoteSummary(items: CartSnapshotItem[]) {
+  const quoted = items.filter((i) => i.unitPrice !== undefined);
+  if (quoted.length === 0) return null;
+  const priced = quoted.filter((i) => i.unitPrice != null);
+  return {
+    tier: quoted[0].priceTier,
+    total: roundPaise(priced.reduce((sum, i) => sum + roundPaise(i.unitPrice! * i.quantity), 0)),
+    onRequest: quoted.length - priced.length,
+  };
 }
 
 interface Inquiry {
@@ -353,10 +370,32 @@ function OrdersContent() {
                         {idx + 1}.{" "}
                         {item.product ? `${item.product.name} (${item.product.sku})` : item.productId}
                       </span>
-                      <span style={{ fontWeight: 700, color: "#F47920" }}>× {item.quantity}</span>
+                      <span style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
+                        <span style={{ fontWeight: 700, color: "#F47920" }}>× {item.quantity}</span>
+                        {item.unitPrice !== undefined && (
+                          <span style={{ display: "block", fontSize: 12, color: "#6E6257", marginTop: 2, whiteSpace: "nowrap" }}>
+                            {item.unitPrice === null
+                              ? "price on request"
+                              : `${formatInr(item.unitPrice)} = ${formatInr(roundPaise(item.unitPrice * item.quantity))}`}
+                          </span>
+                        )}
+                      </span>
                     </div>
                   ))}
                 </div>
+                {(() => {
+                  const quote = quoteSummary(viewInquiry.cartSnapshot);
+                  if (!quote) return null;
+                  return (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "10px 14px", fontSize: 13 }}>
+                      <span style={{ color: "#6E6257" }}>
+                        Quoted total{quote.tier ? ` (Price ${quote.tier})` : ""}
+                        {quote.onRequest > 0 && ` · ${quote.onRequest} on request`}
+                      </span>
+                      <strong style={{ fontSize: 15 }}>{formatInr(quote.total)}</strong>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Received */}

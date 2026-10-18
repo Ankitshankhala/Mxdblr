@@ -11,6 +11,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireDealerAuth } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import { PRICE_SELECT, TieredPrices, priceForTier } from '../lib/pricing';
 
 const router = Router();
 
@@ -80,24 +81,35 @@ router.post('/inquiry', requireDealerAuth, async (req: Request, res: Response): 
 
   const dealer = await prisma.dealer.findUnique({
     where: { id: dealerId },
-    select: { ownerName: true, shopName: true, whatsappNumber: true },
+    select: { ownerName: true, shopName: true, whatsappNumber: true, priceTier: true, showPrices: true, status: true },
   });
   if (!dealer) {
     res.status(404).json({ success: false, message: 'Dealer not found' });
     return;
   }
 
+  // Quote the dealer's own price list only while an admin has prices switched on
+  // for them (same rule as GET /api/dealers/me/prices).
+  const quoteTier = dealer.showPrices && dealer.status === 'ACTIVE' ? dealer.priceTier : null;
+
   const productIds = parse.data.items.map((i) => i.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
-    select: { id: true, name: true, brand: true, sku: true, moq: true },
+    select: { id: true, name: true, brand: true, sku: true, moq: true, ...PRICE_SELECT },
   });
+  const unitPriceOf = (p: TieredPrices) => (quoteTier ? priceForTier(p, quoteTier) : null);
 
-  const cartSnapshot = parse.data.items.map((item) => ({
-    productId: item.productId,
-    quantity: item.quantity,
-    product: products.find((p) => p.id === item.productId) || null,
-  }));
+  // The snapshot records the price quoted at the time, so later price changes
+  // don't rewrite what the dealer was told. Only their own list's price is kept.
+  const cartSnapshot = parse.data.items.map((item) => {
+    const p = products.find((x) => x.id === item.productId);
+    return {
+      productId: item.productId,
+      quantity: item.quantity,
+      product: p ? { id: p.id, name: p.name, brand: p.brand, sku: p.sku, moq: p.moq } : null,
+      ...(quoteTier && { unitPrice: p ? unitPriceOf(p) : null, priceTier: quoteTier }),
+    };
+  });
 
   const inquiry = await prisma.inquiryLog.create({
     data: { dealerId, cartSnapshot, status: 'NEW' },
@@ -108,9 +120,15 @@ router.post('/inquiry', requireDealerAuth, async (req: Request, res: Response): 
     name: p.name,
     sku: p.sku,
     quantity: parse.data.items.find((i) => i.productId === p.id)?.quantity || 1,
+    unitPrice: unitPriceOf(p),
   }));
 
-  const whatsappMessage = buildInquiryWhatsAppMessage(dealer.ownerName, dealer.shopName, itemsForMessage);
+  const whatsappMessage = buildInquiryWhatsAppMessage(
+    dealer.ownerName,
+    dealer.shopName,
+    itemsForMessage,
+    quoteTier !== null,
+  );
 
   res.status(201).json({
     success: true,

@@ -40,6 +40,13 @@ enum InquiryStatus {
   CLOSED
 }
 
+// Which of a product's three price lists (Product.priceA/B/C) a dealer is quoted.
+enum PriceTier {
+  A
+  B
+  C
+}
+
 model Dealer {
   id              String       @id @default(cuid())
   mobile          String       @unique
@@ -56,6 +63,11 @@ model Dealer {
   gstNumber       String?
   businessType    BusinessType
   status          DealerStatus @default(ACTIVE)
+  // Pricing is admin-controlled (ACCESS_FINANCIAL_DATA): the dealer is quoted the
+  // product price for `priceTier`, and only while `showPrices` is on. Off by
+  // default, so a dealer sees no prices until an admin switches them on.
+  priceTier       PriceTier    @default(A)
+  showPrices      Boolean      @default(false)
   lastRevokedAt   DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -114,8 +126,14 @@ model Product {
   stockStatus   StockStatus @default(IN_STOCK)
   stockQty      Int         @default(0)
   images        String[]    @default([])
+  // Legacy single price, never exposed. Superseded by the A/B/C price lists below.
   price          Float?
   pricingActive  Boolean     @default(false)
+  // Per-piece price for each dealer price list (Dealer.priceTier). null = not
+  // priced for that list; the dealer sees "price on request".
+  priceA         Float?
+  priceB         Float?
+  priceC         Float?
   // Storefront visibility. false = hidden from the public site but retained in
   // admin (soft-hide instead of delete). Existing rows default to visible.
   active         Boolean     @default(true)
@@ -355,6 +373,7 @@ enum AuditAction {
   USER_DEACTIVATED
   USER_DELETED
   DEALER_LOGIN_CODE_ISSUED
+  DEALER_PRICING_CHANGED
 }
 
 // Immutable audit trail for every role/permission/user change (Security req #6).

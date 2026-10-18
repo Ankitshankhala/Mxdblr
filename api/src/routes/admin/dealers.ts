@@ -10,6 +10,8 @@
  * GET /:id             — single dealer detail.
  * PUT /:id/moderate    — approve / block / suspend a dealer (moderation action;
  *                        a block bumps lastRevokedAt to kill active sessions).
+ * PUT /:id/pricing     — which price list (A/B/C) the dealer is quoted and
+ *                        whether they see prices; also needs ACCESS_FINANCIAL_DATA.
  *
  * NOTE on scope: filters map ONLY to columns that exist on the Dealer model
  * (state/district/city/businessType/status/gstNumber/createdAt). Spec items with
@@ -18,11 +20,13 @@
  * NOT implemented here; they require schema changes + a security review first.
  */
 import { Router, Request, Response } from 'express';
-import { DealerStatus, BusinessType, Prisma } from '@prisma/client';
+import { DealerStatus, BusinessType, PriceTier, Prisma } from '@prisma/client';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { requireAdminAuth } from '../../middleware/auth';
+import { requireLoadedPermission } from '../../middleware/rbac';
 import { writeAuditLog } from '../../lib/audit';
+import { snapshotForViewer } from '../../lib/pricing';
 import prisma from '../../lib/prisma';
 
 const router = Router();
@@ -141,6 +145,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         id: true, mobile: true, ownerName: true, shopName: true,
         city: true, tehsil: true, district: true, state: true, pincode: true,
         gstNumber: true, businessType: true, status: true,
+        priceTier: true, showPrices: true,
         createdAt: true, updatedAt: true,
         _count: { select: { cartItems: true, inquiries: true } },
       },
@@ -216,6 +221,8 @@ const EXPORT_COLUMNS: { header: string; key: string }[] = [
   { header: 'District', key: 'district' },
   { header: 'State', key: 'state' },
   { header: 'Pincode', key: 'pincode' },
+  { header: 'Price List', key: 'priceTier' },
+  { header: 'Prices Shown', key: 'showPrices' },
   { header: 'Registered On', key: 'createdAt' },
 ];
 
@@ -284,16 +291,16 @@ router.get('/export', async (req: Request, res: Response): Promise<void> => {
   const format = firstString(req.query.format) === 'xlsx' ? 'xlsx' : 'csv';
 
   // Export the full filtered set (capped to protect the server), not just one page.
-  const rows = (await prisma.dealer.findMany({
+  const rows: ExportRow[] = (await prisma.dealer.findMany({
     where,
     orderBy,
     take: 10000,
     select: {
       id: true, ownerName: true, shopName: true, mobile: true, gstNumber: true,
       businessType: true, status: true, city: true, tehsil: true, district: true,
-      state: true, pincode: true, createdAt: true,
+      state: true, pincode: true, priceTier: true, showPrices: true, createdAt: true,
     },
-  })) as ExportRow[];
+  })).map((d) => ({ ...d, showPrices: d.showPrices ? 'Yes' : 'No' }));
 
   const stamp = new Date().toISOString().slice(0, 10);
 
@@ -330,6 +337,65 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     res.status(404).json({ success: false, message: 'Dealer not found' });
     return;
   }
+
+  const canSeePrices = Boolean(req.adminCtx?.permissions.has('ACCESS_FINANCIAL_DATA'));
+  res.json({
+    success: true,
+    data: {
+      ...dealer,
+      inquiries: dealer.inquiries.map((inq) => ({
+        ...inq,
+        cartSnapshot: snapshotForViewer(inq.cartSnapshot, canSeePrices),
+      })),
+    },
+  });
+});
+
+const pricingSchema = z.object({
+  priceTier: z.nativeEnum(PriceTier),
+  showPrices: z.boolean(),
+});
+
+// PUT /api/admin/dealers/:id/pricing  { priceTier: 'A'|'B'|'C', showPrices }
+// Needs ACCESS_FINANCIAL_DATA on top of the router's MANAGE_CUSTOMERS: putting a
+// dealer on a cheaper list is a commercial decision, not account housekeeping.
+// Takes effect on the dealer's next page load (prices are never cached client-side).
+router.put('/:id/pricing', requireLoadedPermission('ACCESS_FINANCIAL_DATA'), async (req: Request, res: Response): Promise<void> => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const parse = pricingSchema.safeParse(req.body);
+  if (!parse.success) {
+    res.status(400).json({ success: false, message: 'Choose price list A, B or C and whether prices are shown' });
+    return;
+  }
+
+  const before = await prisma.dealer.findUnique({
+    where: { id },
+    select: { priceTier: true, showPrices: true },
+  });
+  if (!before) {
+    res.status(404).json({ success: false, message: 'Dealer not found' });
+    return;
+  }
+
+  const dealer = await prisma.dealer.update({
+    where: { id },
+    data: parse.data,
+    select: { id: true, ownerName: true, shopName: true, priceTier: true, showPrices: true },
+  });
+
+  await writeAuditLog({
+    actorId: req.admin!.adminId,
+    actorName: req.admin!.username,
+    action: 'DEALER_PRICING_CHANGED',
+    targetType: 'Dealer',
+    targetId: dealer.id,
+    targetName: dealer.shopName,
+    details: {
+      priceTier: dealer.priceTier,
+      showPrices: dealer.showPrices,
+      previous: `${before.priceTier} · ${before.showPrices ? 'shown' : 'hidden'}`,
+    },
+  });
 
   res.json({ success: true, data: dealer });
 });

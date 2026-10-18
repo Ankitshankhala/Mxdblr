@@ -32,6 +32,13 @@ export function clearToken(): void {
   document.cookie = 'mxd_token=; path=/; SameSite=Lax; max-age=0';
 }
 
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    /** Background call: on 401, fail quietly instead of signing out and redirecting. */
+    quietAuth?: boolean;
+  }
+}
+
 const api = axios.create({ baseURL: BASE });
 
 api.interceptors.request.use((config) => {
@@ -43,7 +50,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+    if (error.response?.status === 401 && typeof window !== 'undefined' && !error.config?.quietAuth) {
       clearToken();
       window.location.href = '/auth';
     }
@@ -85,7 +92,18 @@ export const dealerApi = {
   me: () => api.get('/dealers/me'),
   update: (data: Record<string, unknown>) => api.put('/dealers/me', data),
   myInquiries: () => api.get('/dealers/me/inquiries'),
+  // The dealer's own price per product, or { showPrices: false } while an admin
+  // has their prices switched off. Quiet: an expired session just shows no price.
+  prices: (productIds: string[]) =>
+    api.get<{ success: boolean; data: DealerPrices }>('/dealers/me/prices', {
+      params: { ids: productIds.join(',') },
+      quietAuth: true,
+    }),
 };
+
+export type DealerPrices =
+  | { showPrices: false }
+  | { showPrices: true; prices: Record<string, number | null> };
 
 // Notifications
 export const notificationsApi = {

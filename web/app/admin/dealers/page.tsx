@@ -15,14 +15,21 @@
  * Scope note: filters cover the columns that exist on the Dealer model. Rating,
  * verification, last-login, created-by, email, PENDING status and per-dealer product
  * categories are not part of the data model and are intentionally absent.
+ *
+ * Prices: each dealer is quoted one product price list (A/B/C) and prices can be
+ * switched on or off per dealer (PUT /api/admin/dealers/:id/pricing). Changing
+ * it needs ACCESS_FINANCIAL_DATA; everyone else sees the setting read-only.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/admin/Toast";
+import { useAdminAuth } from "@/lib/admin/auth";
 
 type DealerStatus = "ACTIVE" | "SUSPENDED" | "BLOCKED" | "REJECTED";
+type PriceTier = "A" | "B" | "C";
+const PRICE_TIERS: PriceTier[] = ["A", "B", "C"];
 
 interface ApiDealer {
   id: string;
@@ -37,6 +44,8 @@ interface ApiDealer {
   pincode: string;
   businessType: string;
   status: DealerStatus;
+  priceTier: PriceTier;
+  showPrices: boolean;
   createdAt: string;
 }
 
@@ -76,6 +85,8 @@ const BUSINESS_TYPE_LABELS: Record<string, string> = {
 };
 const btLabel = (v: string) => BUSINESS_TYPE_LABELS[v] ?? v;
 const statusLabel = (v: string) => v.charAt(0) + v.slice(1).toLowerCase();
+const pricingLabel = (d: Pick<ApiDealer, "priceTier" | "showPrices">) =>
+  d.showPrices ? `Price ${d.priceTier}` : "Off";
 
 const SORT_LABELS: Record<string, string> = {
   date: "Registration Date",
@@ -168,10 +179,29 @@ function filtersToQuery(f: Filters): string {
   return p.toString();
 }
 
+function PricingPill({ dealer, onClick }: { dealer: ApiDealer; onClick?: () => void }) {
+  const style: React.CSSProperties = {
+    padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap",
+    border: dealer.showPrices ? "1px solid #059669" : "1px solid #E8E4DE",
+    background: dealer.showPrices ? "#D1FAE5" : "#F3F4F6",
+    color: dealer.showPrices ? "#059669" : "#6B7280",
+  };
+  if (!onClick) return <span style={style}>{pricingLabel(dealer)}</span>;
+  return (
+    <button onClick={onClick} title="Change this dealer's prices"
+      aria-label={`Prices for ${dealer.shopName}: ${pricingLabel(dealer)}. Change`}
+      style={{ ...style, cursor: "pointer" }}>
+      {pricingLabel(dealer)}
+    </button>
+  );
+}
+
 function DealersContent() {
   const { showToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { has } = useAdminAuth();
+  const canEditPrices = has("ACCESS_FINANCIAL_DATA");
 
   const [filters, setFilters] = useState<Filters>(() => filtersFromParams(searchParams));
   const [dealers, setDealers] = useState<ApiDealer[]>([]);
@@ -198,6 +228,42 @@ function DealersContent() {
     code: string; mobile: string; expiresAt: string; newDealer: boolean;
     dealer: { ownerName: string; shopName: string } | null;
   } | null>(null);
+
+  // Price list + on/off editor for one dealer.
+  const [pricingDealer, setPricingDealer] = useState<ApiDealer | null>(null);
+  const [pricingDraft, setPricingDraft] = useState<{ priceTier: PriceTier; showPrices: boolean }>({ priceTier: "A", showPrices: false });
+  const [savingPricing, setSavingPricing] = useState(false);
+
+  function openPricing(d: ApiDealer) {
+    setPricingDealer(d);
+    setPricingDraft({ priceTier: d.priceTier, showPrices: d.showPrices });
+    setOpenMenu(null);
+  }
+
+  async function savePricing() {
+    if (!pricingDealer) return;
+    setSavingPricing(true);
+    try {
+      const res = await fetch(`${API}/admin/dealers/${pricingDealer.id}/pricing`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify(pricingDraft),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error(json.message || `HTTP ${res.status}`);
+      const saved = { priceTier: json.data.priceTier as PriceTier, showPrices: Boolean(json.data.showPrices) };
+      setDealers((list) => list.map((d) => (d.id === pricingDealer.id ? { ...d, ...saved } : d)));
+      setViewDealer((v) => (v && v.id === pricingDealer.id ? { ...v, ...saved } : v));
+      showToast(saved.showPrices
+        ? `${pricingDealer.shopName} now sees Price ${saved.priceTier}`
+        : `Prices hidden for ${pricingDealer.shopName}`);
+      setPricingDealer(null);
+    } catch (err: unknown) {
+      showToast(`Could not save prices: ${err instanceof Error ? err.message : "unknown"}`, "error");
+    } finally {
+      setSavingPricing(false);
+    }
+  }
 
   // Reflect the applied filters into the URL so refresh/back preserves them.
   const syncUrl = useCallback((f: Filters) => {
@@ -607,7 +673,7 @@ function DealersContent() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid #E8E4DE" }}>
-                  {["Name", "Shop", "Mobile", "District", "City", "State", "Type", "Status", "Joined", "Actions"].map((h) => (
+                  {["Name", "Shop", "Mobile", "District", "City", "State", "Type", "Status", "Prices", "Joined", "Actions"].map((h) => (
                     <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6E6257", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
@@ -625,6 +691,9 @@ function DealersContent() {
                       <span style={{ background: "#EEF0FE", color: "#6366F1", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, whiteSpace: "nowrap" }}>{btLabel(d.businessType)}</span>
                     </td>
                     <td style={{ padding: "10px 14px" }}><StatusBadge status={d.status} /></td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <PricingPill dealer={d} onClick={canEditPrices ? () => openPricing(d) : undefined} />
+                    </td>
                     <td style={{ padding: "10px 14px", color: "#6E6257", whiteSpace: "nowrap" }}>{fmtDate(d.createdAt)}</td>
                     <td style={{ padding: "10px 14px" }}>
                       <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
@@ -639,6 +708,12 @@ function DealersContent() {
                               style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", color: "#1F1813" }}>
                               View Details
                             </button>
+                            {canEditPrices && (
+                              <button onClick={() => openPricing(d)}
+                                style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", color: "#1F1813" }}>
+                                Set Prices
+                              </button>
+                            )}
                             {STATUS_ACTIONS[d.status].map((action) => (
                               <button key={action} onClick={() => setConfirmAction({ dealerId: d.id, newStatus: action })}
                                 style={{ display: "block", width: "100%", padding: "9px 14px", border: "none", background: "none", textAlign: "left", fontSize: 13, cursor: "pointer", fontWeight: 600, color: action === "BLOCKED" ? "#DC2626" : action === "REJECTED" ? "#6E6257" : action === "SUSPENDED" ? "#F59E0B" : "#2E7D32" }}>
@@ -652,7 +727,7 @@ function DealersContent() {
                   </tr>
                 ))}
                 {dealers.length === 0 && (
-                  <tr><td colSpan={10} style={{ padding: 32, textAlign: "center", color: "#6E6257" }}>No dealers match the current filters.</td></tr>
+                  <tr><td colSpan={11} style={{ padding: 32, textAlign: "center", color: "#6E6257" }}>No dealers match the current filters.</td></tr>
                 )}
               </tbody>
             </table>
@@ -727,10 +802,74 @@ function DealersContent() {
                   <span style={{ fontWeight: 600, textAlign: "right", wordBreak: "break-all" }}>{v}</span>
                 </div>
               ))}
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 13 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #F0EDEA", fontSize: 13 }}>
                 <span style={{ color: "#6E6257", fontWeight: 500 }}>Status</span>
                 <StatusBadge status={viewDealer.status} />
               </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", fontSize: 13 }}>
+                <span style={{ color: "#6E6257", fontWeight: 500 }}>Prices</span>
+                <PricingPill dealer={viewDealer} onClick={canEditPrices ? () => openPricing(viewDealer) : undefined} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Price list + on/off for one dealer */}
+      {pricingDealer && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div role="dialog" aria-modal="true" aria-labelledby="pricing-title" style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 420, padding: 24 }}>
+            <div id="pricing-title" style={{ fontSize: 16, fontWeight: 800 }}>Prices for {pricingDealer.shopName}</div>
+            <div style={{ fontSize: 12, color: "#6E6257", marginTop: 2, marginBottom: 18 }}>
+              {pricingDealer.ownerName} · {pricingDealer.mobile}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", border: "1px solid #E8E4DE", borderRadius: 10, marginBottom: 18 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Show prices to this dealer</div>
+                <div style={{ fontSize: 12, color: "#6E6257", marginTop: 2 }}>
+                  On the product page and in their WhatsApp order.
+                </div>
+              </div>
+              <button
+                role="switch"
+                aria-checked={pricingDraft.showPrices}
+                aria-label="Show prices to this dealer"
+                onClick={() => setPricingDraft((p) => ({ ...p, showPrices: !p.showPrices }))}
+                style={{ flexShrink: 0, width: 44, height: 24, borderRadius: 999, border: "none", padding: 2, cursor: "pointer", background: pricingDraft.showPrices ? "#059669" : "#D6D3CE", display: "flex", justifyContent: pricingDraft.showPrices ? "flex-end" : "flex-start", transition: "background 0.15s" }}
+              >
+                <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
+              </button>
+            </div>
+
+            <div style={labelStyle} id="pricing-tier-label">Price list</div>
+            <div role="radiogroup" aria-labelledby="pricing-tier-label" style={{ display: "flex", gap: 8, opacity: pricingDraft.showPrices ? 1 : 0.55 }}>
+              {PRICE_TIERS.map((t) => {
+                const selected = pricingDraft.priceTier === t;
+                return (
+                  <button key={t} role="radio" aria-checked={selected}
+                    onClick={() => setPricingDraft((p) => ({ ...p, priceTier: t }))}
+                    style={{ flex: 1, padding: "10px 0", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 700, border: selected ? "2px solid #F47920" : "1px solid #E8E4DE", background: selected ? "#FFF3E8" : "#fff", color: selected ? "#B8560F" : "#1F1813" }}>
+                    Price {t}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 12, color: "#6E6257", marginTop: 8, lineHeight: 1.5 }}>
+              {pricingDraft.showPrices
+                ? `They'll see each product's Price ${pricingDraft.priceTier}. Products with no Price ${pricingDraft.priceTier} show "price on request".`
+                : "Prices are off: this dealer sees no prices. The list is kept for when you switch them on."}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 22 }}>
+              <button onClick={() => setPricingDealer(null)} disabled={savingPricing}
+                style={{ padding: "9px 18px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button onClick={savePricing} disabled={savingPricing}
+                style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#F47920", color: "#fff", fontWeight: 700, fontSize: 13, cursor: savingPricing ? "wait" : "pointer", opacity: savingPricing ? 0.6 : 1 }}>
+                {savingPricing ? "Saving…" : "Save"}
+              </button>
             </div>
           </div>
         </div>

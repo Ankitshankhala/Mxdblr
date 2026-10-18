@@ -5,11 +5,14 @@
  * PUT /me               — update profile (validated with zod).
  * GET /me/inquiries     — paginated history of this dealer's inquiries
  *                         (page/limit + pagination envelope).
+ * GET /me/prices        — this dealer's own price for the given products, from
+ *                         the price list an admin assigned them (lib/pricing.ts).
  */
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireDealerAuth } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import { PRICE_SELECT, priceForTier } from '../lib/pricing';
 
 const router = Router();
 
@@ -92,6 +95,49 @@ router.get('/me/inquiries', requireDealerAuth, async (req: Request, res: Respons
     data: inquiries,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
+});
+
+const pricesQuerySchema = z.object({
+  ids: z
+    .string()
+    .transform((s) => [...new Set(s.split(',').map((id) => id.trim()).filter(Boolean))])
+    .pipe(z.array(z.string()).min(1).max(100)),
+});
+
+// GET /api/dealers/me/prices?ids=<productId>,<productId>
+// Prices are per dealer, so they never ride along on the public (and cached)
+// product responses; the product page asks for them here once a dealer is signed
+// in. While an admin has prices switched off for this dealer the answer is only
+// { showPrices: false }: no numbers, and never which list the dealer is on.
+// A product with no price on the dealer's list comes back as null ("on request").
+router.get('/me/prices', requireDealerAuth, async (req: Request, res: Response): Promise<void> => {
+  const parse = pricesQuerySchema.safeParse(req.query);
+  if (!parse.success) {
+    res.status(400).json({ success: false, message: 'Pass 1 to 100 product ids as ?ids=a,b' });
+    return;
+  }
+
+  const dealer = await prisma.dealer.findUnique({
+    where: { id: req.dealer!.dealerId },
+    select: { priceTier: true, showPrices: true, status: true },
+  });
+  if (!dealer) {
+    res.status(404).json({ success: false, message: 'Dealer not found' });
+    return;
+  }
+  if (!dealer.showPrices || dealer.status !== 'ACTIVE') {
+    res.json({ success: true, data: { showPrices: false } });
+    return;
+  }
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: parse.data.ids }, active: true },
+    select: { id: true, ...PRICE_SELECT },
+  });
+  const prices: Record<string, number | null> = {};
+  for (const p of products) prices[p.id] = priceForTier(p, dealer.priceTier);
+
+  res.json({ success: true, data: { showPrices: true, prices } });
 });
 
 export default router;
