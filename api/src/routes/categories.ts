@@ -1,7 +1,10 @@
 /**
  * Public category routes. Mounted at /api/categories (geo-gated).
  *
- * GET /        — active categories (full fields) for nav and the filter sidebar.
+ * GET /        — active categories that have at least one visible product (in
+ *                themselves or a sub-category), for the nav, filter sidebar and
+ *                homepage. Empty ones are left out so dealers never land on an
+ *                empty catalog; admins still see every category via /api/admin.
  * GET /:slug   — single category by slug. Read-only.
  */
 import { Router, Request, Response } from 'express';
@@ -9,12 +12,13 @@ import prisma from '../lib/prisma';
 
 const router = Router();
 
-// GET /api/categories — active categories only, with full fields
+// GET /api/categories — active, non-empty categories, with full fields
 router.get('/', async (_req: Request, res: Response): Promise<void> => {
   const allCategories = await prisma.category.findMany({
     where: { active: true },
     orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
-    include: { _count: { select: { products: true } } },
+    // Only storefront-visible products count; hidden ones don't fill a category.
+    include: { _count: { select: { products: { where: { active: true } } } } },
   });
 
   type CatNode = {
@@ -57,7 +61,14 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
     }
   });
 
-  res.json({ success: true, data: roots });
+  // Drop categories with no visible products, unless a sub-category has some.
+  const withProducts = (nodes: CatNode[]): CatNode[] =>
+    nodes.filter((n) => {
+      n.children = withProducts(n.children);
+      return n.productCount > 0 || n.children.length > 0;
+    });
+
+  res.json({ success: true, data: withProducts(roots) });
 });
 
 // GET /api/categories/:slug
