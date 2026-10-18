@@ -4,12 +4,14 @@
  * Populates the ProductFeature master list — the central catalogue of supported
  * technologies (fast-charge standards, wireless, cable types, data speeds,
  * protections, certifications) that products reference by slug instead of each
- * uploading a duplicate logo. Idempotent (upsert by slug), so re-running is safe
- * and adds any newly listed features without disturbing existing links.
+ * uploading a duplicate logo. Safe to re-run, including on the live database:
+ * it only ADDS features whose slug is missing. Features that already exist are
+ * left exactly as they are, so logos or text an admin changed in Admin →
+ * Features are never overwritten, and product links are untouched.
  *
- * `logo` points at web/public/product-features/<slug>.svg. Those are currently
- * neutral labeled placeholders (NOT official brand art) — swap in the real
- * Qualcomm / OPPO VOOC / Samsung etc. logos via Admin → Features before launch.
+ * `logo` points at web/public/product-features/<slug>.svg: neutral text badges
+ * (not official brand art). Swap in official Qualcomm / OPPO VOOC / Samsung etc.
+ * logos via Admin → Features if you have the rights to use them.
  */
 import 'dotenv/config';
 import prisma from '../lib/prisma';
@@ -114,19 +116,13 @@ async function main() {
   // Assign displayOrder sequentially within each category for stable card ordering.
   const perCategoryCount: Record<string, number> = {};
 
-  let upserted = 0;
+  let added = 0;
   for (const f of FEATURES) {
     const order = (perCategoryCount[f.category] = (perCategoryCount[f.category] ?? 0) + 1) - 1;
-    await prisma.productFeature.upsert({
-      where: { slug: f.slug },
-      update: {
-        name: f.name,
-        category: f.category,
-        description: f.description,
-        logo: `/product-features/${f.slug}.svg`,
-        displayOrder: order,
-      },
-      create: {
+    const existing = await prisma.productFeature.findUnique({ where: { slug: f.slug }, select: { id: true } });
+    if (existing) continue; // never overwrite an admin's edits
+    await prisma.productFeature.create({
+      data: {
         name: f.name,
         slug: f.slug,
         category: f.category,
@@ -136,11 +132,11 @@ async function main() {
         active: true,
       },
     });
-    upserted++;
+    added++;
   }
 
-  console.log(`✓ Product features: ${upserted} upserted across 6 categories.`);
-  console.log('Note: logos are neutral placeholders — replace with official brand art via Admin → Features.');
+  console.log(`✓ Product features: ${added} added, ${FEATURES.length - added} already present (left unchanged).`);
+  console.log(`DB now holds ${await prisma.productFeature.count()} features.`);
 }
 
 main()

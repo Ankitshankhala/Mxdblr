@@ -6,12 +6,15 @@ feature by **slug** (via Admin → Products → Features), and the frontend rend
 `/product-features/<slug>.svg` automatically — so a logo is stored **once** here,
 not re-uploaded per product. Scales to 400+ products.
 
-## ⚠️ These are PLACEHOLDERS
+## These are neutral text badges, not brand logos
 
-Every file here is a neutral monogram tile marked "PLACEHOLDER" — **not** official
-brand art. Before launch, replace each with the real official logo (keeping the
-same filename/slug), or upload a new logo per feature via **Admin → Features**
-(which updates the `logo` field on the `ProductFeature` record).
+Every file here is a plain MXD-orange tile with a short label ("PD", "QC",
+"VOOC"…), **not** official brand art, which keeps them free of trademark
+questions. (Until 2026-10-18 they also carried a small "PLACEHOLDER" caption; it
+was removed so they can be shown to dealers.) To use an official logo, replace
+the file (keeping the same filename/slug) or upload a new logo per feature via
+**Admin → Features**, which updates the `logo` field on the `ProductFeature`
+record.
 
 Sources for official marks: Qualcomm Quick Charge, USB-IF (USB-C / PD / USB4),
 OPPO (VOOC / SuperVOOC), OnePlus (Warp / Dash), realme (Dart), vivo (FlashCharge),
