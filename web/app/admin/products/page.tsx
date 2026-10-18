@@ -16,6 +16,7 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/admin/Toast";
 import { normalizeImageUrl } from "@/lib/config";
 import { useAdminAuth } from "@/lib/admin/auth";
+import { useDialog } from "@/lib/admin/useDialog";
 
 type PriceField = "priceA" | "priceB" | "priceC";
 const PRICE_FIELDS: { key: PriceField; label: string }[] = [
@@ -307,6 +308,13 @@ function ProductsContent() {
   const [bulkSlugs, setBulkSlugs] = useState<string[]>([]);
   const [bulkMode, setBulkMode] = useState<"add" | "replace" | "remove">("add");
   const [bulkSaving, setBulkSaving] = useState(false);
+
+  // Popups: Escape closes, Tab stays inside (lib/admin/useDialog). Busy
+  // popups (import running, bulk save) ignore Escape until they finish.
+  const editDialogRef = useDialog(showModal, () => setShowModal(false));
+  const deleteDialogRef = useDialog(showDeleteConfirm !== null, () => setShowDeleteConfirm(null));
+  const importDialogRef = useDialog(showImportModal, () => { if (!importing) closeImportModal(); });
+  const bulkDialogRef = useDialog(bulkOpen, () => { if (!bulkSaving) setBulkOpen(false); });
 
   const pageIds = products.map((p) => p.id);
   const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
@@ -1117,7 +1125,7 @@ function ProductsContent() {
       {/* ── CSV Import Modal ───────────────────────────────────────────────────── */}
       {showImportModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: importStep === "map" ? 560 : 480, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" }}>
+          <div ref={importDialogRef} role="dialog" aria-modal="true" tabIndex={-1} aria-label="Import products from CSV" style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: importStep === "map" ? 560 : 480, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh", outline: "none" }}>
 
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               <div>
@@ -1264,11 +1272,11 @@ function ProductsContent() {
       {/* ── Delete confirm ─────────────────────────────────────────────────────── */}
       {showDeleteConfirm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: 12, padding: 28, maxWidth: 360, width: "90%", textAlign: "center" }}>
-            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Delete Product?</div>
+          <div ref={deleteDialogRef} role="dialog" aria-modal="true" tabIndex={-1} aria-labelledby="delete-product-title" style={{ background: "#fff", borderRadius: 12, padding: 28, maxWidth: 360, width: "90%", textAlign: "center", outline: "none" }}>
+            <div id="delete-product-title" style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Delete Product?</div>
             <div style={{ fontSize: 13, color: "#6E6257", marginBottom: 20 }}>This action cannot be undone.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-              <button onClick={() => setShowDeleteConfirm(null)} style={{ padding: "9px 20px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+              <button data-autofocus onClick={() => setShowDeleteConfirm(null)} style={{ padding: "9px 20px", borderRadius: 8, border: "1px solid #E8E4DE", background: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => handleDelete(showDeleteConfirm)} style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#DC2626", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Delete</button>
             </div>
           </div>
@@ -1278,9 +1286,9 @@ function ProductsContent() {
       {/* ── Add / Edit Modal ───────────────────────────────────────────────────── */}
       {showModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 560, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div ref={editDialogRef} role="dialog" aria-modal="true" tabIndex={-1} aria-labelledby="product-dialog-title" style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 560, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", outline: "none" }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>{editingProduct ? "Edit Product" : "Add Product"}</div>
+              <div id="product-dialog-title" style={{ fontWeight: 700, fontSize: 15 }}>{editingProduct ? "Edit Product" : "Add Product"}</div>
               <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", color: "#6E6257", fontSize: 18 }}>×</button>
             </div>
 
@@ -1539,9 +1547,9 @@ function ProductsContent() {
       {/* ── Bulk "Assign technologies" modal ─────────────────────────────────── */}
       {bulkOpen && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 12, width: "100%", maxWidth: 620, maxHeight: "88vh", display: "flex", flexDirection: "column" }}>
+          <div ref={bulkDialogRef} role="dialog" aria-modal="true" tabIndex={-1} aria-labelledby="bulk-features-title" style={{ background: "#fff", borderRadius: 12, width: "100%", maxWidth: 620, maxHeight: "88vh", display: "flex", flexDirection: "column", outline: "none" }}>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid #E8E4DE" }}>
-              <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1F1813" }}>Assign technologies</h2>
+              <h2 id="bulk-features-title" style={{ fontSize: 17, fontWeight: 800, color: "#1F1813" }}>Assign technologies</h2>
               <p style={{ fontSize: 12, color: "#6E6257", marginTop: 3 }}>
                 Applies to the {selectedIds.length} selected product{selectedIds.length === 1 ? "" : "s"}.
               </p>

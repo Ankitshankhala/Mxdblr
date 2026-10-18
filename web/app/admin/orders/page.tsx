@@ -10,6 +10,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/admin/Toast";
 import { formatInr, roundPaise } from "@/lib/price";
+import { useDialog } from "@/lib/admin/useDialog";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -91,6 +92,8 @@ function OrdersContent() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [viewInquiry, setViewInquiry] = useState<Inquiry | null>(null);
+  // Escape closes the details popup; Tab stays inside it (lib/admin/useDialog).
+  const inquiryDialogRef = useDialog(viewInquiry !== null, () => setViewInquiry(null));
   const [modalStatus, setModalStatus] = useState<InquiryStatus>("NEW");
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -323,10 +326,10 @@ function OrdersContent() {
       {/* View Inquiry Modal */}
       {viewInquiry && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 520, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div ref={inquiryDialogRef} role="dialog" aria-modal="true" tabIndex={-1} aria-labelledby="inquiry-dialog-title" style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 520, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", outline: "none" }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid #E8E4DE", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>Inquiry Details</div>
+                <div id="inquiry-dialog-title" style={{ fontWeight: 700, fontSize: 15 }}>Inquiry Details</div>
                 <div style={{ fontSize: 11, color: "#6E6257", fontFamily: "monospace", marginTop: 2 }}>
                   {viewInquiry.id}
                 </div>
