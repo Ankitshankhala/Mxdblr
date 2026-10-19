@@ -35,7 +35,7 @@ function cookieOptions(req: Request): CookieOptions {
   };
 }
 
-/** Stores the token; the cookie expires when the token does (JWT_EXPIRES_IN, 7 days by default). */
+/** Stores the token; the cookie expires when the token does (DEALER_SESSION_DAYS, 90 by default). */
 export function setSessionCookie(req: Request, res: Response, token: string): void {
   const exp = (jwt.decode(token) as { exp?: number } | null)?.exp;
   res.cookie(SESSION_COOKIE, token, {

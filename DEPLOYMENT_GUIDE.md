@@ -369,7 +369,6 @@ DATABASE_URL="postgresql://mxdblr_user:STRONG_DB_PASSWORD@localhost:5432/mxdblr?
 
 # JWT — use the openssl output
 JWT_SECRET=PASTE_OPENSSL_OUTPUT_HERE
-JWT_EXPIRES_IN=7d
 
 # MSG91 (OTP)
 MSG91_AUTH_KEY=your_msg91_key

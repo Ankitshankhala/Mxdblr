@@ -20,7 +20,7 @@ import { z } from 'zod';
 // npm install bcryptjs @types/bcryptjs
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
-import { generateDealerToken, requireDealerAuth } from '../middleware/auth';
+import { generateDealerToken, readDealerToken, requireDealerAuth } from '../middleware/auth';
 import { sendOtp } from '../lib/msg91';
 import { clearSessionCookie, setSessionCookie } from '../lib/session';
 import { otpRateLimit, otpVerifyRateLimit, adminLoginRateLimit } from '../middleware/rateLimit';
@@ -36,6 +36,8 @@ const RESEND_AFTER_SECONDS = 30;
 const MAX_CODES_PER_HOUR = 5;
 /** Wrong guesses before a code locks. */
 const MAX_ATTEMPTS = 5;
+/** A session cookie older than this is swapped for a fresh one on the next visit. */
+const RENEW_SESSION_AFTER_MS = 24 * 60 * 60 * 1000;
 /** A verified new number has this long to finish the registration form. */
 const REGISTER_WINDOW_MS = 30 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
@@ -288,6 +290,8 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 });
 
 // GET /api/auth/me — the signed-in dealer, or 401 (and a cleared cookie).
+// The storefront calls this on every visit, which also keeps the dealer signed
+// in: a cookie more than a day old is re-issued for a full DEALER_SESSION_DAYS.
 router.get('/me', requireDealerAuth, async (req: Request, res: Response): Promise<void> => {
   const dealer = await prisma.dealer.findUnique({
     where: { id: req.dealer!.dealerId },
@@ -297,6 +301,10 @@ router.get('/me', requireDealerAuth, async (req: Request, res: Response): Promis
     clearSessionCookie(req, res);
     res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
     return;
+  }
+  const issuedAt = (req.dealer!.iat ?? 0) * 1000;
+  if (readDealerToken(req)?.fromCookie && Date.now() - issuedAt > RENEW_SESSION_AFTER_MS) {
+    setSessionCookie(req, res, generateDealerToken(dealer.id, dealer.mobile));
   }
   res.json({ success: true, sub: dealer.id, phone: dealer.mobile, dealer: dealerSummary(dealer) });
 });

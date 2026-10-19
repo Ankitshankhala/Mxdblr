@@ -6,6 +6,7 @@
  */
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import app from '../index';
 import prisma from '../lib/prisma';
 import * as msg91 from '../lib/msg91';
@@ -150,6 +151,7 @@ describe('verify-otp', () => {
 
 describe('Registration + session cookie', () => {
   let cookie = '';
+  let dealerId = '';
 
   it('blocks registration from a disallowed state (server-side geo control)', async () => {
     const res = await request(app)
@@ -200,6 +202,7 @@ describe('Registration + session cookie', () => {
     const set = sessionCookie(res);
     expect(set).toBeDefined();
     cookie = set!.split(';')[0];
+    dealerId = res.body.user.id;
   });
 
   it('GET /me returns the dealer for the cookie', async () => {
@@ -212,6 +215,33 @@ describe('Registration + session cookie', () => {
   it('dealer routes accept the cookie in place of a Bearer header', async () => {
     const res = await request(app).get('/api/cart').set('Cookie', cookie);
     expect(res.status).toBe(200);
+  });
+
+  it('keeps a dealer signed in for 90 days', async () => {
+    const { iat, exp } = jwt.decode(cookie.split('=')[1]) as { iat: number; exp: number };
+    expect(exp - iat).toBe(90 * 24 * 60 * 60);
+  });
+
+  it('GET /me leaves a fresh session cookie alone', async () => {
+    const res = await request(app).get('/api/auth/me').set('Cookie', cookie);
+    expect(res.status).toBe(200);
+    expect(sessionCookie(res)).toBeUndefined();
+  });
+
+  it('GET /me renews a session cookie older than a day for another 90 days', async () => {
+    const twoDaysAgo = Math.floor(Date.now() / 1000) - 2 * 24 * 60 * 60;
+    const old = jwt.sign(
+      { dealerId: dealerId, mobile: DEALER_MOBILE, type: 'dealer', iat: twoDaysAgo },
+      process.env.JWT_SECRET!,
+      { expiresIn: 90 * 24 * 60 * 60 }
+    );
+    const res = await request(app).get('/api/auth/me').set('Cookie', `mxd_session=${old}`);
+    expect(res.status).toBe(200);
+    const renewed = sessionCookie(res);
+    expect(renewed).toMatch(/HttpOnly/i);
+    const { iat, exp } = jwt.decode(renewed!.split(';')[0].split('=')[1]) as { iat: number; exp: number };
+    expect(iat).toBeGreaterThan(twoDaysAgo + 24 * 60 * 60);
+    expect(exp - iat).toBe(90 * 24 * 60 * 60);
   });
 
   it('GET /me is 401 without a session', async () => {

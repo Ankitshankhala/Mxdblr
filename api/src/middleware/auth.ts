@@ -5,6 +5,9 @@
  * use, so a dealer token can never reach an admin route and vice versa.
  * - requireDealerAuth also enforces token revocation (dealer.lastRevokedAt) so a
  *   blocked/suspended dealer's existing session stops working immediately.
+ * - Dealer sessions last DEALER_SESSION_DAYS (90 by default) and GET /auth/me
+ *   renews them on each visit, so a dealer only signs in again after that long
+ *   away, after pressing Logout, or after an admin blocks them.
  * - Dealer tokens arrive in the httpOnly session cookie (lib/session.ts) from the
  *   storefront, or as a Bearer header (tests, tools). A cookie whose token no
  *   longer works is cleared along with the 401, so the storefront sees signed-out.
@@ -24,7 +27,12 @@ export interface DealerPayload {
   dealerId: string;
   mobile: string;
   type: 'dealer';
+  /** Issued-at (seconds), set by jwt.sign. */
+  iat?: number;
 }
+
+/** Days a dealer stays signed in without visiting the site. */
+export const DEALER_SESSION_DAYS = Number(process.env.DEALER_SESSION_DAYS) || 90;
 
 export interface AdminPayload {
   adminId: string;
@@ -124,11 +132,10 @@ export function requireAdminAuth(req: Request, res: Response, next: NextFunction
 }
 
 export function generateDealerToken(dealerId: string, mobile: string): string {
-  const expiry = (process.env.JWT_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'];
   return jwt.sign(
     { dealerId, mobile, type: 'dealer' } as DealerPayload,
     JWT_SECRET,
-    { expiresIn: expiry }
+    { expiresIn: DEALER_SESSION_DAYS * 24 * 60 * 60 }
   );
 }
 

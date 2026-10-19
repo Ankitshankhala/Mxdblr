@@ -135,7 +135,6 @@ NODE_ENV=production
 PORT=4000
 DATABASE_URL=postgresql://mxdblr_user:STRONG_DB_PASSWORD@localhost:5432/mxdblr
 JWT_SECRET=<the generated 64-char value>
-JWT_EXPIRES_IN=365d
 SETTINGS_ENCRYPTION_KEY=<the generated 64-char value>
 WHATSAPP_BUSINESS_NUMBER=919029363910
 ```

@@ -122,6 +122,29 @@ describe('WhatsApp inquiry flow', () => {
   });
 });
 
+// The website signs dealers in with the httpOnly session cookie, not a header.
+describe('Cart + inquiry with the session cookie', () => {
+  const cookie = () => `mxd_session=${dealerToken}`;
+
+  it('adds to the cart', async () => {
+    const res = await request(app)
+      .post('/api/cart')
+      .set('Cookie', cookie())
+      .send({ productId: fx.inStockProductId, quantity: 5 });
+    expect(res.status).toBe(200);
+    expect(res.body.data.quantity).toBe(5);
+  });
+
+  it('sends the order as a WhatsApp inquiry', async () => {
+    const res = await request(app)
+      .post('/api/inquiry')
+      .set('Cookie', cookie())
+      .send({ items: [{ productId: fx.inStockProductId, quantity: 5 }] });
+    expect(res.status).toBe(201);
+    expect(res.body.data.whatsappMessage).toContain('Cart Smoke Traders');
+  });
+});
+
 describe('Cart removal', () => {
   it('removes a single item', async () => {
     const res = await request(app)
