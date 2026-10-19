@@ -326,6 +326,17 @@ describe('Remembered phone (number-only login)', () => {
     expect(res.status).toBe(401);
   });
 
+  it('GET /me remembers a signed-in phone that is not remembered yet, once', async () => {
+    const login = await request(app).post('/api/auth/verify-otp').send({ mobile: DEALER_MOBILE, otp: BYPASS_OTP });
+    const session = sessionCookie(login)!.split(';')[0];
+    const first = await request(app).get('/api/auth/me').set('Cookie', session);
+    expect(first.status).toBe(200);
+    const set = deviceCookie(first);
+    expect(set).toMatch(/HttpOnly/i);
+    const again = await request(app).get('/api/auth/me').set('Cookie', `${session}; ${set!.split(';')[0]}`);
+    expect(deviceCookie(again)).toBeUndefined();
+  });
+
   it('an admin block forgets remembered phones', async () => {
     await new Promise((r) => setTimeout(r, 1100)); // revocation must be later than the token's issue second
     await prisma.dealer.update({ where: { mobile: DEALER_MOBILE }, data: { lastRevokedAt: new Date() } });

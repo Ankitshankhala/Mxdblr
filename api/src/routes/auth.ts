@@ -348,9 +348,17 @@ router.get('/me', requireDealerAuth, async (req: Request, res: Response): Promis
     res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
     return;
   }
-  const issuedAt = (req.dealer!.iat ?? 0) * 1000;
-  if (readDealerToken(req)?.fromCookie && Date.now() - issuedAt > RENEW_SESSION_AFTER_MS) {
-    setSessionCookie(req, res, generateDealerToken(dealer.id, dealer.mobile));
+  if (readDealerToken(req)?.fromCookie) {
+    const issuedAt = (req.dealer!.iat ?? 0) * 1000;
+    if (Date.now() - issuedAt > RENEW_SESSION_AFTER_MS) {
+      setSessionCookie(req, res, generateDealerToken(dealer.id, dealer.mobile));
+    }
+    // A working session proves this phone verified once; remember it if it isn't
+    // yet (e.g. signed in before number-only login existed).
+    const deviceToken = readDeviceCookie(req);
+    if (verifyDeviceToken(deviceToken ?? '')?.dealerId !== dealer.id) {
+      setDeviceCookie(req, res, generateDeviceToken(dealer.id, dealer.mobile));
+    }
   }
   res.json({ success: true, sub: dealer.id, phone: dealer.mobile, dealer: dealerSummary(dealer) });
 });
