@@ -118,10 +118,10 @@ describe('Prices stay hidden by default', () => {
     expect(res.body.data.priceC).toBeUndefined();
   });
 
-  it('the order message asks for pricing and stores no prices', async () => {
+  it('the order message lists the items without prices and stores no prices', async () => {
     const res = await placeInquiry();
     expect(res.status).toBe(201);
-    expect(res.body.data.whatsappMessage).toMatch(/share pricing/);
+    expect(res.body.data.whatsappMessage).toMatch(/Qty: 10$/m);
     expect(res.body.data.whatsappMessage).not.toMatch(/₹/);
     const inquiry = await prisma.inquiryLog.findUnique({ where: { id: res.body.data.inquiryId } });
     const items = inquiry!.cartSnapshot as Array<Record<string, unknown>>;
@@ -199,7 +199,6 @@ describe('Admin switches a dealer onto price list B', () => {
     expect(msg).toContain('Qty: 10 × ₹110 = ₹1,100');
     expect(msg).toContain('Qty: 2 — price on request');
     expect(msg).toContain('*Total: ₹1,100* (+ 1 item on request)');
-    expect(msg).toContain('share pricing for the items on request');
     expect(msg).not.toMatch(/₹120|₹99/);
 
     quotedInquiryId = res.body.data.inquiryId;

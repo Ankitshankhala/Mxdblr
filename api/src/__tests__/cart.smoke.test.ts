@@ -143,6 +143,16 @@ describe('Cart + inquiry with the session cookie', () => {
     expect(res.status).toBe(201);
     expect(res.body.data.whatsappMessage).toContain('Cart Smoke Traders');
   });
+
+  it('ends the WhatsApp message with the items: no request line or "Sent via" footer', async () => {
+    const res = await request(app)
+      .post('/api/inquiry')
+      .set('Cookie', cookie())
+      .send({ items: [{ productId: fx.inStockProductId, quantity: 5 }] });
+    const message: string = res.body.data.whatsappMessage;
+    expect(message).not.toMatch(/Please confirm|Sent via/);
+    expect(message.trimEnd().split('\n').pop()).toMatch(/Qty: 5/);
+  });
 });
 
 describe('Cart removal', () => {

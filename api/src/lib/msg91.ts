@@ -149,14 +149,13 @@ export function buildInquiryWhatsAppMessage(
   items: Array<{ name: string; sku: string; quantity: number; unitPrice?: number | null }>,
   showPrices = false
 ): string {
+  // Ends with the items (and total): no closing request line, no "Sent via" footer.
   const header = `*MXD Wholesale Inquiry*\n\nDealer: ${dealerName}\nShop: ${shopName}\n\n*Products Requested:*\n`;
-  const footer = '\n\n_Sent via MXD Dealer Portal_';
   const line = (item: { name: string; sku: string; quantity: number }, i: number) =>
     `${i + 1}. ${item.name} (SKU: ${item.sku}) — Qty: ${item.quantity}`;
 
   if (!showPrices) {
-    const itemLines = items.map(line).join('\n');
-    return `${header}${itemLines}\n\nPlease confirm availability and share pricing.${footer}`;
+    return `${header}${items.map(line).join('\n')}`;
   }
 
   let total = 0;
@@ -177,9 +176,6 @@ export function buildInquiryWhatsAppMessage(
   const totalLine = priced > 0
     ? `\n\n*Total: ${formatInr(roundPaise(total))}*${onRequest ? ` (+ ${onRequest} item${onRequest === 1 ? '' : 's'} on request)` : ''}`
     : '';
-  const ask = onRequest
-    ? 'Please confirm availability and share pricing for the items on request.'
-    : 'Please confirm availability.';
 
-  return `${header}${itemLines}${totalLine}\n\n${ask}${footer}`;
+  return `${header}${itemLines}${totalLine}`;
 }

@@ -54,11 +54,7 @@ function buildWhatsAppMessage(
   const totalLines = priced > 0
     ? [``, `*Total: ${formatInr(roundPaise(total))}*${onRequest ? ` (+ ${onRequest} item${onRequest === 1 ? '' : 's'} on request)` : ''}`]
     : [];
-  const ask = !prices
-    ? `Please confirm availability and pricing.`
-    : onRequest
-      ? `Please confirm availability and share pricing for the items on request.`
-      : `Please confirm availability.`;
+  // Mirrors the API's message: ends with the items (and total), no closing lines.
   return [
     `*MXD Wholesale Inquiry*`,
     ``,
@@ -68,9 +64,6 @@ function buildWhatsAppMessage(
     `*Products:*`,
     ...lines,
     ...totalLines,
-    ``,
-    ask,
-    `_Sent via MXD Dealer Portal_`,
   ].join('\n');
 }
 
