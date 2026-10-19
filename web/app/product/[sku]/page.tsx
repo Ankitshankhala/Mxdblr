@@ -104,7 +104,7 @@ export default async function ProductPage({
         <BackButton />
 
         {/* Main layout — product-layout CSS class handles responsive grid vs stack */}
-        <div className="product-layout" style={{ gap: 40, alignItems: 'flex-start' }}>
+        <div className="product-layout" style={{ gap: 40 }}>
           {/* Left: Images — main image + thumbnails share state so clicking a
               thumbnail swaps the main image */}
           <div>

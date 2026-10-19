@@ -259,6 +259,9 @@ textarea:focus-visible {
 @media (min-width: 768px) { .catalog-mobile-filter-btn { display: none; } }
 
 /* Responsive product layout — flex column on mobile, 2-col grid on md+ */
+/* Stacked on phones, where both columns must stay full width: the gallery's
+   image is absolutely positioned, so a non-stretched column collapses to 0px
+   and its square image box with it. Columns top-align only in the 2-col grid. */
 .product-layout {
   display: flex;
   flex-direction: column;
@@ -267,6 +270,7 @@ textarea:focus-visible {
   .product-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    align-items: start;
   }
 }
 
