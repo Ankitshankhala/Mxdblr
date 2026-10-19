@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/keep-static-assets.mjs save",
     "build": "next build",
+    "postbuild": "node scripts/keep-static-assets.mjs restore",
     "start": "next start",
     "lint": "eslint"
   },
