@@ -4,10 +4,17 @@
  *
  * Endpoints: POST /send-otp, POST /verify-otp (rate-limited brute-force guards),
  * POST /register (creates a dealer; state validated server-side), GET /me (the
- * signed-in dealer), POST /logout, POST /admin/login (username + bcrypt password
+ * signed-in dealer), GET /device + POST /device-login (number-only login on a
+ * remembered phone), POST /logout, POST /admin/login (username + bcrypt password
  * → admin JWT). Login codes are hashed at rest and sent on WhatsApp via MSG91
  * (lib/msg91.ts). The dealer JWT goes into the httpOnly session cookie
  * (lib/session.ts), never the response body. Inputs validated with zod.
+ *
+ * A WhatsApp code is needed once per phone: every sign-in also remembers the
+ * phone (mxd_device cookie, kept on logout), and on that phone the registered
+ * number alone signs the dealer back in. Any other phone still needs a code, so
+ * knowing a dealer's number is not enough. An admin block (lastRevokedAt) also
+ * forgets every remembered phone.
  *
  * Dealer-facing failures carry a stable `error` code (invalid_phone,
  * wait_before_resend, too_many_otps, delivery_failed, invalid_input, invalid_otp,
@@ -20,9 +27,21 @@ import { z } from 'zod';
 // npm install bcryptjs @types/bcryptjs
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
-import { generateDealerToken, readDealerToken, requireDealerAuth } from '../middleware/auth';
+import {
+  generateDealerToken,
+  generateDeviceToken,
+  readDealerToken,
+  requireDealerAuth,
+  verifyDeviceToken,
+} from '../middleware/auth';
 import { sendOtp } from '../lib/msg91';
-import { clearSessionCookie, setSessionCookie } from '../lib/session';
+import {
+  clearDeviceCookie,
+  clearSessionCookie,
+  readDeviceCookie,
+  setDeviceCookie,
+  setSessionCookie,
+} from '../lib/session';
 import { otpRateLimit, otpVerifyRateLimit, adminLoginRateLimit } from '../middleware/rateLimit';
 import prisma from '../lib/prisma';
 
@@ -58,6 +77,33 @@ function fail(
 
 function dealerSummary(dealer: { id: string; ownerName: string; shopName: string; mobile: string; status: string }) {
   return { id: dealer.id, ownerName: dealer.ownerName, shopName: dealer.shopName, mobile: dealer.mobile, status: dealer.status };
+}
+
+type DealerRow = { id: string; ownerName: string; shopName: string; mobile: string; status: string };
+
+/** Signs the dealer in on this browser and remembers the phone for number-only login. */
+function startSession(req: Request, res: Response, dealer: DealerRow): void {
+  setSessionCookie(req, res, generateDealerToken(dealer.id, dealer.mobile));
+  setDeviceCookie(req, res, generateDeviceToken(dealer.id, dealer.mobile));
+}
+
+/**
+ * The dealer this browser remembers, if that still holds: a valid device cookie
+ * for an account that still has that number, is not blocked or rejected, and
+ * has not been revoked by an admin since the phone was remembered.
+ */
+async function rememberedDealer(req: Request) {
+  const token = readDeviceCookie(req);
+  const payload = token ? verifyDeviceToken(token) : null;
+  if (!payload) return null;
+  const dealer = await prisma.dealer.findUnique({
+    where: { id: payload.dealerId },
+    select: { id: true, ownerName: true, shopName: true, mobile: true, status: true, lastRevokedAt: true },
+  });
+  if (!dealer || dealer.mobile !== payload.mobile) return null;
+  if (dealer.status === 'BLOCKED' || dealer.status === 'REJECTED') return null;
+  if (dealer.lastRevokedAt && payload.iat && dealer.lastRevokedAt.getTime() > payload.iat * 1000) return null;
+  return dealer;
 }
 
 const sendOtpSchema = z.object({
@@ -212,7 +258,7 @@ router.post('/verify-otp', otpVerifyRateLimit, async (req: Request, res: Respons
     return;
   }
 
-  setSessionCookie(req, res, generateDealerToken(dealer.id, dealer.mobile));
+  startSession(req, res, dealer);
   res.json({
     success: true,
     newDealer: false,
@@ -281,7 +327,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     },
   });
 
-  setSessionCookie(req, res, generateDealerToken(dealer.id, dealer.mobile));
+  startSession(req, res, dealer);
   res.status(201).json({
     success: true,
     user: { id: dealer.id, phone: dealer.mobile },
@@ -309,7 +355,32 @@ router.get('/me', requireDealerAuth, async (req: Request, res: Response): Promis
   res.json({ success: true, sub: dealer.id, phone: dealer.mobile, dealer: dealerSummary(dealer) });
 });
 
-// POST /api/auth/logout
+// GET /api/auth/device — the number this browser remembers, so the login page
+// can offer number-only login. Always 200; a cookie that no longer holds is cleared.
+router.get('/device', async (req: Request, res: Response): Promise<void> => {
+  const dealer = await rememberedDealer(req);
+  if (!dealer && readDeviceCookie(req)) clearDeviceCookie(req, res);
+  res.json({ success: true, mobile: dealer?.mobile ?? null });
+});
+
+// POST /api/auth/device-login — number-only login on a remembered phone. Any
+// other phone, or another number, gets otp_required and goes through the code.
+router.post('/device-login', async (req: Request, res: Response): Promise<void> => {
+  const parse = sendOtpSchema.safeParse(req.body);
+  if (!parse.success) {
+    fail(res, 400, 'invalid_phone', parse.error.issues[0].message);
+    return;
+  }
+  const dealer = await rememberedDealer(req);
+  if (!dealer || dealer.mobile !== parse.data.mobile) {
+    fail(res, 401, 'otp_required', 'This phone needs a WhatsApp code to sign in.');
+    return;
+  }
+  startSession(req, res, dealer);
+  res.json({ success: true, user: { id: dealer.id, phone: dealer.mobile }, dealer: dealerSummary(dealer) });
+});
+
+// POST /api/auth/logout — ends the session; the phone stays remembered.
 router.post('/logout', (req: Request, res: Response): void => {
   clearSessionCookie(req, res);
   res.json({ success: true });

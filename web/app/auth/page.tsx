@@ -10,6 +10,9 @@
  *    The API sets the httpOnly session cookie; this page never sees the token.
  *    New numbers go on to /register; everyone else to ?redirect= (same-site
  *    paths only) or /catalog.
+ * A phone that verified once is remembered (GET /api/auth/device): its number is
+ * pre-filled and "Log in" signs straight in with POST /api/auth/device-login, no
+ * code. Another number, or a phone the API no longer remembers, gets the code.
  * API failures arrive as error codes and are shown inline in a live region.
  * AnimatePresence uses initial={false} so the form paints on first render even
  * if the enter animation doesn't fire.
@@ -17,7 +20,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, LogIn, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/layout/Logo';
 import { authApi, type AuthApiError } from '@/lib/api';
@@ -101,6 +104,7 @@ export default function AuthPage() {
   const [step, setStep] = useState<Step>('phone');
   const [mobile, setMobile] = useState('');
   const [sentTo, setSentTo] = useState(''); // the number the live code went to
+  const [remembered, setRemembered] = useState(''); // the number this phone can log in with, no code
   const [code, setCode] = useState<string[]>(EMPTY_CODE);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
@@ -115,6 +119,7 @@ export default function AuthPage() {
   const boxRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const phoneValid = MOBILE_RE.test(mobile);
+  const quickLogin = remembered !== '' && mobile === remembered;
   const resendIn = Math.max(0, (resendAt - now) / 1000);
   const expiresIn = Math.max(0, (expiresAt - now) / 1000);
   const expired = step === 'otp' && expiresAt > 0 && expiresIn <= 0;
@@ -128,6 +133,20 @@ export default function AuthPage() {
   useEffect(() => {
     if (status === 'authenticated') router.replace(target());
   }, [status, router, target]);
+
+  // A phone that verified before: pre-fill its number for code-free "Log in".
+  useEffect(() => {
+    authApi
+      .device()
+      .then(({ data }) => {
+        if (!data.mobile) return;
+        setRemembered(data.mobile);
+        setMobile((current) => current || data.mobile!);
+      })
+      .catch(() => {
+        /* not remembered: the usual code flow */
+      });
+  }, []);
 
   // One tick a second while a countdown is showing.
   useEffect(() => {
@@ -164,6 +183,17 @@ export default function AuthPage() {
     setSending(true);
     setError('');
     try {
+      if (quickLogin) {
+        try {
+          const { data } = await authApi.deviceLogin(mobile);
+          signIn(data.dealer);
+          router.replace(target());
+          return;
+        } catch (err) {
+          if (errorBody(err)?.error !== 'otp_required') throw err;
+          setRemembered(''); // the API no longer remembers this phone: use a code
+        }
+      }
       const { data } = await authApi.sendOtp(mobile);
       startTimers(data);
       setSentTo(mobile);
@@ -340,7 +370,9 @@ export default function AuthPage() {
             >
               <h1 style={{ fontWeight: 800, fontSize: 22, marginBottom: 6 }}>Sign In</h1>
               <p style={{ color: '#6E6257', fontSize: 14, marginBottom: 28 }}>
-                Enter your mobile number. We&rsquo;ll send a 6-digit code on WhatsApp.
+                {quickLogin
+                  ? 'Welcome back. This phone is remembered, so no code is needed.'
+                  : <>Enter your mobile number. We&rsquo;ll send a 6-digit code on WhatsApp.</>}
               </p>
 
               <form onSubmit={handleSendOtp} noValidate>
@@ -440,7 +472,12 @@ export default function AuthPage() {
                         aria-hidden="true"
                         style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid #fff', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }}
                       />
-                      Sending…
+                      {quickLogin ? 'Logging in…' : 'Sending…'}
+                    </>
+                  ) : quickLogin ? (
+                    <>
+                      <LogIn size={18} aria-hidden="true" />
+                      Log in
                     </>
                   ) : (
                     <>

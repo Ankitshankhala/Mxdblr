@@ -261,3 +261,78 @@ describe('Registration + session cookie', () => {
     expect(sessionCookie(res)).toMatch(/Expires=Thu, 01 Jan 1970/);
   });
 });
+
+/** The mxd_device Set-Cookie line, if the response set one. */
+function deviceCookie(res: request.Response): string | undefined {
+  const raw = res.headers['set-cookie'] as unknown as string[] | undefined;
+  return raw?.find((c) => c.startsWith('mxd_device='));
+}
+
+describe('Remembered phone (number-only login)', () => {
+  let device = '';
+  const OTHER_MOBILE = `9${String(Number(RUN_ID.slice(-9)) + 1).padStart(9, '0').slice(-9)}`;
+
+  it('every sign-in also remembers the phone for a year', async () => {
+    const res = await request(app).post('/api/auth/verify-otp').send({ mobile: DEALER_MOBILE, otp: BYPASS_OTP });
+    expect(res.status).toBe(200);
+    const set = deviceCookie(res);
+    expect(set).toMatch(/HttpOnly/i);
+    expect(set).toMatch(/SameSite=Lax/i);
+    device = set!.split(';')[0];
+    const { iat, exp } = jwt.decode(device.split('=')[1]) as { iat: number; exp: number };
+    expect(exp - iat).toBe(365 * 24 * 60 * 60);
+  });
+
+  it('GET /device tells the login page which number this phone remembers', async () => {
+    const remembered = await request(app).get('/api/auth/device').set('Cookie', device);
+    expect(remembered.body).toEqual({ success: true, mobile: DEALER_MOBILE });
+    const unknown = await request(app).get('/api/auth/device');
+    expect(unknown.body).toEqual({ success: true, mobile: null });
+  });
+
+  it('logout ends the session but keeps the phone remembered', async () => {
+    const res = await request(app).post('/api/auth/logout').set('Cookie', device);
+    expect(sessionCookie(res)).toMatch(/Expires=Thu, 01 Jan 1970/);
+    expect(deviceCookie(res)).toBeUndefined();
+  });
+
+  it('signs in with just the number on the remembered phone', async () => {
+    const res = await request(app).post('/api/auth/device-login').set('Cookie', device).send({ mobile: DEALER_MOBILE });
+    expect(res.status).toBe(200);
+    expect(res.body.user.phone).toBe(DEALER_MOBILE);
+    expect(res.body.token).toBeUndefined();
+    expect(sessionCookie(res)).toMatch(/HttpOnly/i);
+  });
+
+  it('asks for a code for another number on that phone', async () => {
+    const res = await request(app).post('/api/auth/device-login').set('Cookie', device).send({ mobile: OTHER_MOBILE });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('otp_required');
+  });
+
+  it('asks for a code on a phone that never verified (knowing the number is not enough)', async () => {
+    const res = await request(app).post('/api/auth/device-login').send({ mobile: DEALER_MOBILE });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('otp_required');
+  });
+
+  it('a session token cannot stand in for the device cookie', async () => {
+    const login = await request(app).post('/api/auth/verify-otp').send({ mobile: DEALER_MOBILE, otp: BYPASS_OTP });
+    const sessionToken = sessionCookie(login)!.split(';')[0].split('=')[1];
+    const res = await request(app)
+      .post('/api/auth/device-login')
+      .set('Cookie', `mxd_device=${sessionToken}`)
+      .send({ mobile: DEALER_MOBILE });
+    expect(res.status).toBe(401);
+  });
+
+  it('an admin block forgets remembered phones', async () => {
+    await new Promise((r) => setTimeout(r, 1100)); // revocation must be later than the token's issue second
+    await prisma.dealer.update({ where: { mobile: DEALER_MOBILE }, data: { lastRevokedAt: new Date() } });
+    const res = await request(app).post('/api/auth/device-login').set('Cookie', device).send({ mobile: DEALER_MOBILE });
+    expect(res.status).toBe(401);
+    const check = await request(app).get('/api/auth/device').set('Cookie', device);
+    expect(check.body.mobile).toBeNull();
+    expect(deviceCookie(check)).toMatch(/Expires=Thu, 01 Jan 1970/);
+  });
+});

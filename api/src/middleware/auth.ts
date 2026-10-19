@@ -139,6 +139,36 @@ export function generateDealerToken(dealerId: string, mobile: string): string {
   );
 }
 
+/** "This phone is remembered" for number-only login (lib/session.ts mxd_device). */
+export interface DevicePayload {
+  dealerId: string;
+  mobile: string;
+  type: 'device';
+  iat?: number;
+}
+
+/** Days a phone stays remembered after its last sign-in. */
+export const TRUSTED_DEVICE_DAYS = 365;
+
+/** Typed 'device' so it can never pass requireDealerAuth or an admin guard as a session. */
+export function generateDeviceToken(dealerId: string, mobile: string): string {
+  return jwt.sign(
+    { dealerId, mobile, type: 'device' } as DevicePayload,
+    JWT_SECRET,
+    { expiresIn: TRUSTED_DEVICE_DAYS * 24 * 60 * 60 }
+  );
+}
+
+/** The device token's payload, or null if it is invalid, expired or not a device token. */
+export function verifyDeviceToken(token: string): DevicePayload | null {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as DevicePayload;
+    return payload.type === 'device' ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
 export function generateAdminToken(adminId: string, username: string): string {
   // The token intentionally carries NO role/permission data. Authorization is looked
   // up fresh from the DB on every request (see middleware/rbac.ts) so that revoking a

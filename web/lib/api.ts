@@ -79,6 +79,15 @@ export const authApi = {
   me: () =>
     api.get<{ success: true; sub: string; phone: string; dealer: SessionDealer }>('/auth/me', { quietAuth: true }),
   logout: () => api.post('/auth/logout', null, { quietAuth: true }),
+  // The number this phone remembers (it verified with a code before), or null.
+  device: () => api.get<{ success: true; mobile: string | null }>('/auth/device', { quietAuth: true }),
+  // Number-only sign-in on a remembered phone; 401 otp_required anywhere else.
+  deviceLogin: (mobile: string) =>
+    api.post<{ success: true; user: { id: string; phone: string }; dealer: SessionDealer }>(
+      '/auth/device-login',
+      { mobile },
+      { quietAuth: true }
+    ),
 };
 
 // Products
