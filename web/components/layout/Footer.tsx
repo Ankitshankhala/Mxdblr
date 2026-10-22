@@ -202,7 +202,15 @@ export default function Footer() {
           }}
         >
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
-            © {new Date().getFullYear()} MXD® Wholesale. All rights reserved.
+            © {new Date().getFullYear()} MXD® Wholesale. All rights reserved. · Website by{' '}
+            <a
+              href="https://www.charusolutions.com"
+              target="_blank"
+              rel="noopener"
+              style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}
+            >
+              Charu Solutions
+            </a>
           </div>
           {/* Legal links must stay reachable from every page — Meta's WhatsApp
               Business verification requires a working Privacy Policy URL. */}
