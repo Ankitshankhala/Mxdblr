@@ -271,8 +271,7 @@ df -h / | tail -1                                     # disk headroom
 ```
 
 Then in a browser: catalog loads, product images render, admin login works, and
-**Admin → Dealers → Issue Login Code** mints a code — that is the only way dealers
-can sign in until WhatsApp OTP is approved.
+a dealer login code arrives on WhatsApp (mxdblr.com/auth with your own number).
 
 ---
 

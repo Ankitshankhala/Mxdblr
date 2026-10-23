@@ -53,25 +53,18 @@ if (process.env.NODE_ENV === 'production') {
   if (process.env.ENABLE_OTP_BYPASS === 'true') {
     fatal.push('ENABLE_OTP_BYPASS=true in production would accept 000000 as a valid OTP for any number. Remove it.');
   }
-  // Messaging is a WARNING by design, not a failure. WhatsApp OTP delivery cannot
-  // be approved by Meta until the site is already live, so the first production
-  // deploy necessarily runs without it. Blocking boot here would make the launch
-  // that unlocks approval impossible.
-  //
-  // What this costs is real and must be visible in the logs: sendOtp() no-ops and
-  // returns success, so POST /auth/send-otp answers as if a code went out while
-  // nothing is delivered. Dealers CANNOT sign in or register on their own. The only
-  // route in is POST /api/admin/dealers/login-code -- an admin mints a code and
-  // relays it by hand. Login codes go by WhatsApp only (no SMS); remove this
-  // warning by setting all three vars once the MSG91 authentication template is
-  // approved. The dealer-facing flow does not change.
+  // Messaging is a WARNING, not a failure, so the rest of the site keeps running.
+  // What it costs must be visible in the logs: without these vars no login code
+  // can be sent (WhatsApp only, no SMS, and no admin-issued codes any more), so
+  // POST /auth/send-otp answers delivery_failed. Dealers already remembered on
+  // their phone can still log in with their number; anyone else cannot sign in
+  // or register until all three are set.
   const messaging = ['MSG91_AUTH_KEY', 'MSG91_WHATSAPP_NUMBER', 'MSG91_WHATSAPP_OTP_TEMPLATE'].filter((k) => missing(k));
   if (messaging.length > 0) {
     process.stderr.write(
       `[WARN] ${messaging.join(', ')} unset — WhatsApp login codes are DISABLED.\n` +
-        '       /auth/send-otp reports success but sends nothing. Dealers cannot\n' +
-        '       sign in or self-register. Issue codes from Admin > Dealers >\n' +
-        '       "Issue Login Code" until WhatsApp OTP is approved.\n'
+        '       /auth/send-otp fails with delivery_failed. Only dealers remembered on\n' +
+        '       their phone can log in; nobody else can sign in or register.\n'
     );
   }
   if (missing('SETTINGS_ENCRYPTION_KEY')) {

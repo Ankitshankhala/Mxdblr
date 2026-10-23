@@ -4,11 +4,11 @@
  * Three helpers: sendOtp (login/registration code, WhatsApp only),
  * sendWhatsAppMessage (restock/notification template), and
  * buildInquiryWhatsAppMessage (formats a dealer cart into the wa.me inquiry
- * text). Until WhatsApp login codes are set up (MSG91_AUTH_KEY,
- * MSG91_WHATSAPP_NUMBER, MSG91_WHATSAPP_OTP_TEMPLATE) sendOtp sends nothing and
- * returns success: the code is logged to the console in development, and in
- * production admins issue login codes by hand (Admin > Dealers). Credentials
- * come from env vars exclusively.
+ * text). Without the WhatsApp login-code settings (MSG91_AUTH_KEY,
+ * MSG91_WHATSAPP_NUMBER, MSG91_WHATSAPP_OTP_TEMPLATE) sendOtp sends nothing: in
+ * production it reports a failure so the dealer sees "Couldn't send on
+ * WhatsApp"; in development and tests it succeeds and development logs the code
+ * to the console. Credentials come from env vars exclusively.
  */
 import axios from 'axios';
 import { formatInr, roundPaise } from './pricing';
@@ -35,8 +35,12 @@ export function whatsappOtpConfigured(): boolean {
 /** Sends a login code on WhatsApp. There is no SMS fallback. */
 export async function sendOtp(mobile: string, otp: string): Promise<boolean> {
   if (!whatsappOtpConfigured()) {
-    // Not set up yet: nothing is sent. Dev logs the code; production relies on
-    // admin-issued login codes (POST /api/admin/dealers/login-code).
+    // Nothing can be sent. Production says so (there is no other way to get a
+    // code); development logs the code so the flow can be tried locally.
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[MSG91] WhatsApp login codes are not configured; no code was sent.');
+      return false;
+    }
     if (process.env.NODE_ENV === 'development') {
       console.info(`[DEV] OTP for ${mobile}: ${otp}`);
     }
