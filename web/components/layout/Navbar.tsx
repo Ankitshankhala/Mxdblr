@@ -268,12 +268,14 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
             </Link>
           )}
 
-          {/* Account: masked number + Logout when signed in (labels from md up) */}
+          {/* Account: the dealer's name + Logout when signed in (labels from md up);
+              the masked number only when no name is saved */}
           {user ? (
             <>
               <Link
                 href="/account"
-                aria-label={`My account (${maskPhone(user.mobile)})`}
+                aria-label={`My account (${user.ownerName || maskPhone(user.mobile)})`}
+                title={user.ownerName ? `${user.ownerName} · ${maskPhone(user.mobile)}` : undefined}
                 style={{
                   minWidth: 38,
                   height: 38,
@@ -291,7 +293,12 @@ export default function Navbar({ onSearch, initialSearch = '' }: NavbarProps) {
                 }}
               >
                 <User size={20} aria-hidden="true" />
-                <span className="hidden md:inline">{maskPhone(user.mobile)}</span>
+                <span
+                  className="hidden md:inline"
+                  style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                  {user.ownerName || maskPhone(user.mobile)}
+                </span>
               </Link>
               <button
                 type="button"
