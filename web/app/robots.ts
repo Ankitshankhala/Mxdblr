@@ -4,6 +4,7 @@
  * (/admin, /account, /cart, /auth, /api). Points crawlers at the sitemap.
  */
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -14,7 +15,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/account/', '/cart', '/auth', '/api/'],
       },
     ],
-    sitemap: 'https://www.mxdblr.com/sitemap.xml',
-    host: 'https://www.mxdblr.com',
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }

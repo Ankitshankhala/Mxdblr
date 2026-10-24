@@ -24,7 +24,14 @@ import Testimonials from '@/components/home/Testimonials';
 import HomeFAQ from '@/components/home/HomeFAQ';
 // import AboutStory from '@/components/home/AboutStory'; // re-enable with the <AboutStory /> render below
 import PromoCountdownBanner from '@/components/home/PromoCountdownBanner';
+import type { Metadata } from 'next';
 import type { Product } from '@/types';
+import { SITE_OPEN_GRAPH } from '@/lib/site';
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+  openGraph: { ...SITE_OPEN_GRAPH, url: '/' },
+};
 
 // Server-side (SSR/ISR) fetches: prefer the internal Docker service URL when set
 // (the browser-facing NEXT_PUBLIC_API_URL may be unreachable from inside the

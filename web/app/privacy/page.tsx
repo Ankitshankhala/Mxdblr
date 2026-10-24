@@ -12,6 +12,7 @@ import LegalPage, { Clause } from '@/components/legal/LegalPage';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
+  alternates: { canonical: '/privacy' },
   description:
     'How MXD® Wholesale collects, uses and protects the information of registered dealers.',
 };

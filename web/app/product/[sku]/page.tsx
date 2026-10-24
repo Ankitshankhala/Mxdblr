@@ -50,7 +50,9 @@ export async function generateMetadata({
   return {
     title: `${product.name} — ${product.brand} | MXD Wholesale`,
     description: `Buy ${product.name} by ${product.brand} wholesale. SKU: ${sku}. MOQ: ${product.moq} units.`,
+    alternates: { canonical: `/product/${encodeURIComponent(sku)}` },
     openGraph: {
+      url: `/product/${encodeURIComponent(sku)}`,
       title: product.name,
       // Absolute API URL: a relative /uploads path would resolve against the web
       // host, which doesn't serve uploads, leaving WhatsApp/social previews blank.

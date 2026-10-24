@@ -4,8 +4,9 @@
  * discover the catalog. Falls back to localhost when NEXT_PUBLIC_API_URL is unset.
  */
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site';
 
-const BASE_URL = 'https://www.mxdblr.com';
+const BASE_URL = SITE_URL;
 const API_URL = process.env.INTERNAL_API_URL
   ? `${process.env.INTERNAL_API_URL.replace(/\/$/, '')}/api`
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api');

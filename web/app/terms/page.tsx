@@ -11,6 +11,7 @@ import LegalPage, { Clause } from '@/components/legal/LegalPage';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
+  alternates: { canonical: '/terms' },
   description:
     'The terms on which registered dealers may use the MXD® Wholesale portal.',
 };

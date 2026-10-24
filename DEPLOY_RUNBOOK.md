@@ -151,6 +151,7 @@ chmod 600 /home/mxdblr/app/web/.env.local
 ```
 
 ```
+NEXT_PUBLIC_SITE_URL=https://mxdblr.com
 NEXT_PUBLIC_API_URL=https://api.mxdblr.com/api
 INTERNAL_API_URL=http://localhost:4000
 NEXT_PUBLIC_WHATSAPP_NUMBER=919029363910

@@ -1,6 +1,24 @@
 import type { NextConfig } from "next";
+import { SITE_URL } from "./lib/site";
+
+// The other spelling of the canonical host (www.mxdblr.com when the canonical is
+// mxdblr.com, and the reverse) permanently redirects to it, path and query kept.
+const canonical = new URL(SITE_URL);
+const otherHost = canonical.hostname.startsWith("www.")
+  ? canonical.hostname.slice(4)
+  : `www.${canonical.hostname}`;
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: otherHost }],
+        destination: `${canonical.origin}/:path*`,
+        permanent: true,
+      },
+    ];
+  },
   // Required for Docker multi-stage build — produces a self-contained server.js
   // in .next/standalone that includes only the files needed to run the app.
   output: "standalone",

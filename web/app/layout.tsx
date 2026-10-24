@@ -8,25 +8,20 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import FloatingWhatsApp from "@/components/layout/FloatingWhatsApp";
 import AuthProvider from "@/components/auth/AuthProvider";
+import { SITE_OPEN_GRAPH, SITE_URL } from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.mxdblr.com'),
+  // Relative URLs in metadata (canonical tags, og:url, og:image) resolve against this.
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'MXD® — B2B Wholesale Mobile Accessories',
     template: '%s | MXD® Wholesale',
   },
   description: 'Wholesale mobile accessories for registered dealers in Karnataka, Tamil Nadu & Andhra Pradesh. Bulk pricing on chargers, cables, cases, earphones and more.',
   keywords: ['wholesale mobile accessories', 'B2B dealer portal', 'bulk mobile accessories Karnataka', 'chargers wholesale', 'cables wholesale', 'Bengaluru mobile accessories distributor'],
-  openGraph: {
-    type: 'website',
-    locale: 'en_IN',
-    url: 'https://www.mxdblr.com',
-    siteName: 'MXD Wholesale',
-    title: 'MXD® — B2B Wholesale Mobile Accessories',
-    description: 'Wholesale mobile accessories for registered dealers across South India.',
-  },
+  openGraph: SITE_OPEN_GRAPH,
   twitter: {
     card: 'summary_large_image',
     title: 'MXD® Wholesale — B2B Mobile Accessories',
