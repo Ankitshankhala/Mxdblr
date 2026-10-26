@@ -15,7 +15,7 @@ const CATEGORIES = [
   { name: 'Chargers', slug: 'chargers' },
   { name: 'Data Cables', slug: 'data-cables' },
   { name: 'Power Banks', slug: 'power-banks' },
-  { name: 'Phone Cases', slug: 'phone-cases' },
+  { name: 'Speakers', slug: 'speakers' },
 ];
 
 export default function Footer() {

@@ -33,21 +33,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  const products = await fetchAllProducts();
+  const productPages: MetadataRoute.Sitemap = products.map((p) => ({
+    url: `${BASE_URL}/product/${encodeURIComponent(p.sku)}`,
+    lastModified: new Date(p.updatedAt),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+  return [...staticPages, ...productPages];
+}
+
+/** The products API serves at most this many per page (it rejects more with a 400). */
+const PAGE_SIZE = 100;
+
+/** Every visible product, page by page; whatever loaded if a page fails. */
+async function fetchAllProducts(): Promise<Array<{ sku: string; updatedAt: string }>> {
+  const all: Array<{ sku: string; updatedAt: string }> = [];
   try {
-    const res = await fetch(`${API_URL}/products?limit=500&page=1`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return staticPages;
-    const json = await res.json();
-    const products: Array<{ sku: string; updatedAt: string }> = json.data || json.products || [];
-    const productPages: MetadataRoute.Sitemap = products.map((p) => ({
-      url: `${BASE_URL}/product/${p.sku}`,
-      lastModified: new Date(p.updatedAt),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }));
-    return [...staticPages, ...productPages];
+    for (let page = 1; page <= 100; page++) {
+      const res = await fetch(`${API_URL}/products?limit=${PAGE_SIZE}&page=${page}`, {
+        next: { revalidate: 3600 },
+      });
+      if (!res.ok) break;
+      const json = await res.json();
+      const batch: Array<{ sku: string; updatedAt: string }> = json.data || [];
+      all.push(...batch);
+      if (batch.length < PAGE_SIZE || page >= (json.pagination?.pages ?? page)) break;
+    }
   } catch {
-    return staticPages;
+    /* the sitemap still lists the fixed pages and what loaded */
   }
+  return all;
 }
