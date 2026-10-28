@@ -241,6 +241,14 @@ textarea:focus-visible {
   .banner-card-preview { width: 100%; }
 }
 
+/* Product cards (catalog, home, related): brand and SKU only from 768px up, so
+   phone cards show image, name, MOQ, stock and Add to Cart. The card body is a
+   flex column with a gap, so the hidden rows take their spacing with them. */
+@media (max-width: 767px) {
+  .product-card-brand,
+  .product-card-sku { display: none; }
+}
+
 /* Products: the table on tablet/desktop, cards on phones. */
 .admin-products-cards { display: none; }
 @media (max-width: 767px) {

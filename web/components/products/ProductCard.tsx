@@ -276,7 +276,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* ── Card body ──────────────────────────────────────────────────────────── */}
       <div style={{ padding: '12px 14px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <BrandChip brand={product.brand} />
+        {/* Brand and SKU show from tablet width up; phones get the compact card (globals.css). */}
+        <BrandChip brand={product.brand} className="product-card-brand" />
 
         <Link
           href={`/product/${product.sku}`}
@@ -285,7 +286,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.name}
         </Link>
 
-        <SkuLabel sku={product.sku} />
+        <SkuLabel sku={product.sku} className="product-card-sku" />
 
         <div style={{ fontSize: 12, color: '#6E6257', marginTop: 2 }}>
           MOQ: <strong style={{ color: '#1F1813' }}>{product.moq} pcs</strong>
