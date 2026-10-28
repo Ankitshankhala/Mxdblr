@@ -5,7 +5,7 @@
  * a FilterValues object to the catalog page, which reflects it into the URL.
  * Doubles as a slide-over panel on mobile.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { X, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import type { Category, StockStatus } from '@/types';
 
@@ -55,6 +55,11 @@ function brandLabel(brand: string): string {
   return brand.trim().toUpperCase() === 'ALL' ? 'For all brands' : `For ${brand}`;
 }
 
+/** A filter row; the selected one is tinted and bold (styles in globals.css). */
+function optionClass(selected: boolean): string {
+  return selected ? 'filter-option is-selected' : 'filter-option';
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
 
@@ -88,6 +93,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function FilterSidebar({ categories, filters, onApply, onClose, isMobile = false }: FilterSidebarProps) {
   const [local, setLocal] = useState<FilterValues>(filters);
+  // The catalog renders this panel twice (desktop sidebar, phone sheet). Radios
+  // with the same name form ONE group across the page, so a shared name let the
+  // hidden copy's selection win and the visible pick showed unselected.
+  const group = useId();
   const [brands, setBrands] = useState<string[]>([]);
 
   useEffect(() => {
@@ -160,21 +169,23 @@ export default function FilterSidebar({ categories, filters, onApply, onClose, i
 
       {/* Category */}
       <Section title="Category">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <label className={optionClass(local.categorySlug === '')}>
             <input
+              className="filter-radio"
               type="radio"
-              name="category"
+              name={`${group}-category`}
               checked={local.categorySlug === ''}
               onChange={() => setLocal((p) => ({ ...p, categorySlug: '' }))}
             />
             All Categories
           </label>
           {categories.map((cat) => (
-            <label key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+            <label key={cat.id} className={optionClass(local.categorySlug === cat.slug)}>
               <input
+                className="filter-radio"
                 type="radio"
-                name="category"
+                name={`${group}-category`}
                 checked={local.categorySlug === cat.slug}
                 onChange={() => setLocal((p) => ({ ...p, categorySlug: cat.slug }))}
               />
@@ -187,17 +198,18 @@ export default function FilterSidebar({ categories, filters, onApply, onClose, i
 
       {/* Availability */}
       <Section title="Availability">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {[
             { value: '', label: 'All' },
             { value: 'IN_STOCK', label: 'In Stock' },
             { value: 'LOW_STOCK', label: 'Low Stock' },
             { value: 'OUT_OF_STOCK', label: 'Out of Stock' },
           ].map((opt) => (
-            <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+            <label key={opt.value} className={optionClass(local.stockStatus === opt.value)}>
               <input
+                className="filter-radio"
                 type="radio"
-                name="stock"
+                name={`${group}-stock`}
                 checked={local.stockStatus === opt.value}
                 onChange={() => setLocal((p) => ({ ...p, stockStatus: opt.value as StockStatus | '' }))}
               />

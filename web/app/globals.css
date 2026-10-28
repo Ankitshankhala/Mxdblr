@@ -241,6 +241,48 @@ textarea:focus-visible {
   .banner-card-preview { width: 100%; }
 }
 
+/* Catalog filters (Category, Availability): the radios are drawn by the site,
+   not the browser, because some phone browsers draw the native selected dot in
+   white on this white panel. Selected = orange ring + dot, and the row is tinted. */
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  margin: 0 -8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1F1813;
+}
+.filter-option.is-selected { background: #FFF3E8; font-weight: 700; }
+.filter-radio {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 2px solid #CFC8BF;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+}
+.filter-radio::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F47920;
+  transform: scale(0);
+  transition: transform 0.12s ease-out;
+}
+.filter-radio:checked { border-color: #F47920; }
+.filter-radio:checked::before { transform: scale(1); }
+.filter-radio:focus-visible { border-radius: 50%; } /* keep it round under the global focus style */
+
 /* Product cards (catalog, home, related): brand and SKU only from 768px up, so
    phone cards show image, name, MOQ, stock and Add to Cart. The card body is a
    flex column with a gap, so the hidden rows take their spacing with them. */
