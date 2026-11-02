@@ -8,9 +8,10 @@
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { getImageProps } from "next/image";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-type BannerType = "SIMPLE" | "PRODUCT_PROMO" | "BRAND_PROMO";
+type BannerType = "SIMPLE" | "PRODUCT_PROMO" | "BRAND_PROMO" | "POSTER";
 
 export interface Banner {
   id: string;
@@ -59,6 +60,56 @@ function resolveCta(link: string): { href: string; external: boolean } {
   if (!trimmed) return { href: "/catalog", external: false };
   if (/^https?:\/\//i.test(trimmed)) return { href: trimmed, external: true };
   return { href: trimmed.startsWith("/") ? trimmed : `/${trimmed}`, external: false };
+}
+
+/** Next serves a resized WebP for images its config allows (uploads, Cloudinary); others go as is. */
+function optimizable(src: string): boolean {
+  return /\/uploads\//.test(src) || /res\.cloudinary\.com/.test(src);
+}
+
+/**
+ * An image-only banner (POSTER). The artwork carries its own text and button, so
+ * it is shown exactly as uploaded: no tint, no colours, nothing drawn on top, and
+ * never cropped (the slide takes the image's own shape). The browser picks the
+ * phone or desktop poster itself (<picture>), so a phone downloads only its own.
+ * The whole poster links to ctaLink when one is set; empty means not clickable.
+ */
+function PosterSlide({ b, priority }: { b: Banner; priority: boolean }) {
+  const desktopSrc = normalizeImg(b.image);
+  const phoneSrc = normalizeImg(b.mobileImage);
+  if (!desktopSrc) return null;
+
+  const common = { alt: b.title, sizes: "100vw", priority };
+  const desktop = getImageProps({
+    ...common, src: desktopSrc, width: 1920, height: 700, unoptimized: !optimizable(desktopSrc),
+  }).props;
+  const phone = phoneSrc
+    ? getImageProps({ ...common, src: phoneSrc, width: 1080, height: 1080, unoptimized: !optimizable(phoneSrc) }).props
+    : null;
+
+  const picture = (
+    <picture>
+      {phone && (
+        <source
+          media={`(max-width: ${MOBILE_BREAKPOINT}px)`}
+          srcSet={phone.srcSet ?? phone.src}
+          // Reserves the phone poster's space before it loads (square is the advised size).
+          width={phone.width}
+          height={phone.height}
+        />
+      )}
+      <img {...desktop} alt={b.title} style={{ ...desktop.style, display: "block", width: "100%", height: "auto" }} />
+    </picture>
+  );
+
+  const link = (b.ctaLink || "").trim();
+  if (!link) return <div style={{ width: "100%" }}>{picture}</div>;
+  const { href, external } = resolveCta(link);
+  return external ? (
+    <a href={href} target="_blank" rel="noopener" style={{ display: "block", width: "100%" }}>{picture}</a>
+  ) : (
+    <Link href={href} style={{ display: "block", width: "100%" }}>{picture}</Link>
+  );
 }
 
 // SSR-safe viewport detector: defaults to desktop on the server + first client
@@ -292,7 +343,8 @@ export default function HeroBanner({ banners }: { banners: Banner[] }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [paused, setPaused] = useState(false);
   const isMobile = useIsMobile();
-  const minHeight = isMobile ? 340 : 420;
+  // Text banners need room for their stacked text; posters take their image's shape.
+  const textMinHeight = isMobile ? 340 : 420;
 
   const goTo = useCallback((idx: number) => {
     setIsTransitioning((t) => {
@@ -335,6 +387,12 @@ export default function HeroBanner({ banners }: { banners: Banner[] }) {
 
   const banner = banners[current];
   if (!banner) return null; // no banners set in admin: no hero
+  const currentIsPoster = banner.bannerType === "POSTER";
+  const minHeight = currentIsPoster ? undefined : textMinHeight;
+  // Arrows and dots sit on posters of any colour, so they get a fixed dark
+  // backing and the brand orange there instead of the banner's own colours.
+  const arrowBg = currentIsPoster ? "rgba(31,24,19,0.35)" : "rgba(255,255,255,0.1)";
+  const arrowBgHover = currentIsPoster ? "rgba(31,24,19,0.55)" : "rgba(255,255,255,0.2)";
 
   return (
     <section
@@ -368,15 +426,19 @@ export default function HeroBanner({ banners }: { banners: Banner[] }) {
               // being clipped by the section's overflow: hidden.
               position: i === current ? "relative" : "absolute",
               inset: 0,
-              background: b.bgColor,
+              background: b.bannerType === "POSTER" ? undefined : b.bgColor,
               opacity: i === current ? 1 : 0,
               transition: "opacity 0.5s ease",
               pointerEvents: i === current ? "auto" : "none",
-              minHeight,
+              minHeight: b.bannerType === "POSTER" ? undefined : textMinHeight,
               display: "flex",
               alignItems: "center",
             }}
           >
+            {b.bannerType === "POSTER" ? (
+              <PosterSlide b={b} priority={i === 0} />
+            ) : (
+            <>
             {/* Background image — prefer the device-specific mobile image when
                 on a phone; fall back to the desktop image when mobileImage is
                 empty so existing banners render unchanged. */}
@@ -425,6 +487,8 @@ export default function HeroBanner({ banners }: { banners: Banner[] }) {
             />
 
             <BannerContent b={b} current={i} banners={banners} isMobile={isMobile} />
+            </>
+            )}
           </div>
         ))}
       </div>
@@ -450,13 +514,13 @@ export default function HeroBanner({ banners }: { banners: Banner[] }) {
             style={{
               position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
               zIndex: 10, width: 40, height: 40, borderRadius: "50%",
-              background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)",
+              background: arrowBg, backdropFilter: "blur(8px)",
               border: "1px solid rgba(255,255,255,0.15)", color: "#fff",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "background 0.15s",
             }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.2)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)")}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = arrowBgHover)}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = arrowBg)}
           >
             <ChevronLeft size={18} />
           </button>
@@ -468,13 +532,13 @@ export default function HeroBanner({ banners }: { banners: Banner[] }) {
             style={{
               position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)",
               zIndex: 10, width: 40, height: 40, borderRadius: "50%",
-              background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)",
+              background: arrowBg, backdropFilter: "blur(8px)",
               border: "1px solid rgba(255,255,255,0.15)", color: "#fff",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "background 0.15s",
             }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.2)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)")}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = arrowBgHover)}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = arrowBg)}
           >
             <ChevronRight size={18} />
           </button>
@@ -499,7 +563,10 @@ export default function HeroBanner({ banners }: { banners: Banner[] }) {
               style={{
                 width: i === current ? 24 : 7, height: 7,
                 borderRadius: 999,
-                background: i === current ? banner.accentColor : "rgba(255,255,255,0.3)",
+                background: i === current
+                  ? (currentIsPoster ? "#F47920" : banner.accentColor)
+                  : (currentIsPoster ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)"),
+                boxShadow: currentIsPoster ? "0 0 0 1px rgba(0,0,0,0.25)" : undefined,
                 border: "none", cursor: "pointer", padding: 0,
                 transition: "width 0.3s ease, background 0.3s ease",
               }}

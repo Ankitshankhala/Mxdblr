@@ -31,7 +31,9 @@ router.post('/', async (req, res) => {
       overlayOpacity, textAlignment,
       active, displayOrder,
     } = req.body;
-    if (!title) return res.status(400).json({ error: 'Title is required' });
+    const isPoster = bannerType === 'POSTER';
+    if (!title) return res.status(400).json({ error: isPoster ? 'Banner name is required' : 'Title is required' });
+    if (isPoster && !image) return res.status(400).json({ error: 'A poster needs its image' });
     const count = await prisma.banner.count();
     const banner = await prisma.banner.create({
       data: {
@@ -39,7 +41,8 @@ router.post('/', async (req, res) => {
         title,
         subtitle: subtitle || '',
         ctaText: ctaText || 'Browse Catalog',
-        ctaLink: ctaLink || '/catalog',
+        // A poster's link is optional: empty means the poster isn't clickable.
+        ctaLink: isPoster ? (ctaLink || '').trim() : ctaLink || '/catalog',
         image: image || '',
         mobileImage: mobileImage || '',
         bgColor: bgColor || '#1F1813',
@@ -84,6 +87,9 @@ router.put('/:id', async (req, res) => {
       overlayOpacity, textAlignment,
       active, displayOrder,
     } = req.body;
+    if (bannerType === 'POSTER' && image !== undefined && !image) {
+      return res.status(400).json({ error: 'A poster needs its image' });
+    }
     const banner = await prisma.banner.update({
       where: { id: req.params.id },
       data: {

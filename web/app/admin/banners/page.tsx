@@ -12,7 +12,7 @@ import { normalizeImageUrl } from "@/lib/config";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
-type BannerType = "SIMPLE" | "PRODUCT_PROMO" | "BRAND_PROMO";
+type BannerType = "SIMPLE" | "PRODUCT_PROMO" | "BRAND_PROMO" | "POSTER";
 
 interface Banner {
   id: string;
@@ -58,6 +58,7 @@ const BANNER_TYPE_LABELS: Record<BannerType, string> = {
   SIMPLE: "Simple Banner",
   PRODUCT_PROMO: "Product Promotion",
   BRAND_PROMO: "Brand Promotion",
+  POSTER: "Poster (image only)",
 };
 
 // Must match the server allow-list in api/src/routes/admin/upload.ts. Kept in sync
@@ -202,7 +203,9 @@ function BannersContent() {
   }
 
   async function handleSave() {
-    if (!form.title.trim()) { showToast("Title is required", "error"); return; }
+    const isPoster = form.bannerType === "POSTER";
+    if (!form.title.trim()) { showToast(isPoster ? "Banner name is required" : "Title is required", "error"); return; }
+    if (isPoster && !form.image) { showToast("Upload the poster image", "error"); return; }
     try {
       const token = localStorage.getItem("adminToken") ?? "";
       // Upload any base64 images to Cloudinary/local storage first
@@ -282,11 +285,13 @@ function BannersContent() {
     SIMPLE: "#E3EDFF",
     PRODUCT_PROMO: "#FFF3E0",
     BRAND_PROMO: "#F3E8FF",
+    POSTER: "#E6F3E7",
   };
   const typeBadgeText: Record<BannerType, string> = {
     SIMPLE: "#2563EB",
     PRODUCT_PROMO: "#D97706",
     BRAND_PROMO: "#7C3AED",
+    POSTER: "#2E7D32",
   };
 
   return (
@@ -346,9 +351,9 @@ function BannersContent() {
               >
                 {b.image && (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={normalizeImageUrl(b.image)} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={normalizeImageUrl(b.image)} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: b.bannerType === "POSTER" ? "contain" : "cover", background: b.bannerType === "POSTER" ? "#F8F6F2" : undefined }} />
                 )}
-                {b.image && (
+                {b.image && b.bannerType !== "POSTER" && (
                   <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, ${b.bgColor}cc 0%, transparent 100%)` }} />
                 )}
                 {/* Product images preview for PRODUCT_PROMO */}
@@ -360,11 +365,13 @@ function BannersContent() {
                     ))}
                   </div>
                 )}
+                {b.bannerType !== "POSTER" && (
                 <div style={{ position: "relative", zIndex: 1 }}>
                   <div style={{ width: 20, height: 3, background: b.accentColor, borderRadius: 2, marginBottom: 6 }} />
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#fff", lineHeight: 1.2, marginBottom: 6, maxWidth: 120 }}>{b.title}</div>
                   <div style={{ display: "inline-block", background: b.accentColor, color: "#fff", fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 4 }}>{b.ctaText}</div>
                 </div>
+                )}
               </div>
 
               {/* Details — minWidth:0 lets this column shrink below the nowrap
@@ -385,6 +392,13 @@ function BannersContent() {
                     }}>{BANNER_TYPE_LABELS[b.bannerType as BannerType] || b.bannerType}</span>
                     <span style={{ fontSize: 10, color: "#A8A39A" }}>Slide {idx + 1}</span>
                   </div>
+                  {b.bannerType === "POSTER" ? (
+                  <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#A8A39A", flexWrap: "wrap" }}>
+                    <span>Shown exactly as uploaded{b.mobileImage ? " · has a phone version" : " · desktop poster on phones"}</span>
+                    <span>{b.ctaLink ? <>Tap → <strong style={{ color: "#6366F1" }}>{b.ctaLink}</strong></> : "Not clickable"}</span>
+                  </div>
+                  ) : (
+                  <>
                   <div style={{ fontSize: 12, color: "#6E6257", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.subtitle}</div>
                   <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#A8A39A", flexWrap: "wrap" }}>
                     <span>CTA: <strong style={{ color: "#1F1813" }}>{b.ctaText}</strong></span>
@@ -399,6 +413,8 @@ function BannersContent() {
                       </span>
                     )}
                   </div>
+                  </>
+                  )}
                 </div>
 
                 {/* Actions */}
@@ -454,13 +470,13 @@ function BannersContent() {
               {/* Banner type selector */}
               <div style={{ marginBottom: 20 }}>
                 <label style={labelStyle}>Banner Type</label>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {(["SIMPLE", "PRODUCT_PROMO", "BRAND_PROMO"] as BannerType[]).map((type) => (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {(["SIMPLE", "PRODUCT_PROMO", "BRAND_PROMO", "POSTER"] as BannerType[]).map((type) => (
                     <button
                       key={type}
                       onClick={() => setForm((f) => ({ ...f, bannerType: type }))}
                       style={{
-                        flex: 1, padding: "9px 8px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                        flex: "1 1 120px", padding: "9px 8px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer",
                         border: form.bannerType === type ? `2px solid ${type === "PRODUCT_PROMO" ? "#F47920" : "#1F1813"}` : "2px solid #E8E4DE",
                         background: form.bannerType === type ? (type === "PRODUCT_PROMO" ? "#FFF3E0" : "#F0F0F5") : "#fff",
                         color: form.bannerType === type ? (type === "PRODUCT_PROMO" ? "#D97706" : "#1F1813") : "#6E6257",
@@ -473,7 +489,19 @@ function BannersContent() {
                 </div>
               </div>
 
-              {/* Live preview */}
+              {/* Live preview — a poster is shown exactly as the site will show it */}
+              {form.bannerType === "POSTER" ? (
+                <div style={{ borderRadius: 10, marginBottom: 20, overflow: "hidden", border: "1px solid #E8E4DE", background: "#F8F6F2" }}>
+                  {form.image ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={normalizeImageUrl(form.image)} alt="" style={{ display: "block", width: "100%", height: "auto" }} />
+                  ) : (
+                    <div style={{ padding: "34px 16px", textAlign: "center", fontSize: 12, color: "#6E6257" }}>
+                      Upload the poster below. It is shown exactly as designed: no tint, title or buttons on top.
+                    </div>
+                  )}
+                </div>
+              ) : (
               <div
                 style={{
                   background: form.bgColor,
@@ -516,9 +544,25 @@ function BannersContent() {
                   </div>
                 )}
               </div>
+              )}
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 {/* Common fields */}
+                {form.bannerType === "POSTER" ? (
+                <>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Banner Name *</label>
+                  <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} style={inputStyle} placeholder="e.g. Diwali offers: earbuds and car charger" />
+                  <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 4 }}>Not shown on the website. Names it in this list, and screen readers and Google read it as the poster&rsquo;s description.</div>
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Link When Tapped (optional)</label>
+                  <input value={form.ctaLink} onChange={(e) => setForm((f) => ({ ...f, ctaLink: e.target.value }))} style={inputStyle} placeholder="e.g. /catalog or /catalog?category=speakers" />
+                  <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 4 }}>The whole poster opens this page. Leave empty if it shouldn&rsquo;t be clickable.</div>
+                </div>
+                </>
+                ) : (
+                <>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <label style={labelStyle}>Title *</label>
                   <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} style={inputStyle} placeholder="e.g. Quality for Everyone." />
@@ -558,10 +602,12 @@ function BannersContent() {
                     <option value="center">Center</option>
                   </select>
                 </div>
+                </>
+                )}
 
                 {/* Background image */}
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={labelStyle}>Desktop Background Image (optional)</label>
+                  <label style={labelStyle}>{form.bannerType === "POSTER" ? "Poster Image (desktop) *" : "Desktop Background Image (optional)"}</label>
                   <input ref={fileInputRef} type="file" accept={ACCEPT_ATTR} style={{ display: "none" }} onChange={(e) => { if (e.target.files?.[0]) readBgFile(e.target.files[0]); e.target.value = ""; }} />
                   {form.image ? (
                     <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
@@ -585,7 +631,11 @@ function BannersContent() {
                     >
                       <div style={{ fontSize: 20, marginBottom: 4 }}>🖼️</div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: isDragging ? "#F47920" : "#1F1813" }}>Click to upload or drag & drop</div>
-                      <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 3 }}>PNG, JPG, WEBP — max 5 MB. Recommended 1920 × 700. Shows as overlay behind text.</div>
+                      <div style={{ fontSize: 11, color: "#A8A39A", marginTop: 3 }}>
+                        {form.bannerType === "POSTER"
+                          ? "PNG, JPG, WEBP — max 5 MB. 1920 × 700 (or 2000 × 729). Shown exactly as uploaded, never cropped or tinted."
+                          : "PNG, JPG, WEBP — max 5 MB. Recommended 1920 × 700. Shows as overlay behind text."}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -596,8 +646,10 @@ function BannersContent() {
                   <ImageUploadSlot
                     value={form.mobileImage}
                     onChange={(v) => setForm((f) => ({ ...f, mobileImage: v }))}
-                    label="Mobile Background Image (optional)"
-                    hint="Shown on phones. Recommended 1080 × 1350. Falls back to desktop image if empty."
+                    label={form.bannerType === "POSTER" ? "Poster Image (phone, optional)" : "Mobile Background Image (optional)"}
+                    hint={form.bannerType === "POSTER"
+                      ? "Shown on phones exactly as uploaded, e.g. 1080 × 1080. The desktop poster is used if empty."
+                      : "Shown on phones. Recommended 1080 × 1350. Falls back to desktop image if empty."}
                   />
                 </div>
 

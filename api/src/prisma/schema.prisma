@@ -411,6 +411,10 @@ enum BannerType {
   SIMPLE
   PRODUCT_PROMO
   BRAND_PROMO
+  // Image only: the artwork carries its own text and button, so the site shows it
+  // as uploaded (no tint, colours, title or CTA). title = name/alt text, ctaLink =
+  // optional tap-through link.
+  POSTER
 }
 
 model Brand {
