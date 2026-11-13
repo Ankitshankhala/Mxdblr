@@ -293,7 +293,7 @@ export default async function HomePage() {
 
       {/* ── ACT 4 · CONVERT ─────────────────────────────────────────────── */}
 
-      {/* 10. How It Works — sets GST/requirement expectations immediately
+      {/* 10. How It Works — sets what registering takes immediately
               before the ask, so the CTA meets an informed visitor */}
       <HowItWorks />
 

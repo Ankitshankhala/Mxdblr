@@ -12,7 +12,7 @@ const STEPS = [
   {
     step: '01',
     title: 'Register as a Dealer',
-    desc: 'Takes about 2 minutes. You will need a valid GST number and basic shop details. Most applications are reviewed within 24 hours.',
+    desc: 'Takes about 2 minutes. You will need your mobile number and basic shop details; a GST number is optional. Most applications are reviewed within 24 hours.',
     cta: { label: 'Register as a Dealer', href: '/register' },
   },
   {

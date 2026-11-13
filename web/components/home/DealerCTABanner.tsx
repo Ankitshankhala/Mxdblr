@@ -108,7 +108,7 @@ export default function DealerCTABanner() {
             <ArrowRight size={16} />
           </Link>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-            Takes ~2 min · Valid GST number required
+            Takes ~2 min · GST number optional
           </p>
           <a
             href={whatsappLink()}

@@ -10,7 +10,7 @@ import { Plus, Minus } from 'lucide-react';
 const FAQS = [
   {
     q: 'Who can register as an MXD dealer?',
-    a: 'Any registered retail shop, wholesaler, distributor, or online seller dealing in mobile accessories in Karnataka, Tamil Nadu, or Andhra Pradesh can apply. You will need a valid GST number for registration.',
+    a: 'Any retail shop, wholesaler, distributor, or online seller dealing in mobile accessories in Karnataka, Tamil Nadu, or Andhra Pradesh can apply. A GST number is optional: add it if you have one.',
   },
   {
     q: 'What is the minimum order quantity (MOQ)?',
