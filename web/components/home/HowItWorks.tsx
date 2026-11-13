@@ -8,7 +8,12 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { whatsappLink } from '@/lib/config';
 
-const STEPS = [
+// Do not hard-code a catalog count in these steps — a stated number goes stale
+// the moment the admin adds a category or product. This step previously read
+// "1,200+ SKUs" against a catalog of 68, then "12 categories" against 16. The
+// count is passed in from the homepage's live /categories fetch, and the copy
+// drops the number entirely when that fetch fails.
+const steps = (categoryCount?: number) => [
   {
     step: '01',
     title: 'Register as a Dealer',
@@ -18,11 +23,11 @@ const STEPS = [
   {
     step: '02',
     title: 'Browse the Catalog',
-    // Do not state a SKU count here unless it is verified against the live
-    // catalog — this previously read "1,200+ SKUs" against a catalog of 68.
     // Brand filtering is not mentioned because the compatibility filter is
     // currently hidden (see FilterSidebar.tsx).
-    desc: 'Explore the full catalog across 12 categories. Filter by category and availability.',
+    desc: categoryCount
+      ? `Explore the full catalog across ${categoryCount} categories. Filter by category and availability.`
+      : 'Explore the full catalog. Filter by category and availability.',
     cta: { label: 'Browse Catalog', href: '/catalog' },
   },
   {
@@ -33,7 +38,11 @@ const STEPS = [
   },
 ];
 
-export default function HowItWorks() {
+/** `categoryCount` comes from the homepage's live /categories fetch; omit it
+ *  (or pass 0) and the catalog step renders without a number. */
+export default function HowItWorks({ categoryCount }: { categoryCount?: number }) {
+  const STEPS = steps(categoryCount);
+
   return (
     <section style={{ maxWidth: 1280, margin: '0 auto', padding: '60px 20px 0' }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>

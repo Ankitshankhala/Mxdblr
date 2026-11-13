@@ -15,6 +15,7 @@ import StockBadge from '@/components/ui/StockBadge';
 import SkuLabel from '@/components/ui/SkuLabel';
 import { useWishlist } from '@/hooks/useWishlist';
 import { normalizeImageUrl } from '@/lib/config';
+import { units } from '@/lib/format';
 import type { Product } from '@/types';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -181,7 +182,7 @@ export default function WishlistPage() {
                   <SkuLabel sku={product.sku} />
 
                   <div style={{ fontSize: 12, color: '#6E6257', marginTop: 2 }}>
-                    MOQ: <strong>{product.moq} units</strong>
+                    MOQ: <strong>{units(product.moq)}</strong>
                   </div>
 
                   {/* Actions */}

@@ -14,7 +14,7 @@ const FAQS = [
   },
   {
     q: 'What is the minimum order quantity (MOQ)?',
-    a: 'MOQ starts as low as 5 units on select products. Each product page shows its specific MOQ. Bulk orders of 50+ units qualify for additional discount tiers.',
+    a: 'Each product page shows its own MOQ, and most of the catalog starts at a single piece. For larger quantities, send your cart as a WhatsApp inquiry and our team will confirm your dealer rate the same business day.',
   },
   {
     q: 'How do I place an order?',

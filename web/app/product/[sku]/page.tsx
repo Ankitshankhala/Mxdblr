@@ -19,6 +19,7 @@ import ProductGallery from '@/components/features/product/ProductGallery';
 import SupportedTechnologies from '@/components/products/SupportedTechnologies';
 import type { Product } from '@/types';
 import { normalizeImageUrl } from '@/lib/config';
+import { units } from '@/lib/format';
 
 // Server-side fetch: prefer the internal Docker service URL when set (the
 // browser-facing NEXT_PUBLIC_API_URL may be unreachable from the container).
@@ -49,7 +50,7 @@ export async function generateMetadata({
   }
   return {
     title: `${product.name} — ${product.brand} | MXD Wholesale`,
-    description: `Buy ${product.name} by ${product.brand} wholesale. SKU: ${sku}. MOQ: ${product.moq} units.`,
+    description: `Buy ${product.name} by ${product.brand} wholesale. SKU: ${sku}. MOQ: ${units(product.moq)}.`,
     alternates: { canonical: `/product/${encodeURIComponent(sku)}` },
     openGraph: {
       url: `/product/${encodeURIComponent(sku)}`,
@@ -165,7 +166,7 @@ export default async function ProductPage({
                 color: '#1A1A2E',
               }}
             >
-              Minimum order quantity: <strong>{product.moq} units</strong>
+              Minimum order quantity: <strong>{units(product.moq)}</strong>
             </div>
 
             {/* All interactive cart/wishlist/notify actions */}

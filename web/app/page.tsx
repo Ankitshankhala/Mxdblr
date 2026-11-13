@@ -120,6 +120,10 @@ async function getData() {
       // grids with visible product counts signal catalog depth better than
       // a thin row of a few tiles.
       categories: (stockedCategories.length ? stockedCategories : flatCategories).slice(0, 12),
+      // Full count for the "How It Works" copy, which describes the whole
+      // catalog rather than the 12-tile grid above. Stocked only: a category a
+      // dealer cannot buy from should not be counted as range.
+      categoryCount: stockedCategories.length || flatCategories.length,
       bestSellers,
       newArrivals,
       announcements,
@@ -127,12 +131,12 @@ async function getData() {
       banners,
     };
   } catch {
-    return { categories: [], bestSellers: [], newArrivals: [], announcements: [], events: [], banners: [] as Banner[] };
+    return { categories: [], categoryCount: 0, bestSellers: [], newArrivals: [], announcements: [], events: [], banners: [] as Banner[] };
   }
 }
 
 export default async function HomePage() {
-  const { categories, bestSellers, newArrivals, announcements, events, banners } = await getData();
+  const { categories, categoryCount, bestSellers, newArrivals, announcements, events, banners } = await getData();
   // Only what admins add under Announcements. There used to be built-in
   // fallback messages ("Free Delivery…", "Same-Day Dispatch…") that showed
   // whenever the list was empty, promising things nobody had set; now the bar
@@ -194,7 +198,7 @@ export default async function HomePage() {
         1. The CATEGORY MAP moves up to position 2. A dealer arriving from a
            search already knows what they want to buy, so their first question
            is range, and they leave if they cannot see their categories. The
-           category grid answers that in one screen (12 categories with live
+           category grid answers that in one screen (up to 12 tiles with live
            counts). Note this does NOT contradict the CRO review's actual
            finding, which was that PRODUCT GRIDS should not lead — those stay
            low, at 8 and 9. Category map = range proof; grids = browsing depth.
@@ -242,7 +246,7 @@ export default async function HomePage() {
 
       {/* ── ACT 2 · PERSUADE ────────────────────────────────────────────── */}
 
-      {/* 4. Why Choose MXD — the value proposition (MOQ from 5, same-day
+      {/* 4. Why Choose MXD — the value proposition (low MOQ, same-day
              dispatch), now anchored to a catalog the visitor has just seen */}
       <WhyChooseMXD />
 
@@ -295,7 +299,7 @@ export default async function HomePage() {
 
       {/* 10. How It Works — sets what registering takes immediately
               before the ask, so the CTA meets an informed visitor */}
-      <HowItWorks />
+      <HowItWorks categoryCount={categoryCount} />
 
       {/* 11. Become Dealer CTA Banner — the conversion push */}
       <DealerCTABanner />

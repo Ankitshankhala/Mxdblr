@@ -11,8 +11,12 @@ const BENEFITS = [
     Icon: Package,
     color: '#FFF3E8',
     iconColor: '#F47920',
-    title: 'MOQ as Low as 5 Units',
-    desc: 'No massive bulk-order requirements. Start small, test the market, and scale at your own pace.',
+    // Do not state a fixed MOQ number here unless it is verified against the
+    // live catalog — this previously read "as Low as 5 Units" while every
+    // product in the catalog carried an MOQ of 1. MOQ is a per-product field
+    // the admin can change at any time, so point at the product page instead.
+    title: 'Low Minimum Orders',
+    desc: 'No massive bulk-order requirements. Every product page shows its own MOQ. Start small, test the market, and scale at your own pace.',
   },
   {
     Icon: Zap,
