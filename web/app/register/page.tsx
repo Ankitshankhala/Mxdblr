@@ -45,8 +45,6 @@ interface FormData {
   altMobile: string;
   businessType: BusinessType | '';
   city: string;
-  tehsil: string;
-  district: string;
   state: string;
   country: string;
   pincode: string;
@@ -60,8 +58,6 @@ const INITIAL_FORM: FormData = {
   altMobile: '',
   businessType: '',
   city: '',
-  tehsil: '',
-  district: '',
   state: '',
   country: 'India',
   pincode: '',
@@ -136,8 +132,6 @@ export default function RegisterPage() {
   function validateStep2(): boolean {
     const newErrors: Partial<FormData> = {};
     if (!form.city.trim()) newErrors.city = 'Required';
-    if (!form.tehsil.trim()) newErrors.tehsil = 'Required';
-    if (!form.district.trim()) newErrors.district = 'Required';
     if (!form.state.trim()) newErrors.state = 'Required';
     if (!/^\d{6}$/.test(form.pincode)) newErrors.pincode = 'Enter a valid 6-digit pincode';
     setErrors(newErrors);
@@ -300,17 +294,6 @@ export default function RegisterPage() {
                       <input style={{ ...inputStyle, borderColor: errors.city ? '#DC2626' : '#E8E4DE' }} value={form.city} onChange={(e) => update('city', e.target.value)} placeholder="City" />
                       {errors.city && <p style={{ color: '#DC2626', fontSize: 11, marginTop: 4 }}>{errors.city}</p>}
                     </FormField>
-                    <FormField label="Tehsil" required>
-                      <input style={{ ...inputStyle, borderColor: errors.tehsil ? '#DC2626' : '#E8E4DE' }} value={form.tehsil} onChange={(e) => update('tehsil', e.target.value)} placeholder="Tehsil" />
-                      {errors.tehsil && <p style={{ color: '#DC2626', fontSize: 11, marginTop: 4 }}>{errors.tehsil}</p>}
-                    </FormField>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="District" required>
-                      <input style={{ ...inputStyle, borderColor: errors.district ? '#DC2626' : '#E8E4DE' }} value={form.district} onChange={(e) => update('district', e.target.value)} placeholder="District" />
-                      {errors.district && <p style={{ color: '#DC2626', fontSize: 11, marginTop: 4 }}>{errors.district}</p>}
-                    </FormField>
                     <FormField label="State" required>
                       <select
                         value={form.state}
@@ -365,7 +348,6 @@ export default function RegisterPage() {
                     { label: 'WhatsApp', value: `+91 ${form.whatsappNumber}` },
                     { label: 'Business Type', value: BUSINESS_TYPES.find((b) => b.value === form.businessType)?.label || '' },
                     { label: 'City', value: form.city },
-                    { label: 'District', value: form.district },
                     { label: 'State', value: form.state },
                     { label: 'Pincode', value: form.pincode },
                   ].map(({ label, value }) => (

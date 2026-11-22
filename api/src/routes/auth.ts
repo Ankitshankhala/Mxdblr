@@ -122,8 +122,14 @@ const registerSchema = z.object({
   whatsappNumber: z.string().regex(/^[6-9]\d{9}$/),
   altMobile: z.string().regex(/^[6-9]\d{9}$/).optional().or(z.literal('')),
   city: z.string().min(2).max(100),
-  tehsil: z.string().min(2).max(100),
-  district: z.string().min(2).max(100),
+  // Tehsil and district are no longer asked for at sign-up — two extra fields a
+  // shop owner had to type cost more than they were worth, and the service-area
+  // check never used them (geoCheckMiddleware resolves the state from the IP,
+  // and checkStateAllowed only ever queries district: ''). They stay on the
+  // Dealer record, non-null and defaulting to '', so existing dealers keep their
+  // values and the admin district filter — which already skips '' — still works.
+  tehsil: z.string().max(100).optional().default(''),
+  district: z.string().max(100).optional().default(''),
   state: z.string().min(2).max(100),
   country: z.string().default('India'),
   pincode: z.string().regex(/^\d{6}$/, 'Enter a valid 6-digit pincode'),

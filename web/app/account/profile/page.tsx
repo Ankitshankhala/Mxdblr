@@ -34,7 +34,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
 
 interface EditForm {
   ownerName: string; shopName: string; whatsappNumber: string;
-  altMobile: string; city: string; tehsil: string; district: string;
+  altMobile: string; city: string;
   state: string; pincode: string; gstNumber: string;
 }
 
@@ -108,7 +108,7 @@ export default function ProfileSettingsPage() {
   const [saveError, setSaveError]     = useState('');
   const [form, setForm] = useState<EditForm>({
     ownerName: '', shopName: '', whatsappNumber: '', altMobile: '',
-    city: '', tehsil: '', district: '', state: '', pincode: '', gstNumber: '',
+    city: '', state: '', pincode: '', gstNumber: '',
   });
 
   // Signed-out visitors never reach this page (proxy.ts); an expired session
@@ -124,8 +124,6 @@ export default function ProfileSettingsPage() {
           whatsappNumber: d.whatsappNumber,
           altMobile:      d.altMobile || '',
           city:           d.city,
-          tehsil:         d.tehsil,
-          district:       d.district,
           state:          d.state,
           pincode:        d.pincode,
           gstNumber:      d.gstNumber || '',
@@ -150,8 +148,6 @@ export default function ProfileSettingsPage() {
         whatsappNumber: form.whatsappNumber || undefined,
         altMobile:      form.altMobile      || undefined,
         city:           form.city           || undefined,
-        tehsil:         form.tehsil         || undefined,
-        district:       form.district       || undefined,
         state:          form.state          || undefined,
         pincode:        form.pincode        || undefined,
         gstNumber:      form.gstNumber      || undefined,
@@ -163,8 +159,6 @@ export default function ProfileSettingsPage() {
         whatsappNumber: form.whatsappNumber || prev.whatsappNumber,
         altMobile:      form.altMobile      || null,
         city:           form.city           || prev.city,
-        tehsil:         form.tehsil         || prev.tehsil,
-        district:       form.district       || prev.district,
         state:          form.state          || prev.state,
         pincode:        form.pincode        || prev.pincode,
         gstNumber:      form.gstNumber      || null,
@@ -189,8 +183,6 @@ export default function ProfileSettingsPage() {
       whatsappNumber: dealer.whatsappNumber,
       altMobile:      dealer.altMobile || '',
       city:           dealer.city,
-      tehsil:         dealer.tehsil,
-      district:       dealer.district,
       state:          dealer.state,
       pincode:        dealer.pincode,
       gstNumber:      dealer.gstNumber || '',
@@ -385,10 +377,6 @@ export default function ProfileSettingsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div><FieldLabel>City</FieldLabel><input style={inputStyle} value={form.city} onChange={e => update('city', e.target.value)} /></div>
-                <div><FieldLabel>Tehsil</FieldLabel><input style={inputStyle} value={form.tehsil} onChange={e => update('tehsil', e.target.value)} /></div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div><FieldLabel>District</FieldLabel><input style={inputStyle} value={form.district} onChange={e => update('district', e.target.value)} /></div>
                 <div><FieldLabel>State</FieldLabel><input style={inputStyle} value={form.state} onChange={e => update('state', e.target.value)} /></div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -404,8 +392,6 @@ export default function ProfileSettingsPage() {
           ) : (
             <>
               <InfoRow label="City"     value={dealer.city} />
-              <InfoRow label="Tehsil"   value={dealer.tehsil} />
-              <InfoRow label="District" value={dealer.district} />
               <InfoRow label="State"    value={dealer.state} />
               <InfoRow label="Country"  value={dealer.country} />
               <InfoRow label="Pincode"  value={dealer.pincode} />
